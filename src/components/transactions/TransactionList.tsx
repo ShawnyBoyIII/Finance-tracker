@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useFinance } from '@/context/FinanceContext';
 import { TransactionType } from '@/types';
 import { Trash2 } from 'lucide-react';
@@ -9,6 +9,15 @@ import { format } from 'date-fns';
 export default function TransactionList() {
   const { transactions, addTransaction, deleteTransaction } = useFinance();
   const [isAdding, setIsAdding] = useState(false);
+
+  // ⚡ Bolt: Memoize sorted transactions to prevent expensive O(N log N) sorting
+  // and date parsing on every render (e.g., when typing in form inputs).
+  // Spread [...transactions] prevents mutating the original context state.
+  const sortedTransactions = useMemo(() => {
+    return [...transactions].sort(
+      (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
+    );
+  }, [transactions]);
 
   // Form State
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
@@ -92,14 +101,14 @@ export default function TransactionList() {
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
-            {transactions.length === 0 ? (
+            {sortedTransactions.length === 0 ? (
               <tr>
                 <td colSpan={5} className="px-6 py-4 text-center text-sm text-gray-500">
                   No transactions yet. Add some or import a CSV!
                 </td>
               </tr>
             ) : (
-              transactions.sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime()).map((t) => (
+              sortedTransactions.map((t) => (
                 <tr key={t.id}>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                     {format(new Date(t.date), 'MMM d, yyyy')}

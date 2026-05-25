@@ -26,3 +26,10 @@ To make the dashboard more insightful, we will add advanced metrics that give a 
    * **Visualization**: A "Watchlist" card showing categories with high growth (e.g., "Dining Out: +$150 from last month 📈").
 5. **Net Worth Tracking**:
    * **What it is**: Allowing users to manually input or link static assets (Home value, 401k) and liabilities (Mortgage, Car loan) to see their overall Net Worth, not just cash flow.
+
+## Phase 3: Investment Tracking
+To provide a complete picture of financial health, we will add the ability to track stock investments and portfolios.
+
+1. **Manual Entry & Integration**: Allow users to manually log stock purchases/sales (Ticker, Shares, Price) or potentially upload brokerage CSVs.
+2. **Portfolio Dashboard**: Create a new 'Investments' view showing current holdings, portfolio allocation (pie chart of different stocks/sectors), and total portfolio value.
+3. **Performance Tracking**: Track the cost basis versus current estimated value. (Note: getting real-time stock prices client-side without a backend proxy can be tricky due to CORS and API limits, so we may start with manual price updates or use a free public API if one supports CORS).

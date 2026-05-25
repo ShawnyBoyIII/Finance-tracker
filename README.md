@@ -1,36 +1,59 @@
-This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# 💰 Free Personal Financial Tracker
 
-## Getting Started
+Welcome to your free, private, and easy-to-use Personal Financial Tracker!
 
-First, run the development server:
+This application runs directly in your browser. All your financial data is saved locally on your device (`localStorage`), meaning it is 100% private, highly secure, and costs nothing to host or maintain.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+---
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## 🚀 Getting Started
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+If you are running this locally on your machine, follow these steps:
 
-This project uses [`next/font`](https://nextjs.org/docs/basic-features/font-optimization) to automatically optimize and load Inter, a custom Google Font.
+1. **Install Dependencies:**
+   Make sure you have [Node.js](https://nodejs.org/) installed. Then run:
+   ```bash
+   npm install
+   ```
 
-## Learn More
+2. **Start the Application:**
+   ```bash
+   npm run dev
+   ```
 
-To learn more about Next.js, take a look at the following resources:
+3. **Open the App:**
+   Open your browser and navigate to [http://localhost:3000](http://localhost:3000).
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+---
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js/) - your feedback and contributions are welcome!
+## 📖 How to Use the App
 
-## Deploy on Vercel
+The app is divided into three main sections, accessible via the top navigation bar.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+### 1. Dashboard 📊
+The Dashboard is your financial control center.
+* **Summary Cards:** Quickly see your Total Balance, Total Income, and Total Expenses.
+* **Income vs Expenses:** A bar chart comparing what you earned versus what you spent.
+* **Expenses by Category:** A pie chart showing exactly where your money is going (e.g., Groceries, Rent, Entertainment).
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/deployment) for more details.
+### 2. Transactions 💳
+This is where you log your financial activity.
+* **Manual Entry:** Click "Add Manual Transaction" to record a single purchase or paycheck. You can edit or delete these at any time.
+* **CSV Import:** Want to bulk-add data from your bank? Click the "Import CSV" button.
+  * *Important:* Your CSV file **must** have headers matching these exact names: `Date, Amount, Description, Category`.
+  * Positive amounts are treated as Income, and negative amounts are treated as Expenses.
+* **Export CSV:** Need to back up your data or move to a new computer? Click "Export CSV" to download all your transactions securely.
+
+### 3. Budgets 🎯
+Set goals and track your spending limits.
+* **Set a Budget:** Enter a Category (e.g., "Groceries") and a Monthly Limit ($).
+* **Track Progress:** The app will automatically match your expense transactions to these categories. You'll see a progress bar filling up as you spend.
+* **Alerts:** If you exceed your limit, the progress bar turns red to warn you.
+
+---
+
+## 💡 Pro Tips for Beginners
+* **Backup Often:** Because your data lives in your browser, if you clear your browser history/cache completely, your data might be reset. Use the **Export CSV** button on the Transactions page regularly to keep safe backups on your computer.
+* **Consistent Categories:** When adding transactions manually or via CSV, try to use the same category names (e.g., always use "Groceries" instead of mixing "Groceries", "Food", "Supermarket"). This makes your Dashboard charts much cleaner!
+
+Happy tracking! 🎉

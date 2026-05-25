@@ -33,3 +33,16 @@ To provide a complete picture of financial health, we will add the ability to tr
 1. **Manual Entry & Integration**: Allow users to manually log stock purchases/sales (Ticker, Shares, Price) or potentially upload brokerage CSVs.
 2. **Portfolio Dashboard**: Create a new 'Investments' view showing current holdings, portfolio allocation (pie chart of different stocks/sectors), and total portfolio value.
 3. **Performance Tracking**: Track the cost basis versus current estimated value. (Note: getting real-time stock prices client-side without a backend proxy can be tricky due to CORS and API limits, so we may start with manual price updates or use a free public API if one supports CORS).
+
+## Phase 4: Debt & Goal Management
+1. **Debt Payoff Calculator**: A tool to track credit cards or student loans, visualize the 'Snowball' vs 'Avalanche' payoff methods, and project debt-free dates.
+2. **Savings Goals**: Allow users to create specific savings buckets (e.g., 'Vacation', 'New Car') and allocate portions of their balance towards these goals with visual progress bars.
+
+## Phase 5: Automation & Intelligence
+3. **Recurring Bills Calendar**: Identify recurring expenses automatically from transaction history and populate a calendar view showing when upcoming bills are due.
+4. **Smart Categorization Rules**: Allow users to create 'If/Then' rules (e.g., 'If description contains UBER, categorize as Transit') to auto-categorize imported CSV transactions.
+5. **AI Financial Assistant (Client-Side)**: Integrate a lightweight, in-browser AI model (like WebLLM) to allow users to ask questions like 'How much did I spend on food this month?' without sending data to a server.
+
+## Phase 6: Multi-Device Sync & Export
+6. **Peer-to-Peer Syncing**: Implement WebRTC or a service like Yjs to allow users to sync their local data securely between their phone and laptop without needing a central database.
+7. **Advanced Export Options**: Expand beyond CSV to allow exporting data to beautifully formatted PDF reports for tax purposes or personal records.

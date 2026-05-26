@@ -17,12 +17,22 @@ export default function BudgetManager() {
     setNewAmount('');
   };
 
-  // Calculate spending against budgets
+  // ⚡ Bolt: Calculate spending against budgets
+  // Optimized from O(M*N) nested loops to O(N+M) using a hash map for lookups
+  // This significantly improves performance when the transactions array grows large.
   const budgetProgress = useMemo(() => {
+    // 1. Pre-calculate total expenses by category (O(N) operation)
+    const categorySpentMap: Record<string, number> = {};
+    for (const t of transactions) {
+      if (t.type === 'expense') {
+        const categoryKey = t.category.toLowerCase();
+        categorySpentMap[categoryKey] = (categorySpentMap[categoryKey] || 0) + t.amount;
+      }
+    }
+
+    // 2. Map budgets to their progress (O(M) operation)
     return budgets.map((budget) => {
-      const spent = transactions
-        .filter((t) => t.category.toLowerCase() === budget.category.toLowerCase() && t.type === 'expense')
-        .reduce((sum, t) => sum + t.amount, 0);
+      const spent = categorySpentMap[budget.category.toLowerCase()] || 0;
 
       const percentage = budget.amount > 0 ? (spent / budget.amount) * 100 : 0;
       const isOverBudget = spent > budget.amount;

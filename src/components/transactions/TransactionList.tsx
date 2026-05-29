@@ -11,6 +11,72 @@ const INPUT_CLASS_NAME =
 
 const PAGE_SIZE = 50;
 
+// ⚡ Bolt: Extracted AddTransactionForm to prevent table re-renders on every keystroke
+// By isolating the form state (amount, category, description), the parent TransactionList
+// and its large paginated table no longer re-render on every typed character,
+// significantly improving typing responsiveness and preventing unnecessary date parsing.
+function AddTransactionForm({
+  addTransaction,
+  onClose
+}: {
+  addTransaction: (transaction: Omit<Transaction, 'id'>) => void,
+  onClose: () => void
+}) {
+  const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
+  const [amount, setAmount] = useState('');
+  const [type, setType] = useState<TransactionType>('expense');
+  const [category, setCategory] = useState('');
+  const [description, setDescription] = useState('');
+
+  const handleAdd = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!amount || !category) return;
+
+    addTransaction({
+      date,
+      amount: parseFloat(amount),
+      type,
+      category,
+      description,
+    });
+
+    onClose();
+  };
+
+  return (
+    <form onSubmit={handleAdd} className="p-6 bg-gray-50 border-b border-gray-100 grid grid-cols-1 gap-4 sm:grid-cols-6">
+      <div className="sm:col-span-1">
+        <label className="block text-sm font-medium text-gray-700">Date</label>
+        <input type="date" required value={date} onChange={e => setDate(e.target.value)} className={INPUT_CLASS_NAME} />
+      </div>
+      <div className="sm:col-span-1">
+        <label className="block text-sm font-medium text-gray-700">Type</label>
+        <select value={type} onChange={e => setType(e.target.value as TransactionType)} className={INPUT_CLASS_NAME}>
+          <option value="expense">Expense</option>
+          <option value="income">Income</option>
+        </select>
+      </div>
+      <div className="sm:col-span-1">
+        <label className="block text-sm font-medium text-gray-700">Amount</label>
+        <input type="number" required step="0.01" min="0" value={amount} onChange={e => setAmount(e.target.value)} className={INPUT_CLASS_NAME} />
+      </div>
+      <div className="sm:col-span-1">
+        <label className="block text-sm font-medium text-gray-700">Category</label>
+        <input type="text" required value={category} onChange={e => setCategory(e.target.value)} placeholder="e.g. Groceries" className={INPUT_CLASS_NAME} />
+      </div>
+      <div className="sm:col-span-2 flex items-end gap-2">
+        <div className="flex-1">
+          <label className="block text-sm font-medium text-gray-700">Description</label>
+          <input type="text" value={description} onChange={e => setDescription(e.target.value)} placeholder="Optional" className={INPUT_CLASS_NAME} />
+        </div>
+        <button type="submit" className="mb-0.5 bg-green-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-green-700">
+          Save
+        </button>
+      </div>
+    </form>
+  );
+}
+
 export default function TransactionList() {
   const { transactions, addTransaction, deleteTransaction } = useFinance();
   const [isAdding, setIsAdding] = useState(false);
@@ -40,31 +106,6 @@ export default function TransactionList() {
     return sortedTransactions.slice(start, start + PAGE_SIZE);
   }, [sortedTransactions, page]);
 
-  // Form State
-  const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
-  const [amount, setAmount] = useState('');
-  const [type, setType] = useState<TransactionType>('expense');
-  const [category, setCategory] = useState('');
-  const [description, setDescription] = useState('');
-
-  const handleAdd = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!amount || !category) return;
-
-    addTransaction({
-      date,
-      amount: parseFloat(amount),
-      type,
-      category,
-      description,
-    });
-
-    // Reset
-    setAmount('');
-    setDescription('');
-    setIsAdding(false);
-  };
-
   return (
     <div className="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden">
       <div className="p-6 border-b border-gray-100 flex justify-between items-center">
@@ -78,67 +119,10 @@ export default function TransactionList() {
       </div>
 
       {isAdding && (
-        <form onSubmit={handleAdd} className="p-6 bg-gray-50 border-b border-gray-100 grid grid-cols-1 gap-4 sm:grid-cols-6">
-          <div className="sm:col-span-1">
-            <label className="block text-sm font-medium text-gray-700">Date</label>
-            <input
-              type="date"
-              required
-              value={date}
-              onChange={e => setDate(e.target.value)}
-              className={INPUT_CLASS_NAME}
-            />
-          </div>
-          <div className="sm:col-span-1">
-            <label className="block text-sm font-medium text-gray-700">Type</label>
-            <select
-              value={type}
-              onChange={e => setType(e.target.value as TransactionType)}
-              className={INPUT_CLASS_NAME}
-            >
-              <option value="expense">Expense</option>
-              <option value="income">Income</option>
-            </select>
-          </div>
-          <div className="sm:col-span-1">
-            <label className="block text-sm font-medium text-gray-700">Amount</label>
-            <input
-              type="number"
-              required
-              step="0.01"
-              min="0"
-              value={amount}
-              onChange={e => setAmount(e.target.value)}
-              className={INPUT_CLASS_NAME}
-            />
-          </div>
-          <div className="sm:col-span-1">
-            <label className="block text-sm font-medium text-gray-700">Category</label>
-            <input
-              type="text"
-              required
-              value={category}
-              onChange={e => setCategory(e.target.value)}
-              placeholder="e.g. Groceries"
-              className={INPUT_CLASS_NAME}
-            />
-          </div>
-          <div className="sm:col-span-2 flex items-end gap-2">
-            <div className="flex-1">
-              <label className="block text-sm font-medium text-gray-700">Description</label>
-              <input
-                type="text"
-                value={description}
-                onChange={e => setDescription(e.target.value)}
-                placeholder="Optional"
-                className={INPUT_CLASS_NAME}
-              />
-            </div>
-            <button type="submit" className="mb-0.5 bg-green-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-green-700">
-              Save
-            </button>
-          </div>
-        </form>
+        <AddTransactionForm
+          addTransaction={addTransaction}
+          onClose={() => setIsAdding(false)}
+        />
       )}
 
       <div className="overflow-x-auto">

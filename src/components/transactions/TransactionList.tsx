@@ -81,10 +81,12 @@ export default function TransactionList() {
   const [page, setPage] = useState(1);
 
   // ⚡ Bolt: Memoize sorted transactions to prevent expensive O(N log N) sorting
-  // on every render (e.g., when typing in form inputs).
+  // and date parsing on every render (e.g., when typing in form inputs).
+  // Spread [...transactions] prevents mutating the original context state.
+  // Optimization: use localeCompare for O(N log N) string comparison instead of expensive Date parsing.
   const sortedTransactions = useMemo(() => {
     return [...transactions].sort(
-      (a, b) => (b.date < a.date ? -1 : b.date > a.date ? 1 : 0)
+      (a, b) => b.date.localeCompare(a.date)
     );
   }, [transactions]);
 

@@ -13,3 +13,8 @@
 ## 2024-05-28 - Missing DOM Virtualization for Large Datasets
 **Learning:** In Next.js client components without server-side pagination, dumping thousands of imported CSV records directly into a React table causes severe main thread blocking and laggy input interactions. Instantiating `new Date()` within thousands of list items exponentially worsens the re-render performance.
 **Action:** Always implement pagination or virtualization when rendering unconstrained lists of transactions on the client, and slice the array BEFORE applying date formatting and creating DOM nodes.
+
+## 2026-05-30 - Optimize Date Sorting
+
+**Learning:** Date sorting using Date constructor `new Date().getTime()` is slow compared to string comparison especially within large datasets in sorting algorithms O(N log N).
+**Action:** When comparing dates in formats such as YYYY-MM-DD, convert sorting mechanics to `String.prototype.localeCompare()` to leverage string comparison natively rather than allocating a new Date.

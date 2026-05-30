@@ -14,9 +14,11 @@
     "lucide-react": "^1.16.0",
     "next": "14.2.3",
     "papaparse": "^5.5.3",
+    "pdfjs-dist": "^6.0.227",
     "react": "^18",
     "react-dom": "^18",
-    "recharts": "^3.8.1"
+    "recharts": "^3.8.1",
+    "tesseract.js": "^7.0.0"
   },
   "devDependencies": {
     "@testing-library/jest-dom": "^6.9.1",
@@ -25,6 +27,7 @@
     "@types/jest": "^30.0.0",
     "@types/node": "^20.19.41",
     "@types/papaparse": "^5.5.2",
+    "@types/pdfjs-dist": "^2.10.377",
     "@types/react": "^18",
     "@types/react-dom": "^18",
     "eslint": "^8",

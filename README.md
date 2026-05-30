@@ -10,18 +10,26 @@ This application runs directly in your browser. All your financial data is saved
 
 If you are running this locally on your machine, follow these steps:
 
-1. **Install Dependencies:**
+1. **Open Terminal & Navigate to the Project:**
+   Open the Terminal app on your Mac. You need to navigate to the folder where you downloaded the app using the `cd` (change directory) command.
+   For example, if you downloaded and extracted it to your Downloads folder, run:
+   ```bash
+   cd ~/Downloads/personal-financial-tracker
+   ```
+   *(Note: Replace `personal-financial-tracker` with the actual name of the folder if it's different)*
+
+2. **Install Dependencies:**
    Make sure you have [Node.js](https://nodejs.org/) installed. Then run:
    ```bash
    npm install
    ```
 
-2. **Start the Application:**
+3. **Start the Application:**
    ```bash
    npm run dev
    ```
 
-3. **Open the App:**
+4. **Open the App:**
    Open your browser and navigate to [http://localhost:3000](http://localhost:3000).
 
 ---

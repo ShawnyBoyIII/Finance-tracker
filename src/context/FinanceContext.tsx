@@ -76,7 +76,8 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
   };
 
   const deleteTransaction = (id: string) => {
-    setTransactions((prev) => prev.map((t) => t).filter((t) => t.id !== id));
+    // ⚡ Bolt: Removed redundant .map(t => t) array allocation which was O(N) memory overhead before filtering
+    setTransactions((prev) => prev.filter((t) => t.id !== id));
   };
 
   const addTransactionsBulk = (newTransactions: Omit<Transaction, 'id'>[]) => {

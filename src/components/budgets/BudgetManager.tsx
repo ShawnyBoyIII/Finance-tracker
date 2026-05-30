@@ -3,6 +3,7 @@
 import React, { useState, useMemo } from 'react';
 import { useFinance } from '@/context/FinanceContext';
 import { Trash2, AlertCircle } from 'lucide-react';
+import { COMMON_INPUT_CLASS } from '@/utils/constants';
 
 export default function BudgetManager() {
   const { budgets, updateBudget, deleteBudget, transactions } = useFinance();
@@ -61,7 +62,7 @@ export default function BudgetManager() {
               value={newCategory}
               onChange={e => setNewCategory(e.target.value)}
               placeholder="e.g. Groceries"
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2 border"
+              className={COMMON_INPUT_CLASS}
             />
           </div>
           <div className="flex-1">
@@ -74,7 +75,7 @@ export default function BudgetManager() {
               value={newAmount}
               onChange={e => setNewAmount(e.target.value)}
               placeholder="0.00"
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2 border"
+              className={COMMON_INPUT_CLASS}
             />
           </div>
           <button

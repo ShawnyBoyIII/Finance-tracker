@@ -65,3 +65,64 @@ Set goals and track your spending limits.
 * **Consistent Categories:** When adding transactions manually or via CSV, try to use the same category names (e.g., always use "Groceries" instead of mixing "Groceries", "Food", "Supermarket"). This makes your Dashboard charts much cleaner!
 
 Happy tracking! 🎉
+---
+
+## 🛠️ Troubleshooting & Common Errors
+
+If you are developing locally or adding new features (like the experimental PDF/OCR import), you might run into build errors. Here is how to solve the most common ones.
+
+### 1. Module not found: Can't resolve 'pdfjs-dist' or 'tesseract.js'
+If you add the experimental `PDFImport` component and see a module not found error during build, you need to install the missing dependencies.
+
+**Solution:**
+Run this in your terminal:
+```bash
+npm install pdfjs-dist tesseract.js
+```
+
+### 2. Error: `ssr: false` is not allowed with `next/dynamic` in Server Components
+If you try to dynamically import a client-side component (like `PDFImport` which requires browser APIs) directly inside a Next.js Server Component (like `app/transactions/page.tsx`), the build will fail.
+
+**Solution:**
+You must wrap the dynamic import in a Client Component file.
+
+1. Create a new file at `src/components/transactions/PDFImportWrapper.tsx`:
+   ```tsx
+   "use client";
+   import dynamic from 'next/dynamic';
+
+   const PDFImport = dynamic(() => import('@/components/transactions/PDFImport'), {
+     ssr: false,
+   });
+
+   export default function PDFImportWrapper() {
+     return <PDFImport />;
+   }
+   ```
+
+2. Update your `src/app/transactions/page.tsx` to use the wrapper:
+   ```tsx
+   import React from 'react';
+   import Navbar from '@/components/layout/Navbar';
+   import CSVImport from '@/components/transactions/CSVImport';
+   import TransactionList from '@/components/transactions/TransactionList';
+   // Import the new wrapper instead!
+   import PDFImportWrapper from '@/components/transactions/PDFImportWrapper';
+
+   export default function TransactionsPage() {
+     return (
+       <div className="min-h-screen bg-gray-50">
+         <Navbar />
+         <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+           <div className="flex justify-between items-end mb-6">
+             <h1 className="text-2xl font-bold text-gray-900">Manage Transactions</h1>
+           </div>
+
+           <PDFImportWrapper />
+           <CSVImport />
+           <TransactionList />
+         </main>
+       </div>
+     );
+   }
+   ```

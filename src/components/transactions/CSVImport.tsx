@@ -18,13 +18,17 @@ export default function CSVImport() {
       skipEmptyLines: true,
       complete: (results) => {
         try {
+          // ⚡ Bolt: Hoist Date instantiation outside the map loop.
+          // Calling new Date() for potentially thousands of missing rows is extremely slow.
+          const fallbackDate = new Date().toISOString().split('T')[0];
+
           const newTransactions = results.data.map((row: any) => {
             // Very basic mapping, expecting columns: Date, Amount, Description, Category
             const amount = parseFloat(row.Amount || '0');
             const type: TransactionType = amount >= 0 ? 'income' : 'expense';
 
             return {
-              date: row.Date || new Date().toISOString().split('T')[0],
+              date: row.Date || fallbackDate,
               amount: Math.abs(amount),
               type,
               description: row.Description || 'Imported Transaction',

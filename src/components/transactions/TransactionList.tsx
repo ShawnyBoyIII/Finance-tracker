@@ -4,8 +4,7 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { useFinance } from '@/context/FinanceContext';
 import { TransactionType, Transaction } from '@/types';
 import { Trash2 } from 'lucide-react';
-import { format } from 'date-fns';
-import { COMMON_INPUT_CLASS } from '@/utils/constants';
+import { COMMON_INPUT_CLASS, formatISODate } from '@/utils/constants';
 
 const PAGE_SIZE = 50;
 
@@ -154,7 +153,7 @@ export default function TransactionList() {
               paginatedTransactions.map((t) => (
                 <tr key={t.id}>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {format(new Date(t.date), 'MMM d, yyyy')}
+                    {formatISODate(t.date)}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                     {t.description}

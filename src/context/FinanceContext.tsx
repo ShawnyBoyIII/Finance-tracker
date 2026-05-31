@@ -2,6 +2,7 @@
 
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { Transaction, Budget } from '@/types';
+import { v4 as uuidv4 } from 'uuid';
 
 interface FinanceContextType {
   transactions: Transaction[];
@@ -64,7 +65,7 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const addTransaction = (transaction: Omit<Transaction, 'id'>) => {
     const newTransaction: Transaction = {
       ...transaction,
-      id: crypto.randomUUID(),
+      id: uuidv4(),
     };
     setTransactions((prev) => [...prev, newTransaction]);
   };
@@ -83,7 +84,7 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const addTransactionsBulk = (newTransactions: Omit<Transaction, 'id'>[]) => {
     const transactionsWithIds: Transaction[] = newTransactions.map((t) => ({
       ...t,
-      id: crypto.randomUUID(),
+      id: uuidv4(),
     }));
     setTransactions((prev) => [...prev, ...transactionsWithIds]);
   };

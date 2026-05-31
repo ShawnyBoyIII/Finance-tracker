@@ -1,6 +1,7 @@
 import { TransactionType } from '@/types';
 
 import Tesseract from 'tesseract.js';
+import { v4 as uuidv4 } from 'uuid';
 
 export interface ParsedTransaction {
   id?: string;
@@ -115,7 +116,7 @@ export const parseTransactionsFromText = (text: string): ParsedTransaction[] => 
       const type: TransactionType = parsedAmount > 0 ? 'income' : 'expense';
 
       transactions.push({
-        id: crypto.randomUUID(), // Temporarily add an ID for rendering lists in staging area
+        id: uuidv4(), // Temporarily add an ID for rendering lists in staging area
         date: formattedDate,
         amount: Math.abs(parsedAmount),
         type,

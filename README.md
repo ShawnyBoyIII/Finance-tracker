@@ -50,6 +50,9 @@ This is where you log your financial activity.
 * **CSV Import:** Want to bulk-add data from your bank? Click the "Import CSV" button.
   * *Important:* Your CSV file **must** have headers matching these exact names: `Date, Amount, Description, Category`.
   * Positive amounts are treated as Income, and negative amounts are treated as Expenses.
+* **PDF Import (Experimental):** You can also upload PDF bank statements.
+  * The text will be extracted locally in your browser using OCR technology.
+  * **Privacy Guarantee:** No data is sent to any external server during this process. Everything runs locally on your device!
 * **Export CSV:** Need to back up your data or move to a new computer? Click "Export CSV" to download all your transactions securely.
 
 ### 3. Budgets 🎯

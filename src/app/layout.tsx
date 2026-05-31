@@ -6,8 +6,8 @@ import { FinanceProvider } from "@/context/FinanceContext";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Finance Tracker",
-  description: "A simple, free personal finance tracker",
+  title: "Free Budget Tracker",
+  description: "A free, easy-to-use, and private budget tracker that runs entirely in your browser.",
 };
 
 export default function RootLayout({

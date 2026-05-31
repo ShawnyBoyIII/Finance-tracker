@@ -1,6 +1,6 @@
-# 💰 Free Personal Financial Tracker
+# 💰 Free Budget Tracker
 
-Welcome to your free, private, and easy-to-use Personal Financial Tracker!
+Welcome to your free, private, and easy-to-use Free Budget Tracker!
 
 This application runs directly in your browser. All your financial data is saved locally on your device (`localStorage`), meaning it is 100% private, highly secure, and costs nothing to host or maintain.
 
@@ -14,9 +14,9 @@ If you are running this locally on your machine, follow these steps:
    Open the Terminal app on your Mac. You need to navigate to the folder where you downloaded the app using the `cd` (change directory) command.
    For example, if you downloaded and extracted it to your Downloads folder, run:
    ```bash
-   cd ~/Downloads/personal-financial-tracker
+   cd ~/Downloads/free-budget-tracker
    ```
-   *(Note: Replace `personal-financial-tracker` with the actual name of the folder if it's different)*
+   *(Note: Replace `free-budget-tracker` with the actual name of the folder if it's different)*
 
 2. **Install Dependencies:**
    Make sure you have [Node.js](https://nodejs.org/) installed. Then run:

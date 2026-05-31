@@ -7,7 +7,7 @@ export default function Navbar() {
         <div className="flex justify-between h-16">
           <div className="flex">
             <div className="flex-shrink-0 flex items-center">
-              <span className="font-bold text-xl text-indigo-600">FinanceTracker</span>
+              <span className="font-bold text-xl text-indigo-600">FreeBudgetTracker</span>
             </div>
             <div className="hidden sm:ml-6 sm:flex sm:space-x-8">
               <Link

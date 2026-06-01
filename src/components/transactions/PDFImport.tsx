@@ -5,7 +5,13 @@ import { useFinance } from '@/context/FinanceContext';
 import { extractImagesFromPdf, performOcrOnImages, parseTransactionsFromText, ParsedTransaction } from '@/utils/pdfOcr';
 import { Trash2 } from 'lucide-react';
 
-export default function PDFImport() {
+import { StatementType } from './ImportSection';
+
+interface PDFImportProps {
+  statementType: StatementType;
+}
+
+export default function PDFImport({ statementType }: PDFImportProps) {
   const { addTransactionsBulk } = useFinance();
   const [isProcessing, setIsProcessing] = useState(false);
   const [progress, setProgress] = useState(0);
@@ -36,7 +42,7 @@ export default function PDFImport() {
       });
 
       setProgress(95);
-      const transactions = parseTransactionsFromText(extractedText);
+      const transactions = parseTransactionsFromText(extractedText, statementType);
 
       if (transactions.length === 0) {
         setError('No valid transactions could be parsed from the PDF. It may not match expected formats or the OCR failed to read it clearly.');
@@ -67,10 +73,9 @@ export default function PDFImport() {
   };
 
   return (
-    <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100 mb-6">
-      <h3 className="text-lg font-medium text-gray-900 mb-4">Import Bank Statement (PDF)</h3>
+    <div>
       <p className="text-sm text-gray-500 mb-4">
-        Upload a PDF bank statement. The text will be extracted locally in your browser using OCR (no data is sent to a server). Note: This feature is experimental and works best with standard formats containing dates and amounts.
+        Upload a PDF. The text will be extracted locally in your browser using OCR (no data is sent to a server). Note: This feature is experimental and works best with standard formats containing dates and amounts.
       </p>
 
       {!isProcessing && stagedTransactions.length === 0 && (

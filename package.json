@@ -18,8 +18,7 @@
     "react": "^19",
     "react-dom": "^19",
     "recharts": "^3.8.1",
-    "tesseract.js": "^7.0.0",
-    "uuid": "^14.0.0"
+    "tesseract.js": "^7.0.0"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.3.5",
@@ -33,10 +32,11 @@
     "@types/papaparse": "^5.5.2",
     "@types/react": "^19",
     "@types/react-dom": "^19",
-    "@types/uuid": "^10.0.0",
     "@typescript-eslint/parser": "^8.60.0",
     "eslint": "^9.39.4",
     "eslint-config-next": "16.2.6",
+    "eslint-plugin-react": "^7.37.5",
+    "eslint-plugin-react-hooks": "^7.1.1",
     "globals": "^17.6.0",
     "jest": "^30.4.2",
     "jest-environment-jsdom": "^30.4.1",
@@ -46,5 +46,8 @@
     "ts-node": "^10.9.2",
     "typescript": "^6",
     "typescript-eslint": "^8.60.0"
+  },
+  "overrides": {
+    "postcss": "8.5.10"
   }
 }

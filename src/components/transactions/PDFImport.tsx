@@ -136,8 +136,8 @@ export default function PDFImport() {
                     <td className="px-6 py-4 text-sm text-gray-900">{t.description}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 capitalize">{t.type}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                      <span className={t.type === 'income' ? 'text-green-600' : 'text-red-600'}>
-                        {t.type === 'income' ? '+' : '-'}${t.amount.toFixed(2)}
+                      <span className={t.type === 'income' || (t.type === 'cc_payment' && t.amount > 0) ? 'text-green-600' : 'text-red-600'}>
+                        {t.type === 'cc_payment' && t.amount < 0 ? `-$${Math.abs(t.amount).toFixed(2)}` : `${t.type === 'income' || t.type === 'cc_payment' ? '+' : '-'}$${Math.abs(t.amount).toFixed(2)}`}
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">

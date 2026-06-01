@@ -51,11 +51,12 @@ function AddTransactionForm({
         <select value={type} onChange={e => setType(e.target.value as TransactionType)} className={COMMON_INPUT_CLASS}>
           <option value="expense">Expense</option>
           <option value="income">Income</option>
+          <option value="cc_payment">CC Payment</option>
         </select>
       </div>
       <div className="sm:col-span-1">
         <label className="block text-sm font-medium text-gray-700">Amount</label>
-        <input type="number" required step="0.01" min="0" value={amount} onChange={e => setAmount(e.target.value)} className={COMMON_INPUT_CLASS} />
+        <input type="number" required step="0.01" value={amount} onChange={e => setAmount(e.target.value)} className={COMMON_INPUT_CLASS} />
       </div>
       <div className="sm:col-span-1">
         <label className="block text-sm font-medium text-gray-700">Category</label>
@@ -165,10 +166,10 @@ export default function TransactionList() {
                   </td>
                   <td
                     className={`px-6 py-4 whitespace-nowrap text-sm font-medium ${
-                      t.type === 'income' ? 'text-green-600' : 'text-gray-900'
+                      t.type === 'income' || (t.type === 'cc_payment' && t.amount > 0) ? 'text-green-600' : 'text-gray-900'
                     }`}
                   >
-                    {t.type === 'income' ? '+' : '-'}${t.amount.toFixed(2)}
+                    {t.type === 'cc_payment' && t.amount < 0 ? `-$${Math.abs(t.amount).toFixed(2)}` : `${t.type === 'income' || t.type === 'cc_payment' ? '+' : '-'}$${Math.abs(t.amount).toFixed(2)}`}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                     <button onClick={() => deleteTransaction(t.id)} className="text-red-600 hover:text-red-900">

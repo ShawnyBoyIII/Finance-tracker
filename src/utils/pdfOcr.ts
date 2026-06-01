@@ -76,8 +76,8 @@ export const parseTransactionsFromText = (text: string): ParsedTransaction[] => 
   // Basic regex: Look for MM/DD or MM/DD/YYYY, followed by some description, followed by amount
   const lines = text.split('\n');
 
-  // Improved Regex: Allows for spaces, tabs between parts, and negative amounts
-  const transactionRegex = /^(\d{1,2}[/-]\d{1,2}(?:[/-]\d{2,4})?)\s+(.*?)\s+(-?\$?\s*\d+\.\d{2})$/i;
+  // Improved Regex: Allows for spaces, tabs between parts, negative amounts (including typographic dashes), and commas in the numbers
+  const transactionRegex = /^(\d{1,2}[/-]\d{1,2}(?:[/-]\d{2,4})?)\s+(.*?)\s+([-–—−]?\$?\s*[\d,]+\.\d{2})$/i;
 
   for (const line of lines) {
     const trimmedLine = line.trim();
@@ -87,7 +87,8 @@ export const parseTransactionsFromText = (text: string): ParsedTransaction[] => 
     if (match) {
       const [, dateStr, description, amountStr] = match;
 
-      const cleanAmountStr = amountStr.replace(/[$\s]/g, '');
+      // Normalize different types of dashes to standard hyphen-minus, remove spaces/dollars/commas
+      const cleanAmountStr = amountStr.replace(/[$\s,]/g, '').replace(/[–—−]/g, '-');
       const parsedAmount = parseFloat(cleanAmountStr);
       if (isNaN(parsedAmount)) continue;
 
@@ -110,15 +111,24 @@ export const parseTransactionsFromText = (text: string): ParsedTransaction[] => 
         // Leave formattedDate empty string if parsing fails
       }
 
-      // Default negative values to expenses, positive to income for simplicity,
-      // though banks usually list expenses as positive numbers. We'll default all to expenses
-      // if they don't explicitly signify income, but for this parser let's stick to sign = type
-      const type: TransactionType = parsedAmount > 0 ? 'income' : 'expense';
+      // Determine type based on amount sign and description keywords
+      const isPayment = description.toLowerCase().includes('payment');
+
+      let type: TransactionType = parsedAmount > 0 ? 'income' : 'expense';
+
+      if (isPayment) {
+        type = 'cc_payment';
+      } else if (parsedAmount < 0) {
+        // Some expenses might be negative without "payment" in the name,
+        // but typically standard expenses are positive on statements.
+        // We will default generic negatives to expenses unless they are CC payments
+        type = 'expense';
+      }
 
       transactions.push({
         id: uuidv4(), // Temporarily add an ID for rendering lists in staging area
         date: formattedDate,
-        amount: Math.abs(parsedAmount),
+        amount: type === 'cc_payment' ? parsedAmount : Math.abs(parsedAmount),
         type,
         description: description.trim() || 'OCR Transaction',
         category: 'Uncategorized',

@@ -2,6 +2,7 @@ import { TransactionType } from '@/types';
 
 import Tesseract from 'tesseract.js';
 import { v4 as uuidv4 } from 'uuid';
+import { StatementType } from '@/components/transactions/ImportSection';
 
 export interface ParsedTransaction {
   id?: string;
@@ -132,18 +133,25 @@ export const parseTransactionsFromText = (text: string): ParsedTransaction[] => 
         // Leave formattedDate empty string if parsing fails
       }
 
-      // Determine type based on amount sign and description keywords
+      let type: TransactionType = 'expense'; // Default to expense
       const isPayment = description.toLowerCase().includes('payment');
 
-      let type: TransactionType = parsedAmount > 0 ? 'income' : 'expense';
-
-      if (isPayment || (parsedAmount < 0 && isPayment)) {
-        type = 'cc_payment';
-      } else if (parsedAmount < 0) {
-        // Some expenses might be negative without "payment" in the name,
-        // but typically standard expenses are positive on statements.
-        // We will default generic negatives to expenses unless they are CC payments
-        type = 'expense';
+      if (statementType === 'credit_card') {
+        // Credit Card rules: + is expense (spent money), - is cc_payment (paying bill/refund)
+        if (parsedAmount > 0) {
+          type = 'expense';
+        } else {
+          type = 'cc_payment';
+        }
+      } else {
+        // Bank Statement rules: + is income, - is expense (or cc_payment if 'payment' in desc)
+        if (parsedAmount > 0) {
+          type = 'income';
+        } else if (isPayment) {
+          type = 'cc_payment';
+        } else {
+          type = 'expense';
+        }
       }
 
       transactions.push({

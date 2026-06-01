@@ -5,7 +5,13 @@ import Papa from 'papaparse';
 import { useFinance } from '@/context/FinanceContext';
 import { TransactionType } from '@/types';
 
-export default function CSVImport() {
+import { StatementType } from './ImportSection';
+
+interface CSVImportProps {
+  statementType: StatementType;
+}
+
+export default function CSVImport({ statementType }: CSVImportProps) {
   const { addTransactionsBulk } = useFinance();
   const [error, setError] = useState<string | null>(null);
 
@@ -28,9 +34,21 @@ export default function CSVImport() {
             const description = row.Description || 'Imported Transaction';
             const isPayment = description.toLowerCase().includes('payment');
 
-            let type: TransactionType = amount >= 0 ? 'income' : 'expense';
-            if (isPayment || (amount < 0 && isPayment)) {
-              type = 'cc_payment';
+            let type: TransactionType = 'expense';
+            if (statementType === 'credit_card') {
+              if (amount > 0) {
+                type = 'expense';
+              } else {
+                type = 'cc_payment';
+              }
+            } else {
+              if (amount > 0) {
+                type = 'income';
+              } else if (isPayment) {
+                type = 'cc_payment';
+              } else {
+                type = 'expense';
+              }
             }
 
             return {
@@ -56,10 +74,9 @@ export default function CSVImport() {
   };
 
   return (
-    <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100 mb-6">
-      <h3 className="text-lg font-medium text-gray-900 mb-4">Import CSV</h3>
+    <div>
       <p className="text-sm text-gray-500 mb-4">
-        Upload a CSV file with columns: <strong>Date, Amount, Description, Category</strong>. (Negative amounts will be marked as expenses).
+        Upload a CSV file with columns: <strong>Date, Amount, Description, Category</strong>. (Behavior depends on the selected statement type).
       </p>
       <input
         type="file"

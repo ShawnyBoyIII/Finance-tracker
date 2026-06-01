@@ -15,6 +15,9 @@ export default function Dashboard() {
     transactions.forEach((t) => {
       if (t.type === 'income') {
         income += t.amount;
+      } else if (t.type === 'cc_payment') {
+        // Balance increases because debt is reduced/paid off, handle amount gracefully
+        income += Math.abs(t.amount);
       } else {
         expense += t.amount;
         categories[t.category] = (categories[t.category] || 0) + t.amount;

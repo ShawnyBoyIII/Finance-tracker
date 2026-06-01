@@ -10,6 +10,7 @@ export interface ParsedTransaction {
   type: TransactionType;
   description: string;
   category: string;
+  institution?: string;
 }
 
 export const extractImagesFromPdf = async (file: File): Promise<string[]> => {
@@ -70,8 +71,29 @@ export const performOcrOnImages = async (images: string[], onProgress?: (progres
   return fullText;
 };
 
+const KNOWN_INSTITUTIONS = [
+  'Chase',
+  'Bank of America',
+  'Capital One',
+  'American Express',
+  'Wells Fargo',
+  'Discover',
+  'Citi'
+];
+
 export const parseTransactionsFromText = (text: string): ParsedTransaction[] => {
   const transactions: ParsedTransaction[] = [];
+
+  // Attempt to extract the institution from the full text
+  let detectedInstitution: string | undefined;
+  for (const inst of KNOWN_INSTITUTIONS) {
+    // Use word boundaries to prevent matching "Chase" inside "Purchase"
+    const regex = new RegExp(`\\b${inst}\\b`, 'i');
+    if (regex.test(text)) {
+      detectedInstitution = inst;
+      break;
+    }
+  }
 
   // Basic regex: Look for MM/DD or MM/DD/YYYY, followed by some description, followed by amount
   const lines = text.split('\n');
@@ -131,6 +153,7 @@ export const parseTransactionsFromText = (text: string): ParsedTransaction[] => 
         type,
         description: description.trim() || 'OCR Transaction',
         category: 'Uncategorized',
+        ...(detectedInstitution && { institution: detectedInstitution }),
       });
     }
   }

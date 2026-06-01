@@ -10,6 +10,7 @@ export interface ParsedTransaction {
   type: TransactionType;
   description: string;
   category: string;
+  institution?: string;
 }
 
 export const extractImagesFromPdf = async (file: File): Promise<string[]> => {
@@ -70,14 +71,35 @@ export const performOcrOnImages = async (images: string[], onProgress?: (progres
   return fullText;
 };
 
+const KNOWN_INSTITUTIONS = [
+  'Chase',
+  'Bank of America',
+  'Capital One',
+  'American Express',
+  'Wells Fargo',
+  'Discover',
+  'Citi'
+];
+
 export const parseTransactionsFromText = (text: string): ParsedTransaction[] => {
   const transactions: ParsedTransaction[] = [];
+
+  // Attempt to extract the institution from the full text
+  let detectedInstitution: string | undefined;
+  for (const inst of KNOWN_INSTITUTIONS) {
+    // Use word boundaries to prevent matching "Chase" inside "Purchase"
+    const regex = new RegExp(`\\b${inst}\\b`, 'i');
+    if (regex.test(text)) {
+      detectedInstitution = inst;
+      break;
+    }
+  }
 
   // Basic regex: Look for MM/DD or MM/DD/YYYY, followed by some description, followed by amount
   const lines = text.split('\n');
 
-  // Improved Regex: Allows for spaces, tabs between parts, negative amounts (including typographic dashes), and commas in the numbers
-  const transactionRegex = /^(\d{1,2}[/-]\d{1,2}(?:[/-]\d{2,4})?)\s+(.*?)\s+([-–—−]?\$?\s*[\d,]+\.\d{2})$/i;
+  // Improved Regex: Allows for spaces, tabs between parts, negative amounts, and commas in the numbers
+  const transactionRegex = /^(\d{1,2}[/-]\d{1,2}(?:[/-]\d{2,4})?)\s+(.*?)\s+(-?\$?\s*[\d,]+\.\d{2})$/i;
 
   for (const line of lines) {
     const trimmedLine = line.trim();
@@ -87,8 +109,7 @@ export const parseTransactionsFromText = (text: string): ParsedTransaction[] => 
     if (match) {
       const [, dateStr, description, amountStr] = match;
 
-      // Normalize different types of dashes to standard hyphen-minus, remove spaces/dollars/commas
-      const cleanAmountStr = amountStr.replace(/[$\s,]/g, '').replace(/[–—−]/g, '-');
+      const cleanAmountStr = amountStr.replace(/[$\s,]/g, '');
       const parsedAmount = parseFloat(cleanAmountStr);
       if (isNaN(parsedAmount)) continue;
 
@@ -116,7 +137,7 @@ export const parseTransactionsFromText = (text: string): ParsedTransaction[] => 
 
       let type: TransactionType = parsedAmount > 0 ? 'income' : 'expense';
 
-      if (isPayment) {
+      if (isPayment || (parsedAmount < 0 && isPayment)) {
         type = 'cc_payment';
       } else if (parsedAmount < 0) {
         // Some expenses might be negative without "payment" in the name,
@@ -132,6 +153,7 @@ export const parseTransactionsFromText = (text: string): ParsedTransaction[] => 
         type,
         description: description.trim() || 'OCR Transaction',
         category: 'Uncategorized',
+        ...(detectedInstitution && { institution: detectedInstitution }),
       });
     }
   }

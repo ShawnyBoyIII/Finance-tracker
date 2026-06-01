@@ -29,7 +29,7 @@ export default function CSVImport() {
             const isPayment = description.toLowerCase().includes('payment');
 
             let type: TransactionType = amount >= 0 ? 'income' : 'expense';
-            if (isPayment) {
+            if (isPayment || (amount < 0 && isPayment)) {
               type = 'cc_payment';
             }
 

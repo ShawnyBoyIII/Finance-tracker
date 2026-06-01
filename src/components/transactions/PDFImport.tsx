@@ -129,6 +129,7 @@ export default function PDFImport({ statementType }: PDFImportProps) {
                 <tr>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Description</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Institution</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Action</th>
@@ -139,6 +140,7 @@ export default function PDFImport({ statementType }: PDFImportProps) {
                   <tr key={t.id}>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{t.date}</td>
                     <td className="px-6 py-4 text-sm text-gray-900">{t.description}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{t.institution || 'Unknown'}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 capitalize">{t.type}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                       <span className={t.type === 'income' || (t.type === 'cc_payment' && t.amount > 0) ? 'text-green-600' : 'text-red-600'}>

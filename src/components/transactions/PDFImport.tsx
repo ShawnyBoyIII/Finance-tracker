@@ -3,7 +3,6 @@
 import React, { useState } from 'react';
 import { useFinance } from '@/context/FinanceContext';
 import { extractImagesFromPdf, performOcrOnImages, parseTransactionsFromText, ParsedTransaction } from '@/utils/pdfOcr';
-import { COMMON_INPUT_CLASS } from '@/utils/constants';
 import { Trash2 } from 'lucide-react';
 
 export default function PDFImport() {
@@ -61,7 +60,7 @@ export default function PDFImport() {
 
   const handleConfirmImport = () => {
     // Remove the temporary 'id' and import to context
-    const readyToImport = stagedTransactions.map(({ id, ...rest }) => rest);
+    const readyToImport = stagedTransactions.map(({ id: _, ...rest }) => rest);
     addTransactionsBulk(readyToImport);
     setStagedTransactions([]);
     alert(`Successfully imported ${readyToImport.length} transactions!`);

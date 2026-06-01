@@ -1,50 +1,49 @@
-import nextPlugin from "@next/eslint-plugin-next";
 import js from "@eslint/js";
-import globals from "globals";
-import tsParser from "@typescript-eslint/parser";
 import tseslint from "typescript-eslint";
+import nextPlugin from "@next/eslint-plugin-next";
+import reactPlugin from "eslint-plugin-react";
+import reactHooksPlugin from "eslint-plugin-react-hooks";
 
-export default [
+export default tseslint.config(
   js.configs.recommended,
   ...tseslint.configs.recommended,
   {
-    files: ["**/*.ts", "**/*.tsx", "**/*.js", "**/*.mjs", "**/*.cjs"],
     plugins: {
       "@next/next": nextPlugin,
+      "react": reactPlugin,
+      "react-hooks": reactHooksPlugin,
+    },
+    rules: {
+      ...nextPlugin.configs.recommended.rules,
+      ...nextPlugin.configs["core-web-vitals"].rules,
+      "@next/next/no-img-element": "off",
+      "react/react-in-jsx-scope": "off",
+      "@typescript-eslint/no-unused-vars": ["warn", {
+        "argsIgnorePattern": "^_",
+        "varsIgnorePattern": "^_",
+        "caughtErrorsIgnorePattern": "^_"
+      }],
+      "@typescript-eslint/no-explicit-any": "off"
     },
     languageOptions: {
-      parser: tsParser,
-      globals: {
-        ...globals.browser,
-        ...globals.node,
-        ...globals.jest,
-      },
       parserOptions: {
         ecmaFeatures: {
           jsx: true
         }
       }
     },
-    rules: {
-      ...nextPlugin.configs.recommended.rules,
-      ...nextPlugin.configs["core-web-vitals"].rules,
-      "@typescript-eslint/no-unused-vars": "warn",
-      "@typescript-eslint/no-explicit-any": "off",
-      "no-unused-vars": "off"
-    },
+    settings: {
+      react: {
+        version: "detect"
+      }
+    }
   },
   {
     ignores: [
-      ".next/**",
-      "node_modules/**",
-      "coverage/**",
-      "dist/**",
-      "build/**",
-      "postcss.config.mjs",
-      "eslint.config.mjs",
-      "jest.config.js",
-      "jest.setup.js",
-      "tailwind.config.ts"
+      ".next/",
+      "node_modules/",
+      "dist/",
+      "build/", "jest.config.js", "jest.setup.js"
     ]
   }
-];
+);

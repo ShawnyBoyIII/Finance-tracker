@@ -14,7 +14,7 @@ export interface ParsedTransaction {
 export const extractImagesFromPdf = async (file: File): Promise<string[]> => {
   // Dynamically import pdfjs-dist inside the function to ensure it only runs on the client
   const pdfjsLib = await import('pdfjs-dist');
-  pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.mjs`;
+  pdfjsLib.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjsLib.version}/build/pdf.worker.min.mjs`;
 
   const arrayBuffer = await file.arrayBuffer();
   const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
@@ -84,7 +84,7 @@ export const parseTransactionsFromText = (text: string): ParsedTransaction[] => 
 
     const match = trimmedLine.match(transactionRegex);
     if (match) {
-      const [_, dateStr, description, amountStr] = match;
+      const [, dateStr, description, amountStr] = match;
 
       const cleanAmountStr = amountStr.replace(/[$\s]/g, '');
       const parsedAmount = parseFloat(cleanAmountStr);
@@ -105,7 +105,7 @@ export const parseTransactionsFromText = (text: string): ParsedTransaction[] => 
                 }
             }
         }
-      } catch (e) {
+      } catch {
         // Leave formattedDate empty string if parsing fails
       }
 

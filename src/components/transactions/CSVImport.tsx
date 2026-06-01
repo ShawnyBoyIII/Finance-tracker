@@ -35,7 +35,7 @@ export default function CSVImport() {
           addTransactionsBulk(newTransactions);
           setError(null);
           alert('CSV Imported Successfully!');
-        } catch (e) {
+        } catch {
           setError('Failed to parse CSV. Ensure columns: Date, Amount, Description, Category');
         }
       },

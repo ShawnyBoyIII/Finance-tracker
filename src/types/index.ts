@@ -7,6 +7,7 @@ export interface Transaction {
   type: TransactionType;
   category: string;
   description: string;
+  institution?: string;
 }
 
 export interface Budget {

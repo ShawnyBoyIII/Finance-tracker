@@ -82,7 +82,7 @@ const KNOWN_INSTITUTIONS = [
   'Citi'
 ];
 
-export const parseTransactionsFromText = (text: string): ParsedTransaction[] => {
+export const parseTransactionsFromText = (text: string, statementType: StatementType): ParsedTransaction[] => {
   const transactions: ParsedTransaction[] = [];
 
   // Attempt to extract the institution from the full text
@@ -135,8 +135,12 @@ export const parseTransactionsFromText = (text: string): ParsedTransaction[] => 
 
       let type: TransactionType = 'expense'; // Default to expense
       const isPayment = description.toLowerCase().includes('payment');
+      const isAutoPayment = description.toLowerCase().includes('automatic payment - thank you');
 
-      if (statementType === 'credit_card') {
+      if (isAutoPayment) {
+        // Force these matches to be a CC payment regardless of sign or statement type
+        type = 'cc_payment';
+      } else if (statementType === 'credit_card') {
         // Credit Card rules: + is expense (spent money), - is cc_payment (paying bill/refund)
         if (parsedAmount > 0) {
           type = 'expense';

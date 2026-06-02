@@ -150,7 +150,9 @@ export default function PDFImport({ statementType }: PDFImportProps) {
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                       <button
                         onClick={() => handleRemoveStaged(t.id!)}
-                        className="text-red-500 hover:text-red-700"
+                        className="text-red-500 hover:text-red-700 rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500"
+                        aria-label="Remove staged transaction"
+                        title="Remove staged transaction"
                       >
                         <Trash2 className="w-4 h-4" />
                       </button>

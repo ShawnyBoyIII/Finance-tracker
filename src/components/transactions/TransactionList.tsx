@@ -178,7 +178,12 @@ export default function TransactionList() {
                     {t.type === 'cc_payment' && t.amount < 0 ? `-$${Math.abs(t.amount).toFixed(2)}` : `${t.type === 'income' || t.type === 'cc_payment' ? '+' : '-'}$${Math.abs(t.amount).toFixed(2)}`}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                    <button onClick={() => deleteTransaction(t.id)} className="text-red-600 hover:text-red-900">
+                    <button
+                      onClick={() => deleteTransaction(t.id)}
+                      className="text-red-600 hover:text-red-900 rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500"
+                      aria-label="Delete transaction"
+                      title="Delete transaction"
+                    >
                       <Trash2 className="w-4 h-4" />
                     </button>
                   </td>

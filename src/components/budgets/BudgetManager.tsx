@@ -111,7 +111,11 @@ export default function BudgetManager() {
                       ${budget.spent.toFixed(2)} / ${budget.amount.toFixed(2)}
                     </span>
                     <button
-                      onClick={() => deleteBudget(budget.category)}
+                      onClick={() => {
+                        if (window.confirm('Are you sure you want to delete this budget?')) {
+                          deleteBudget(budget.category);
+                        }
+                      }}
                       className="text-gray-400 hover:text-red-600 rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500"
                       aria-label="Delete budget"
                       title="Delete budget"

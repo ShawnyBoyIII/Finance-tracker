@@ -179,7 +179,11 @@ export default function TransactionList() {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                     <button
-                      onClick={() => deleteTransaction(t.id)}
+                      onClick={() => {
+                        if (window.confirm('Are you sure you want to delete this transaction?')) {
+                          deleteTransaction(t.id);
+                        }
+                      }}
                       className="text-red-600 hover:text-red-900 rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500"
                       aria-label="Delete transaction"
                       title="Delete transaction"

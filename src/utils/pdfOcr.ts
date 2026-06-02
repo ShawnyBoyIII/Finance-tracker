@@ -82,7 +82,7 @@ const KNOWN_INSTITUTIONS = [
   'Citi'
 ];
 
-export const parseTransactionsFromText = (text: string): ParsedTransaction[] => {
+export const parseTransactionsFromText = (text: string, statementType: StatementType): ParsedTransaction[] => {
   const transactions: ParsedTransaction[] = [];
 
   // Attempt to extract the institution from the full text
@@ -100,7 +100,7 @@ export const parseTransactionsFromText = (text: string): ParsedTransaction[] => 
   const lines = text.split('\n');
 
   // Improved Regex: Allows for spaces, tabs between parts, negative amounts, and commas in the numbers
-  const transactionRegex = /^(\d{1,2}[/-]\d{1,2}(?:[/-]\d{2,4})?)\s+(.*?)\s+(-?\$?\s*[\d,]+\.\d{2})$/i;
+  const transactionRegex = /^(\d{1,2}[/-]\d{1,2}(?:[/-]\d{2,4})?)\s+(.*?)\s*([-\u2013\u2014\u2212]?(?:\$\s*[\d,]+|[\d,]+)\.\d{2})$/i;
 
   for (const line of lines) {
     const trimmedLine = line.trim();
@@ -110,7 +110,9 @@ export const parseTransactionsFromText = (text: string): ParsedTransaction[] => 
     if (match) {
       const [, dateStr, description, amountStr] = match;
 
-      const cleanAmountStr = amountStr.replace(/[$\s,]/g, '');
+      let cleanAmountStr = amountStr.replace(/[$\s,]/g, '');
+      // Replace typographic dashes with standard hyphen for parseFloat
+      cleanAmountStr = cleanAmountStr.replace(/[\u2013\u2014\u2212]/g, '-');
       const parsedAmount = parseFloat(cleanAmountStr);
       if (isNaN(parsedAmount)) continue;
 

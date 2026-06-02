@@ -102,6 +102,10 @@ export const parseTransactionsFromText = (text: string, statementType: Statement
   // Improved Regex: Allows for spaces, tabs between parts, negative amounts, and commas in the numbers
   const transactionRegex = /^(\d{1,2}[/-]\d{1,2}(?:[/-]\d{2,4})?)\s+(.*?)\s*([-\u2013\u2014\u2212]?(?:\$\s*[\d,]+|[\d,]+)\.\d{2})$/i;
 
+  // ⚡ Bolt: Hoist currentYear calculation outside the loop.
+  // We avoid repeatedly instantiating new Date() for each transaction row.
+  const currentYear = new Date().getFullYear().toString();
+
   for (const line of lines) {
     const trimmedLine = line.trim();
     if (!trimmedLine) continue;
@@ -116,23 +120,17 @@ export const parseTransactionsFromText = (text: string, statementType: Statement
       const parsedAmount = parseFloat(cleanAmountStr);
       if (isNaN(parsedAmount)) continue;
 
+      // ⚡ Bolt: Fast string parsing instead of expensive new Date() object instantiation.
       let formattedDate = '';
-      try {
-        const parsedDate = new Date(dateStr);
-        if (!isNaN(parsedDate.getTime())) {
-          formattedDate = parsedDate.toISOString().split('T')[0];
-        } else {
-            // Handle MM/DD by appending current year
-            if(dateStr.length <= 5) {
-                const currentYear = new Date().getFullYear();
-                const d = new Date(`${dateStr}/${currentYear}`);
-                if (!isNaN(d.getTime())) {
-                    formattedDate = d.toISOString().split('T')[0];
-                }
-            }
-        }
-      } catch {
-        // Leave formattedDate empty string if parsing fails
+      const dateParts = dateStr.split(/[/-]/);
+
+      if (dateParts.length === 2) {
+        const [m, d] = dateParts;
+        formattedDate = `${currentYear}-${m.padStart(2, '0')}-${d.padStart(2, '0')}`;
+      } else if (dateParts.length === 3) {
+        const [m, d, y] = dateParts;
+        const fullYear = y.length === 2 ? `20${y}` : y;
+        formattedDate = `${fullYear}-${m.padStart(2, '0')}-${d.padStart(2, '0')}`;
       }
 
       let type: TransactionType = 'expense'; // Default to expense

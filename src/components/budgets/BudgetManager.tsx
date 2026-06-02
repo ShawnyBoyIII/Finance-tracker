@@ -112,7 +112,9 @@ export default function BudgetManager() {
                     </span>
                     <button
                       onClick={() => deleteBudget(budget.category)}
-                      className="text-gray-400 hover:text-red-600"
+                      className="text-gray-400 hover:text-red-600 rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500"
+                      aria-label="Delete budget"
+                      title="Delete budget"
                     >
                       <Trash2 className="w-4 h-4" />
                     </button>

@@ -82,7 +82,7 @@ const KNOWN_INSTITUTIONS = [
   'Citi'
 ];
 
-export const parseTransactionsFromText = (text: string): ParsedTransaction[] => {
+export const parseTransactionsFromText = (text: string, statementType: StatementType): ParsedTransaction[] => {
   const transactions: ParsedTransaction[] = [];
 
   // Attempt to extract the institution from the full text

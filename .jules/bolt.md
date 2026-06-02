@@ -27,3 +27,6 @@
 ## 2024-06-01 - Extreme Overhead of new Date() in Tight Loops (Re-applied)
 **Learning:** Instantiating `new Date()` inside loops parsing potentially hundreds of lines (like in `parseTransactionsFromText` for OCR) creates severe execution time overhead. For simple ISO date strings (`YYYY-MM-DD`) from MM/DD/YYYY inputs, executing a fast string parse (`split`, `padStart`) takes ~34ms for 100k iterations compared to ~154ms for `new Date()`. Additionally, repeating dynamic logic like `new Date().getFullYear()` in every loop iteration is wasteful.
 **Action:** Replace `new Date(dateStr)` object instantiation inside tight parsing loops with fast string parsing where standard string formats (`YYYY-MM-DD`) are required. Hoist single-calculation constants (like `currentYear`) outside the loop.
+## 2024-06-02 - O(N) String Operations in Tight Loops
+**Learning:** Calling `.toLowerCase()` inside a high-iteration loop (like pre-aggregating transactions during a React render cycle) introduces significant string allocation and execution time overhead for large data sets (e.g., 100k rows).
+**Action:** When aggregating or indexing data that requires string transformation (like case-insensitive matching), aggregate using the raw (case-sensitive) keys first (O(N)), and then apply the transformation only to the unique aggregated keys (O(K), where K << N).

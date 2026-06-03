@@ -82,7 +82,7 @@ const KNOWN_INSTITUTIONS = [
   'Citi'
 ];
 
-export const parseTransactionsFromText = (text: string, statementType: StatementType = 'credit_card'): ParsedTransaction[] => {
+export const parseTransactionsFromText = (text: string, statementType: StatementType): ParsedTransaction[] => {
   const transactions: ParsedTransaction[] = [];
 
   // Attempt to extract the institution from the full text
@@ -100,9 +100,12 @@ export const parseTransactionsFromText = (text: string, statementType: Statement
   const dateRegex = /(?:\b|^)(\d{1,2}[/-]\d{1,2}(?:[/-]\d{2,4})?)\s+/g;
   const splitText = text.split(dateRegex);
 
-  for (let i = 1; i < splitText.length; i += 2) {
-    const dateStr = splitText[i];
-    let rest = splitText[i+1];
+  // Improved Regex: Allows for spaces, tabs between parts, negative amounts, and commas in the numbers
+  const transactionRegex = /^(\d{1,2}[/-]\d{1,2}(?:[/-]\d{2,4})?)\s+(.*?)\s*([-\u2013\u2014\u2212]?(?:\$\s*[\d,]+|[\d,]+)\.\d{2})$/i;
+
+  // ⚡ Bolt: Hoist currentYear calculation outside the loop.
+  // We avoid repeatedly instantiating new Date() for each transaction row.
+  const currentYear = new Date().getFullYear().toString();
 
     if (!rest) continue;
 
@@ -134,35 +137,33 @@ export const parseTransactionsFromText = (text: string, statementType: Statement
         continue;
       }
 
-      // Replace typographic dashes with standard minus sign
-      amountStr = amountStr.replace(/[\u2013\u2014\u2212]/g, '-');
-      const cleanAmountStr = amountStr.replace(/[$\s,]/g, '');
+      let cleanAmountStr = amountStr.replace(/[$\s,]/g, '');
+      // Replace typographic dashes with standard hyphen for parseFloat
+      cleanAmountStr = cleanAmountStr.replace(/[\u2013\u2014\u2212]/g, '-');
       const parsedAmount = parseFloat(cleanAmountStr);
       if (isNaN(parsedAmount)) continue;
 
+      // ⚡ Bolt: Fast string parsing instead of expensive new Date() object instantiation.
       let formattedDate = '';
-      try {
-        const parsedDate = new Date(dateStr);
-        if (!isNaN(parsedDate.getTime())) {
-          formattedDate = parsedDate.toISOString().split('T')[0];
-        } else {
-            // Handle MM/DD by appending current year
-            if(dateStr.length <= 5) {
-                const currentYear = new Date().getFullYear();
-                const d = new Date(`${dateStr}/${currentYear}`);
-                if (!isNaN(d.getTime())) {
-                    formattedDate = d.toISOString().split('T')[0];
-                }
-            }
-        }
-      } catch {
-        // Leave formattedDate empty string if parsing fails
+      const dateParts = dateStr.split(/[/-]/);
+
+      if (dateParts.length === 2) {
+        const [m, d] = dateParts;
+        formattedDate = `${currentYear}-${m.padStart(2, '0')}-${d.padStart(2, '0')}`;
+      } else if (dateParts.length === 3) {
+        const [m, d, y] = dateParts;
+        const fullYear = y.length === 2 ? `20${y}` : y;
+        formattedDate = `${fullYear}-${m.padStart(2, '0')}-${d.padStart(2, '0')}`;
       }
 
       let type: TransactionType = 'expense'; // Default to expense
       const isPayment = description.toLowerCase().includes('payment');
+      const isAutoPayment = description.toLowerCase().includes('automatic payment - thank you');
 
-      if (statementType === 'credit_card') {
+      if (isAutoPayment) {
+        // Force these matches to be a CC payment regardless of sign or statement type
+        type = 'cc_payment';
+      } else if (statementType === 'credit_card') {
         // Credit Card rules: + is expense (spent money), - is cc_payment (paying bill/refund)
         if (parsedAmount > 0) {
           type = 'expense';

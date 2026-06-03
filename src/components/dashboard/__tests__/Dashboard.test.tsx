@@ -70,13 +70,13 @@ describe('Dashboard Component', () => {
     render(<Dashboard />);
 
     // Total Income = 1000 + 500 = 1500
-    expect(screen.getByText('Total Income').nextElementSibling).toHaveTextContent('$1500.00');
+    expect(screen.getByText('Total Income').nextElementSibling).toHaveTextContent('$1,500.00');
 
     // Total Expenses = 200 + 100 + 50 = 350
     expect(screen.getByText('Total Expenses').nextElementSibling).toHaveTextContent('$350.00');
 
     // Total Balance = 1500 - 350 = 1150
-    expect(screen.getByText('Total Balance').nextElementSibling).toHaveTextContent('$1150.00');
+    expect(screen.getByText('Total Balance').nextElementSibling).toHaveTextContent('$1,150.00');
 
     // Ensure empty state message is not shown
     expect(screen.queryByText('No expense data available. Add some transactions to see charts.')).not.toBeInTheDocument();
@@ -101,7 +101,7 @@ describe('Dashboard Component', () => {
     render(<Dashboard />);
 
     const balanceElement = screen.getByText('Total Balance').nextElementSibling;
-    expect(balanceElement).toHaveTextContent('$-500.00');
+    expect(balanceElement).toHaveTextContent('-$500.00');
     // Ensure it has the red text class for negative balance
     expect(balanceElement).toHaveClass('text-red-600');
   });

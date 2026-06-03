@@ -1,7 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { Transaction, Budget } from '@/types';
+import { Transaction, Budget, SalarySchedule } from '@/types';
 import { v4 as uuidv4 } from 'uuid';
 
 interface FinanceContextType {
@@ -13,22 +13,27 @@ interface FinanceContextType {
   addTransactionsBulk: (transactions: Omit<Transaction, 'id'>[]) => void;
   updateBudget: (category: string, amount: number) => void;
   deleteBudget: (category: string) => void;
+  salarySchedule: SalarySchedule | null;
+  setSalarySchedule: (schedule: SalarySchedule | null) => void;
 }
 
 const FinanceContext = createContext<FinanceContextType | undefined>(undefined);
 
 const LOCAL_STORAGE_TRANSACTIONS_KEY = 'finance_tracker_transactions';
 const LOCAL_STORAGE_BUDGETS_KEY = 'finance_tracker_budgets';
+const LOCAL_STORAGE_SALARY_KEY = 'finance_tracker_salary_schedule';
 
 export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [budgets, setBudgets] = useState<Budget[]>([]);
+  const [salarySchedule, setSalarySchedule] = useState<SalarySchedule | null>(null);
   const [isLoaded, setIsLoaded] = useState(false);
 
   // Load from local storage on mount
   useEffect(() => {
     const storedTransactions = localStorage.getItem(LOCAL_STORAGE_TRANSACTIONS_KEY);
     const storedBudgets = localStorage.getItem(LOCAL_STORAGE_BUDGETS_KEY);
+    const storedSalarySchedule = localStorage.getItem(LOCAL_STORAGE_SALARY_KEY);
 
     if (storedTransactions) {
       try {
@@ -43,6 +48,14 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
         setBudgets(JSON.parse(storedBudgets));
       } catch (e) {
         console.error("Failed to parse budgets", e);
+      }
+    }
+
+    if (storedSalarySchedule) {
+      try {
+        setSalarySchedule(JSON.parse(storedSalarySchedule));
+      } catch (e) {
+        console.error("Failed to parse salary schedule", e);
       }
     }
 
@@ -61,6 +74,16 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
       localStorage.setItem(LOCAL_STORAGE_BUDGETS_KEY, JSON.stringify(budgets));
     }
   }, [budgets, isLoaded]);
+
+  useEffect(() => {
+    if (isLoaded) {
+      if (salarySchedule) {
+        localStorage.setItem(LOCAL_STORAGE_SALARY_KEY, JSON.stringify(salarySchedule));
+      } else {
+        localStorage.removeItem(LOCAL_STORAGE_SALARY_KEY);
+      }
+    }
+  }, [salarySchedule, isLoaded]);
 
   const addTransaction = (transaction: Omit<Transaction, 'id'>) => {
     const newTransaction: Transaction = {
@@ -114,6 +137,8 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
         addTransactionsBulk,
         updateBudget,
         deleteBudget,
+        salarySchedule,
+        setSalarySchedule,
       }}
     >
       {children}

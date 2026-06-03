@@ -3,38 +3,24 @@
 import React, { useMemo } from 'react';
 import { useFinance } from '@/context/FinanceContext';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from 'recharts';
+import SalaryPlanner from './SalaryPlanner';
+import { summarizeTransactions, formatCurrency } from '@/utils/finance';
+import { getProjectedIncome } from '@/utils/salary';
 
 export default function Dashboard() {
-  const { transactions } = useFinance();
+  const { transactions, salarySchedule } = useFinance();
 
-  const { totalIncome, totalExpense, balance, expensesByCategory } = useMemo(() => {
-    let income = 0;
-    let expense = 0;
-    const categories: Record<string, number> = {};
+  const { totalIncome, totalExpense, balance, expensesByCategory } = useMemo(
+    () => summarizeTransactions(transactions),
+    [transactions]
+  );
 
-    transactions.forEach((t) => {
-      if (t.type === 'income') {
-        income += t.amount;
-      } else if (t.type === 'cc_payment') {
-        // Balance increases because debt is reduced/paid off, handle amount gracefully
-        income += Math.abs(t.amount);
-      } else {
-        expense += t.amount;
-        categories[t.category] = (categories[t.category] || 0) + t.amount;
-      }
-    });
+  const projectedIncome30Days = useMemo(
+    () => getProjectedIncome(salarySchedule, 30),
+    [salarySchedule]
+  );
 
-    const expensesByCategoryData = Object.entries(categories)
-      .map(([name, value]) => ({ name, value }))
-      .sort((a, b) => b.value - a.value);
-
-    return {
-      totalIncome: income,
-      totalExpense: expense,
-      balance: income - expense,
-      expensesByCategory: expensesByCategoryData,
-    };
-  }, [transactions]);
+  const safeToSpend = balance + projectedIncome30Days;
 
   const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8', '#82ca9d', '#ffc658'];
 
@@ -43,26 +29,35 @@ export default function Dashboard() {
       <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
         <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
           <h3 className="text-sm font-medium text-gray-500">Total Balance</h3>
           <p className={`text-3xl font-bold mt-2 ${balance >= 0 ? 'text-gray-900' : 'text-red-600'}`}>
-            ${balance.toFixed(2)}
+            {formatCurrency(balance)}
           </p>
+        </div>
+        <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
+          <h3 className="text-sm font-medium text-gray-500">Safe to Spend</h3>
+          <p className={`text-3xl font-bold mt-2 ${safeToSpend >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
+            {formatCurrency(safeToSpend)}
+          </p>
+          <p className="text-xs text-gray-500 mt-1">Includes the next 30 days of paychecks, if you set one.</p>
         </div>
         <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
           <h3 className="text-sm font-medium text-gray-500">Total Income</h3>
           <p className="text-3xl font-bold mt-2 text-green-600">
-            ${totalIncome.toFixed(2)}
+            {formatCurrency(totalIncome)}
           </p>
         </div>
         <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
           <h3 className="text-sm font-medium text-gray-500">Total Expenses</h3>
           <p className="text-3xl font-bold mt-2 text-red-600">
-            ${totalExpense.toFixed(2)}
+            {formatCurrency(totalExpense)}
           </p>
         </div>
       </div>
+
+      <SalaryPlanner />
 
       {/* Charts */}
       <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100">

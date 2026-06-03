@@ -14,3 +14,8 @@ export interface Budget {
   category: string;
   amount: number;
 }
+
+export interface SalarySchedule {
+  amount: number;
+  nextPayDate: string;
+}

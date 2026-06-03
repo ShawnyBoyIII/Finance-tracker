@@ -9,3 +9,7 @@
 ## 2023-10-27 - File Input Accessibility
 **Learning:** File upload inputs (`<input type="file" />`) lacking associated labels or ARIA attributes can be confusing for screen reader users, who might not understand what to upload. Additionally, native file inputs often lack visible focus states when styled with utility classes like Tailwind.
 **Action:** Always add descriptive `aria-label`s to file inputs that aren't explicitly bound to an `<label>`. Also, ensure custom-styled file inputs include explicit keyboard focus states (`focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 rounded`) for accessible keyboard navigation.
+
+## 2023-10-27 - Visual Required Indicators and Focus Rings
+**Learning:** Required form inputs lacked visual indicators in labels, relying only on HTML5 validation, which can be easily missed. Furthermore, some key action buttons ("Save", "Cancel", "Add Manual Transaction") lacked distinct focus rings, hindering keyboard navigation.
+**Action:** Always append visually hidden but semantic required indicators (e.g., `<span className="text-red-500 ml-1" aria-hidden="true">*</span>`) to labels of `required` inputs. Ensure interactive elements like buttons have explicit focus states, utilizing standard Tailwind utility classes like `focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-indigo-500` to guarantee visibility across different backgrounds.

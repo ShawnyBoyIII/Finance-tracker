@@ -64,7 +64,7 @@ export default function BudgetManager() {
         <h3 className="text-lg font-medium text-gray-900 mb-4">Set a Budget</h3>
         <form onSubmit={handleAddBudget} className="flex gap-4 items-end">
           <div className="flex-1">
-            <label className="block text-sm font-medium text-gray-700">Category Name</label>
+            <label className="block text-sm font-medium text-gray-700">Category Name<span className="text-red-500 ml-1" aria-hidden="true">*</span></label>
             <input
               type="text"
               required
@@ -75,7 +75,7 @@ export default function BudgetManager() {
             />
           </div>
           <div className="flex-1">
-            <label className="block text-sm font-medium text-gray-700">Monthly Limit ($)</label>
+            <label className="block text-sm font-medium text-gray-700">Monthly Limit ($)<span className="text-red-500 ml-1" aria-hidden="true">*</span></label>
             <input
               type="number"
               required
@@ -89,7 +89,7 @@ export default function BudgetManager() {
           </div>
           <button
             type="submit"
-            className="mb-0.5 bg-indigo-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-indigo-700"
+            className="mb-0.5 bg-indigo-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-indigo-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-indigo-500"
           >
             Save Budget
           </button>

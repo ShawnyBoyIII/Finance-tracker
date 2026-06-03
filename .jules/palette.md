@@ -5,3 +5,7 @@
 ## 2023-10-27 - Confirmation Dialogs for Destructive Actions
 **Learning:** Destructive actions, such as deleting transactions or budgets, were executing immediately upon clicking the delete icon button. This could lead to accidental data loss, creating a poor user experience, especially since there is no "undo" functionality.
 **Action:** Always wrap destructive actions (like deletions) with a confirmation dialog (`window.confirm`) to ensure the user intentionally meant to perform the action.
+
+## 2023-10-27 - File Input Accessibility
+**Learning:** File upload inputs (`<input type="file" />`) lacking associated labels or ARIA attributes can be confusing for screen reader users, who might not understand what to upload. Additionally, native file inputs often lack visible focus states when styled with utility classes like Tailwind.
+**Action:** Always add descriptive `aria-label`s to file inputs that aren't explicitly bound to an `<label>`. Also, ensure custom-styled file inputs include explicit keyboard focus states (`focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 rounded`) for accessible keyboard navigation.

@@ -23,12 +23,21 @@ export default function BudgetManager() {
   // This significantly improves performance when the transactions array grows large.
   const budgetProgress = useMemo(() => {
     // 1. Pre-calculate total expenses by category (O(N) operation)
-    const categorySpentMap: Record<string, number> = {};
-    for (const t of transactions) {
+    // To avoid expensive string transformations (.toLowerCase()) on the main thread
+    // during high-iteration list renders, we first aggregate by the raw key using a fast standard for loop.
+    const rawCategorySpentMap: Record<string, number> = {};
+    for (let i = 0; i < transactions.length; i++) {
+      const t = transactions[i];
       if (t.type === 'expense') {
-        const categoryKey = t.category.toLowerCase();
-        categorySpentMap[categoryKey] = (categorySpentMap[categoryKey] || 0) + t.amount;
+        rawCategorySpentMap[t.category] = (rawCategorySpentMap[t.category] || 0) + t.amount;
       }
+    }
+
+    // Then, we apply .toLowerCase() only to the resulting much smaller set of unique keys.
+    const categorySpentMap: Record<string, number> = {};
+    for (const [key, amount] of Object.entries(rawCategorySpentMap)) {
+      const lowerKey = key.toLowerCase();
+      categorySpentMap[lowerKey] = (categorySpentMap[lowerKey] || 0) + amount;
     }
 
     // 2. Map budgets to their progress (O(M) operation)

@@ -96,8 +96,9 @@ export const parseTransactionsFromText = (text: string, statementType: Statement
     }
   }
 
-  // Basic regex: Look for MM/DD or MM/DD/YYYY, followed by some description, followed by amount
-  const lines = text.split('\n');
+  // Split text by date-like patterns to handle OCR outputs where newlines are missing
+  const dateRegex = /(?:\b|^)(\d{1,2}[/-]\d{1,2}(?:[/-]\d{2,4})?)\s+/g;
+  const splitText = text.split(dateRegex);
 
   // Improved Regex: Allows for spaces, tabs between parts, negative amounts, and commas in the numbers
   const transactionRegex = /^(\d{1,2}[/-]\d{1,2}(?:[/-]\d{2,4})?)\s+(.*?)\s*([-\u2013\u2014\u2212]?(?:\$\s*[\d,]+|[\d,]+)\.\d{2})$/i;
@@ -106,13 +107,35 @@ export const parseTransactionsFromText = (text: string, statementType: Statement
   // We avoid repeatedly instantiating new Date() for each transaction row.
   const currentYear = new Date().getFullYear().toString();
 
-  for (const line of lines) {
-    const trimmedLine = line.trim();
-    if (!trimmedLine) continue;
+    if (!rest) continue;
 
-    const match = trimmedLine.match(transactionRegex);
+    // Clean up leading spaces/newlines
+    rest = rest.replace(/^\s+/, '');
+
+    // Assuming description is at most 150 characters long before we see an amount.
+    // Handles typographic dashes (which look like negative signs) by only matching hyphens attached to numbers/dollar signs
+    const amountRegex = /^([^]{1,150}?)\s+([-\u2013\u2014\u2212]?\$?\s*[\d,]+\.\d{2})(?:\s|$)/;
+    const match = rest.match(amountRegex);
+
     if (match) {
-      const [, dateStr, description, amountStr] = match;
+      const description = match[1].trim();
+      let amountStr = match[2];
+
+      // Filter out false positives common in statements
+      const lowerDesc = description.toLowerCase();
+      if (
+        lowerDesc.includes('balance') ||
+        lowerDesc.includes('payment due') ||
+        lowerDesc.includes('statement') ||
+        description.startsWith('$')
+      ) {
+        continue;
+      }
+
+      // Further filter if description doesn't contain any letters
+      if (!/[a-zA-Z]/.test(description)) {
+        continue;
+      }
 
       let cleanAmountStr = amountStr.replace(/[$\s,]/g, '');
       // Replace typographic dashes with standard hyphen for parseFloat

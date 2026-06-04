@@ -106,7 +106,13 @@ export const parseTransactionsFromText = (text: string, statementType: Statement
   // ⚡ Bolt: Hoist currentYear calculation outside the loop.
   // We avoid repeatedly instantiating new Date() for each transaction row.
   const currentYear = new Date().getFullYear().toString();
+  const ignoreDescRegex = /balance|payment due|statement/i;
+  const paymentRegex = /payment/i;
+  const autoPaymentRegex = /automatic payment - thank you/i;
 
+  for (let i = 1; i < splitText.length; i += 2) {
+    const dateStr = splitText[i];
+    let rest = splitText[i + 1];
     if (!rest) continue;
 
     // Clean up leading spaces/newlines
@@ -119,14 +125,11 @@ export const parseTransactionsFromText = (text: string, statementType: Statement
 
     if (match) {
       const description = match[1].trim();
-      let amountStr = match[2];
+      const amountStr = match[2];
 
       // Filter out false positives common in statements
-      const lowerDesc = description.toLowerCase();
       if (
-        lowerDesc.includes('balance') ||
-        lowerDesc.includes('payment due') ||
-        lowerDesc.includes('statement') ||
+        ignoreDescRegex.test(description) ||
         description.startsWith('$')
       ) {
         continue;
@@ -157,8 +160,8 @@ export const parseTransactionsFromText = (text: string, statementType: Statement
       }
 
       let type: TransactionType = 'expense'; // Default to expense
-      const isPayment = description.toLowerCase().includes('payment');
-      const isAutoPayment = description.toLowerCase().includes('automatic payment - thank you');
+      const isPayment = paymentRegex.test(description);
+      const isAutoPayment = autoPaymentRegex.test(description);
 
       if (isAutoPayment) {
         // Force these matches to be a CC payment regardless of sign or statement type

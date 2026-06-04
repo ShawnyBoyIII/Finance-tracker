@@ -27,12 +27,13 @@ export default function CSVImport({ statementType }: CSVImportProps) {
           // ⚡ Bolt: Hoist Date instantiation outside the map loop.
           // Calling new Date() for potentially thousands of missing rows is extremely slow.
           const fallbackDate = new Date().toISOString().split('T')[0];
+          const paymentRegex = /payment/i;
 
           const newTransactions = results.data.map((row: any) => {
             // Very basic mapping, expecting columns: Date, Amount, Description, Category
             const amount = parseFloat(row.Amount || '0');
             const description = row.Description || 'Imported Transaction';
-            const isPayment = description.toLowerCase().includes('payment');
+            const isPayment = paymentRegex.test(description);
 
             let type: TransactionType = 'expense';
             if (statementType === 'credit_card') {

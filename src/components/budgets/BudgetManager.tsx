@@ -25,7 +25,7 @@ export default function BudgetManager() {
     // 1. Pre-calculate total expenses by category (O(N) operation)
     // To avoid expensive string transformations (.toLowerCase()) on the main thread
     // during high-iteration list renders, we first aggregate by the raw key using a fast standard for loop.
-    const rawCategorySpentMap: Record<string, number> = {};
+    const rawCategorySpentMap: Record<string, number> = Object.create(null);
     for (let i = 0; i < transactions.length; i++) {
       const t = transactions[i];
       if (t.type === 'expense') {
@@ -34,7 +34,7 @@ export default function BudgetManager() {
     }
 
     // Then, we apply .toLowerCase() only to the resulting much smaller set of unique keys.
-    const categorySpentMap: Record<string, number> = {};
+    const categorySpentMap: Record<string, number> = Object.create(null);
     for (const [key, amount] of Object.entries(rawCategorySpentMap)) {
       const lowerKey = key.toLowerCase();
       categorySpentMap[lowerKey] = (categorySpentMap[lowerKey] || 0) + amount;

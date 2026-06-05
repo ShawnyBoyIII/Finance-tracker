@@ -10,7 +10,7 @@ export interface FinancialSummary {
 export const summarizeTransactions = (transactions: Transaction[]): FinancialSummary => {
   let income = 0;
   let expense = 0;
-  const categories: Record<string, number> = {};
+  const categories: Record<string, number> = Object.create(null);
 
   transactions.forEach((transaction) => {
     if (transaction.type === 'income') {

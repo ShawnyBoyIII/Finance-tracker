@@ -10,6 +10,6 @@
 **Learning:** File upload inputs (`<input type="file" />`) lacking associated labels or ARIA attributes can be confusing for screen reader users, who might not understand what to upload. Additionally, native file inputs often lack visible focus states when styled with utility classes like Tailwind.
 **Action:** Always add descriptive `aria-label`s to file inputs that aren't explicitly bound to an `<label>`. Also, ensure custom-styled file inputs include explicit keyboard focus states (`focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 rounded`) for accessible keyboard navigation.
 
-## 2026-06-04 - Dynamic Active States for Navigation
-**Learning:** Hardcoding active styles or ignoring them entirely makes it hard for users (and screen readers) to know where they are.
-**Action:** Always use a router hook like `usePathname` from `next/navigation` to detect active routes, conditionally apply visual active styles, and most importantly, add `aria-current="page"` to the active link for accessibility.
+## 2023-10-27 - Dynamic Active Navigation States
+**Learning:** For Next.js navigation menus, active routes were statically set, causing confusion about the current page, and missing the `aria-current="page"` attribute for screen readers.
+**Action:** Always dynamically determine active routes using `usePathname` from `next/navigation`, and apply `aria-current="page"` along with active visual styles to the active link element to ensure accessibility and clear UX.

@@ -110,6 +110,10 @@ export const parseTransactionsFromText = (text: string, statementType: Statement
     const dateStr = splitText[i];
     let rest = splitText[i + 1];
 
+  for (let i = 1; i < splitText.length; i += 2) {
+    const dateStr = splitText[i];
+    let rest = splitText[i + 1];
+
     if (!rest) continue;
 
     // Clean up leading spaces/newlines

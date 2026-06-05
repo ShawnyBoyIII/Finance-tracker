@@ -41,7 +41,9 @@ export default function SalaryPlanner() {
   };
 
   const handleClear = () => {
-    setSalarySchedule(null);
+    if (window.confirm('Are you sure you want to clear your salary schedule?')) {
+      setSalarySchedule(null);
+    }
   };
 
   return (

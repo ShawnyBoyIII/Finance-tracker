@@ -4,8 +4,9 @@ import React, { useMemo } from 'react';
 import { useFinance } from '@/context/FinanceContext';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from 'recharts';
 import SalaryPlanner from './SalaryPlanner';
-import { summarizeTransactions, summarizeMonthlyTransactions, formatCurrency } from '@/utils/finance';
+import { summarizeTransactions, summarizeMonthlyTransactions, detectRecurringBills, formatCurrency } from '@/utils/finance';
 import { getProjectedIncome } from '@/utils/salary';
+import { formatISODate } from '@/utils/constants';
 
 export default function Dashboard() {
   const { transactions, salarySchedule } = useFinance();
@@ -24,6 +25,7 @@ export default function Dashboard() {
     () => getProjectedIncome(salarySchedule, 30),
     [salarySchedule]
   );
+  const recurringBills = useMemo(() => detectRecurringBills(transactions), [transactions]);
 
   const safeToSpend = balance + projectedIncome30Days;
   const monthlyNet = monthlySummary.totalIncome - monthlySummary.totalExpense;
@@ -101,6 +103,58 @@ export default function Dashboard() {
       </div>
 
       <SalaryPlanner />
+
+      <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between mb-5">
+          <div>
+            <h3 className="text-lg font-medium text-gray-900">Upcoming Recurring Bills</h3>
+            <p className="text-sm text-gray-500 mt-1">
+              Detected from repeat expense patterns in your transaction history.
+            </p>
+          </div>
+          <div className="text-sm text-gray-500">
+            {recurringBills.length} recurring {recurringBills.length === 1 ? 'bill' : 'bills'} detected
+          </div>
+        </div>
+
+        {recurringBills.length === 0 ? (
+          <div className="text-center py-8 text-gray-500">
+            Add at least two similar bill payments to start detecting recurring expenses.
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            {recurringBills.slice(0, 6).map((bill) => (
+              <div key={`${bill.name}-${bill.nextExpectedDate}`} className="rounded-lg border border-gray-200 bg-gray-50 p-4">
+                <div className="flex items-start justify-between gap-4">
+                  <div>
+                    <p className="text-sm font-semibold text-gray-900">{bill.name}</p>
+                    <p className="text-sm text-gray-500 mt-1">
+                      {bill.category}
+                      {bill.institution ? ` • ${bill.institution}` : ''}
+                    </p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-lg font-bold text-gray-900">{formatCurrency(bill.averageAmount)}</p>
+                    <p className="text-xs uppercase tracking-wide text-indigo-600 font-medium mt-1">{bill.cadence}</p>
+                  </div>
+                </div>
+
+                <div className="mt-4 grid grid-cols-2 gap-3 text-sm">
+                  <div className="rounded-md bg-white border border-gray-200 p-3">
+                    <p className="text-gray-500">Expected next</p>
+                    <p className="font-semibold text-gray-900 mt-1">{formatISODate(bill.nextExpectedDate)}</p>
+                  </div>
+                  <div className="rounded-md bg-white border border-gray-200 p-3">
+                    <p className="text-gray-500">Last charge</p>
+                    <p className="font-semibold text-gray-900 mt-1">{formatCurrency(bill.lastAmount)}</p>
+                    <p className="text-xs text-gray-500 mt-1">{formatISODate(bill.lastDate)}</p>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
 
       {/* Charts */}
       <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100">

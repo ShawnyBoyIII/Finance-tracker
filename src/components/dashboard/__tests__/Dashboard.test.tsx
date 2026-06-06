@@ -154,4 +154,24 @@ describe('Dashboard Component', () => {
     expect(screen.getByText('Net cash flow').nextElementSibling).toHaveTextContent('$1,400.00');
     expect(screen.getByText('Monthly safe to spend').nextElementSibling).toHaveTextContent('$3,400.00');
   });
+
+  it('shows detected recurring bills on the dashboard', () => {
+    const mockTransactions: Transaction[] = [
+      { id: '1', amount: 1200, type: 'expense', category: 'Housing', date: '2026-04-03', description: 'Rent Payment', institution: 'Chase' },
+      { id: '2', amount: 1200, type: 'expense', category: 'Housing', date: '2026-05-03', description: 'Rent Payment', institution: 'Chase' },
+      { id: '3', amount: 1200, type: 'expense', category: 'Housing', date: '2026-06-03', description: 'Rent Payment', institution: 'Chase' },
+      { id: '4', amount: 18, type: 'expense', category: 'Subscriptions', date: '2026-05-10', description: 'Spotify', institution: 'Capital One' },
+      { id: '5', amount: 18, type: 'expense', category: 'Subscriptions', date: '2026-06-10', description: 'Spotify', institution: 'Capital One' },
+    ];
+
+    (useFinance as jest.Mock).mockReturnValue({ transactions: mockTransactions, salarySchedule: null });
+
+    render(<Dashboard />);
+
+    expect(screen.getByText('Upcoming Recurring Bills')).toBeInTheDocument();
+    expect(screen.getByText('Rent Payment')).toBeInTheDocument();
+    expect(screen.getByText('Spotify')).toBeInTheDocument();
+    expect(screen.getByText('Jul 3, 2026')).toBeInTheDocument();
+    expect(screen.getByText('Jul 10, 2026')).toBeInTheDocument();
+  });
 });

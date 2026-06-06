@@ -1,5 +1,5 @@
 import { getNextPayDate, getProjectedIncome, getUpcomingPaychecks } from '../salary';
-import { summarizeMonthlyTransactions, summarizeTransactions } from '../finance';
+import { detectRecurringBills, summarizeMonthlyTransactions, summarizeTransactions } from '../finance';
 import { Transaction } from '@/types';
 
 describe('salary utilities', () => {
@@ -68,5 +68,32 @@ describe('salary utilities', () => {
       { name: 'Rent', value: 600 },
       { name: 'Groceries', value: 150 },
     ]);
+  });
+
+  it('detects recurring bills from repeating expense patterns', () => {
+    const transactions: Transaction[] = [
+      { id: '1', amount: 1200, type: 'expense', category: 'Housing', date: '2026-04-03', description: 'Rent Payment', institution: 'Chase' },
+      { id: '2', amount: 1200, type: 'expense', category: 'Housing', date: '2026-05-03', description: 'Rent Payment', institution: 'Chase' },
+      { id: '3', amount: 1200, type: 'expense', category: 'Housing', date: '2026-06-03', description: 'Rent Payment', institution: 'Chase' },
+      { id: '4', amount: 18, type: 'expense', category: 'Subscriptions', date: '2026-05-10', description: 'Spotify', institution: 'Capital One' },
+      { id: '5', amount: 18, type: 'expense', category: 'Subscriptions', date: '2026-06-10', description: 'Spotify', institution: 'Capital One' },
+      { id: '6', amount: 70, type: 'expense', category: 'Food', date: '2026-06-12', description: 'Groceries', institution: 'Chase' },
+    ];
+
+    const recurringBills = detectRecurringBills(transactions, new Date('2026-06-15T12:00:00Z'));
+
+    expect(recurringBills).toHaveLength(2);
+    expect(recurringBills[0]).toMatchObject({
+      name: 'Rent Payment',
+      cadence: 'monthly',
+      averageAmount: 1200,
+      nextExpectedDate: '2026-07-03',
+    });
+    expect(recurringBills[1]).toMatchObject({
+      name: 'Spotify',
+      cadence: 'monthly',
+      averageAmount: 18,
+      nextExpectedDate: '2026-07-10',
+    });
   });
 });

@@ -1,8 +1,8 @@
 'use client';
 
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { Transaction, Budget, SalarySchedule, FinancialAccount, FinancialAccountType, AppMetadata } from '@/types';
-import { APP_DATA_SCHEMA_VERSION, loadAppData, saveAppData } from '@/utils/storage';
+import { Transaction, Budget, SalarySchedule, FinancialAccount, FinancialAccountType, AppMetadata, AppData } from '@/types';
+import { APP_DATA_SCHEMA_VERSION, exportAppData, loadAppData, saveAppData } from '@/utils/storage';
 import { v4 as uuidv4 } from 'uuid';
 
 interface FinanceContextType {
@@ -19,6 +19,8 @@ interface FinanceContextType {
   deleteBudget: (category: string) => void;
   salarySchedule: SalarySchedule | null;
   setSalarySchedule: (schedule: SalarySchedule | null) => void;
+  getBackupData: () => AppData;
+  restoreBackupData: (appData: AppData) => void;
 }
 
 const FinanceContext = createContext<FinanceContextType | undefined>(undefined);
@@ -200,6 +202,32 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
     setBudgets((prev) => prev.filter((b) => b.category !== category));
   };
 
+  const getBackupData = () =>
+    exportAppData({
+      transactions,
+      budgets,
+      accounts,
+      salarySchedule,
+      metadata,
+    });
+
+  const restoreBackupData = (appData: AppData) => {
+    const migratedData = migrateTransactionsAndAccounts(
+      appData.transactions || [],
+      appData.accounts || null
+    );
+
+    setTransactions(migratedData.transactions);
+    setAccounts(migratedData.accounts);
+    setBudgets(appData.budgets || []);
+    setSalarySchedule(appData.salarySchedule || null);
+    setMetadata({
+      ...(appData.metadata || {}),
+      schemaVersion: APP_DATA_SCHEMA_VERSION,
+      lastBackupAt: appData.metadata?.lastBackupAt,
+    });
+  };
+
   return (
     <FinanceContext.Provider
       value={{
@@ -216,6 +244,8 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
         deleteBudget,
         salarySchedule,
         setSalarySchedule,
+        getBackupData,
+        restoreBackupData,
       }}
     >
       {children}

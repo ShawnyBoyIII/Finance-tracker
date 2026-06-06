@@ -79,6 +79,11 @@ export default function TransactionList() {
   const { transactions, addTransaction, deleteTransaction } = useFinance();
   const [isAdding, setIsAdding] = useState(false);
   const [page, setPage] = useState(1);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [typeFilter, setTypeFilter] = useState<'all' | TransactionType>('all');
+  const [categoryFilter, setCategoryFilter] = useState('all');
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
 
   // ⚡ Bolt: Memoize sorted transactions to prevent expensive O(N log N) sorting
   // and date parsing on every render (e.g., when typing in form inputs).
@@ -90,12 +95,56 @@ export default function TransactionList() {
     );
   }, [transactions]);
 
-  const totalPages = Math.ceil(sortedTransactions.length / PAGE_SIZE);
+  const categories = useMemo(() => {
+    return Array.from(new Set(transactions.map((transaction) => transaction.category)))
+      .filter(Boolean)
+      .sort((a, b) => a.localeCompare(b));
+  }, [transactions]);
+
+  const filteredTransactions = useMemo(() => {
+    const normalizedQuery = searchQuery.trim().toLowerCase();
+
+    return sortedTransactions.filter((transaction) => {
+      if (typeFilter !== 'all' && transaction.type !== typeFilter) {
+        return false;
+      }
+
+      if (categoryFilter !== 'all' && transaction.category !== categoryFilter) {
+        return false;
+      }
+
+      if (startDate && transaction.date < startDate) {
+        return false;
+      }
+
+      if (endDate && transaction.date > endDate) {
+        return false;
+      }
+
+      if (!normalizedQuery) {
+        return true;
+      }
+
+      const haystack = [
+        transaction.description,
+        transaction.category,
+        transaction.institution,
+        transaction.type,
+      ]
+        .filter(Boolean)
+        .join(' ')
+        .toLowerCase();
+
+      return haystack.includes(normalizedQuery);
+    });
+  }, [sortedTransactions, searchQuery, typeFilter, categoryFilter, startDate, endDate]);
+
+  const totalPages = Math.ceil(filteredTransactions.length / PAGE_SIZE);
 
   // Reset to first page when new transactions are added/deleted
   useEffect(() => {
     setPage(1);
-  }, [sortedTransactions.length]);
+  }, [filteredTransactions.length]);
 
   // ⚡ Bolt: Implement pagination for transaction list
   // Optimization: Slicing the sorted array to only render PAGE_SIZE items at a time.
@@ -103,8 +152,23 @@ export default function TransactionList() {
   // calls on each render, improving large dataset rendering from ~140ms to ~2ms.
   const paginatedTransactions = useMemo(() => {
     const start = (page - 1) * PAGE_SIZE;
-    return sortedTransactions.slice(start, start + PAGE_SIZE);
-  }, [sortedTransactions, page]);
+    return filteredTransactions.slice(start, start + PAGE_SIZE);
+  }, [filteredTransactions, page]);
+
+  const hasActiveFilters =
+    searchQuery.trim() !== '' ||
+    typeFilter !== 'all' ||
+    categoryFilter !== 'all' ||
+    startDate !== '' ||
+    endDate !== '';
+
+  const clearFilters = () => {
+    setSearchQuery('');
+    setTypeFilter('all');
+    setCategoryFilter('all');
+    setStartDate('');
+    setEndDate('');
+  };
 
   return (
     <div className="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden">
@@ -121,6 +185,77 @@ export default function TransactionList() {
       {isAdding && (
         <AddTransactionForm addTransaction={addTransaction} onClose={() => setIsAdding(false)} />
       )}
+
+      <div className="p-6 bg-gray-50 border-b border-gray-100">
+        <div className="flex flex-col gap-4">
+          <div className="flex flex-col gap-2 lg:flex-row lg:items-end lg:justify-between">
+            <div>
+              <h4 className="text-sm font-semibold text-gray-900">Find transactions fast</h4>
+              <p className="text-sm text-gray-500 mt-1">
+                Search merchants, categories, institutions, and filter down by type or date range.
+              </p>
+            </div>
+            <div className="text-sm text-gray-500">
+              Showing {filteredTransactions.length} of {sortedTransactions.length} transactions
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-5">
+            <div className="xl:col-span-2">
+              <label htmlFor="transaction-search" className="block text-sm font-medium text-gray-700">Search</label>
+              <input
+                id="transaction-search"
+                type="text"
+                value={searchQuery}
+                onChange={(event) => setSearchQuery(event.target.value)}
+                placeholder="Search description, category, institution..."
+                className={COMMON_INPUT_CLASS}
+              />
+            </div>
+            <div>
+              <label htmlFor="transaction-type-filter" className="block text-sm font-medium text-gray-700">Type</label>
+              <select id="transaction-type-filter" value={typeFilter} onChange={(event) => setTypeFilter(event.target.value as 'all' | TransactionType)} className={COMMON_INPUT_CLASS}>
+                <option value="all">All types</option>
+                <option value="expense">Expense</option>
+                <option value="income">Income</option>
+                <option value="cc_payment">CC Payment</option>
+              </select>
+            </div>
+            <div>
+              <label htmlFor="transaction-category-filter" className="block text-sm font-medium text-gray-700">Category</label>
+              <select id="transaction-category-filter" value={categoryFilter} onChange={(event) => setCategoryFilter(event.target.value)} className={COMMON_INPUT_CLASS}>
+                <option value="all">All categories</option>
+                {categories.map((category) => (
+                  <option key={category} value={category}>
+                    {category}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="flex items-end">
+              <button
+                type="button"
+                onClick={clearFilters}
+                disabled={!hasActiveFilters}
+                className="w-full rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                Clear filters
+              </button>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+            <div>
+              <label htmlFor="transaction-start-date" className="block text-sm font-medium text-gray-700">Start date</label>
+              <input id="transaction-start-date" type="date" value={startDate} onChange={(event) => setStartDate(event.target.value)} className={COMMON_INPUT_CLASS} />
+            </div>
+            <div>
+              <label htmlFor="transaction-end-date" className="block text-sm font-medium text-gray-700">End date</label>
+              <input id="transaction-end-date" type="date" value={endDate} onChange={(event) => setEndDate(event.target.value)} className={COMMON_INPUT_CLASS} />
+            </div>
+          </div>
+        </div>
+      </div>
 
       <div className="overflow-x-auto">
         <table className="min-w-full divide-y divide-gray-200">
@@ -150,7 +285,9 @@ export default function TransactionList() {
             {paginatedTransactions.length === 0 ? (
               <tr>
                 <td colSpan={6} className="px-6 py-4 text-center text-sm text-gray-500">
-                  No transactions yet. Add some or import a CSV!
+                  {sortedTransactions.length === 0
+                    ? 'No transactions yet. Add some or import a CSV!'
+                    : 'No transactions match your current filters.'}
                 </td>
               </tr>
             ) : (

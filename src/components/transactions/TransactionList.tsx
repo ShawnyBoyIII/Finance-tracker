@@ -43,29 +43,29 @@ function AddTransactionForm({
   return (
     <form onSubmit={handleAdd} className="p-6 bg-gray-50 border-b border-gray-100 grid grid-cols-1 gap-4 sm:grid-cols-6">
       <div className="sm:col-span-1">
-        <label className="block text-sm font-medium text-gray-700">Date<span className="text-red-500 ml-1" aria-hidden="true">*</span></label>
-        <input type="date" required value={date} onChange={e => setDate(e.target.value)} className={COMMON_INPUT_CLASS} />
+        <label htmlFor="add-date" className="block text-sm font-medium text-gray-700">Date<span className="text-red-500 ml-1" aria-hidden="true">*</span></label>
+        <input id="add-date" type="date" required value={date} onChange={e => setDate(e.target.value)} className={COMMON_INPUT_CLASS} />
       </div>
       <div className="sm:col-span-1">
-        <label className="block text-sm font-medium text-gray-700">Type</label>
-        <select value={type} onChange={e => setType(e.target.value as TransactionType)} className={COMMON_INPUT_CLASS}>
+        <label htmlFor="add-type" className="block text-sm font-medium text-gray-700">Type</label>
+        <select id="add-type" value={type} onChange={e => setType(e.target.value as TransactionType)} className={COMMON_INPUT_CLASS}>
           <option value="expense">Expense</option>
           <option value="income">Income</option>
           <option value="cc_payment">CC Payment</option>
         </select>
       </div>
       <div className="sm:col-span-1">
-        <label className="block text-sm font-medium text-gray-700">Amount<span className="text-red-500 ml-1" aria-hidden="true">*</span></label>
-        <input type="number" required step="0.01" value={amount} onChange={e => setAmount(e.target.value)} className={COMMON_INPUT_CLASS} />
+        <label htmlFor="add-amount" className="block text-sm font-medium text-gray-700">Amount<span className="text-red-500 ml-1" aria-hidden="true">*</span></label>
+        <input id="add-amount" type="number" required step="0.01" value={amount} onChange={e => setAmount(e.target.value)} className={COMMON_INPUT_CLASS} />
       </div>
       <div className="sm:col-span-1">
-        <label className="block text-sm font-medium text-gray-700">Category<span className="text-red-500 ml-1" aria-hidden="true">*</span></label>
-        <input type="text" required value={category} onChange={e => setCategory(e.target.value)} placeholder="e.g. Groceries" className={COMMON_INPUT_CLASS} />
+        <label htmlFor="add-category" className="block text-sm font-medium text-gray-700">Category<span className="text-red-500 ml-1" aria-hidden="true">*</span></label>
+        <input id="add-category" type="text" required value={category} onChange={e => setCategory(e.target.value)} placeholder="e.g. Groceries" className={COMMON_INPUT_CLASS} />
       </div>
       <div className="sm:col-span-2 flex items-end gap-2">
         <div className="flex-1">
-          <label className="block text-sm font-medium text-gray-700">Description</label>
-          <input type="text" value={description} onChange={e => setDescription(e.target.value)} placeholder="Optional" className={COMMON_INPUT_CLASS} />
+          <label htmlFor="add-description" className="block text-sm font-medium text-gray-700">Description</label>
+          <input id="add-description" type="text" value={description} onChange={e => setDescription(e.target.value)} placeholder="Optional" className={COMMON_INPUT_CLASS} />
         </div>
         <button type="submit" className="mb-0.5 bg-green-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-green-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-green-500">
           Save
@@ -284,10 +284,22 @@ export default function TransactionList() {
           <tbody className="bg-white divide-y divide-gray-200">
             {paginatedTransactions.length === 0 ? (
               <tr>
-                <td colSpan={6} className="px-6 py-4 text-center text-sm text-gray-500">
-                  {sortedTransactions.length === 0
-                    ? 'No transactions yet. Add some or import a CSV!'
-                    : 'No transactions match your current filters.'}
+                <td colSpan={6} className="px-6 py-8 text-center">
+                  {sortedTransactions.length === 0 ? (
+                    <p className="text-sm text-gray-500">No transactions yet. Add some or import a CSV!</p>
+                  ) : (
+                    <div className="flex flex-col items-center justify-center space-y-3">
+                      <p className="text-sm text-gray-500">No transactions match your current filters.</p>
+                      {hasActiveFilters && (
+                        <button
+                          onClick={clearFilters}
+                          className="inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
+                        >
+                          Clear all filters
+                        </button>
+                      )}
+                    </div>
+                  )}
                 </td>
               </tr>
             ) : (

@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import Papa from 'papaparse';
 import { useFinance } from '@/context/FinanceContext';
 import { TransactionType } from '@/types';
+import { getSuggestedCategory } from '@/utils/finance';
 
 import { StatementType } from './ImportSection';
 
@@ -13,7 +14,7 @@ interface CSVImportProps {
 }
 
 export default function CSVImport({ statementType, accountId }: CSVImportProps) {
-  const { addTransactionsBulk } = useFinance();
+  const { addTransactionsBulk, transactions } = useFinance();
   const [error, setError] = useState<string | null>(null);
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -58,7 +59,7 @@ export default function CSVImport({ statementType, accountId }: CSVImportProps) 
               amount: type === 'cc_payment' ? amount : Math.abs(amount),
               type,
               description,
-              category: row.Category || 'Uncategorized',
+              category: row.Category || getSuggestedCategory(description, transactions),
               accountId,
             };
           });

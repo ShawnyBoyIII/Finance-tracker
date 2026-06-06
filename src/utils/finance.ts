@@ -24,6 +24,14 @@ export interface RecurringBill {
   nextExpectedDate: string;
 }
 
+const normalizeMerchantName = (description: string) =>
+  description
+    .toLowerCase()
+    .replace(/\d+/g, '')
+    .replace(/[^a-z\s]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+
 const getMonthKey = (date: Date) => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
 
 const getMonthLabel = (date: Date) =>
@@ -31,13 +39,7 @@ const getMonthLabel = (date: Date) =>
 
 const DAY_IN_MS = 24 * 60 * 60 * 1000;
 
-const normalizeDescription = (description: string) =>
-  description
-    .toLowerCase()
-    .replace(/\d+/g, '')
-    .replace(/[^a-z\s]/g, ' ')
-    .replace(/\s+/g, ' ')
-    .trim();
+const normalizeDescription = normalizeMerchantName;
 
 const getDateDifferenceInDays = (firstDate: string, secondDate: string) => {
   const first = new Date(`${firstDate}T00:00:00`);
@@ -190,6 +192,35 @@ export const detectRecurringBills = (
   });
 
   return recurringBills.sort((a, b) => a.nextExpectedDate.localeCompare(b.nextExpectedDate));
+};
+
+export const getSuggestedCategory = (
+  description: string,
+  transactions: Transaction[],
+  fallbackCategory = 'Uncategorized'
+) => {
+  const normalizedDescription = normalizeMerchantName(description);
+
+  if (!normalizedDescription) {
+    return fallbackCategory;
+  }
+
+  const categoryCounts = new Map<string, number>();
+
+  transactions.forEach((transaction) => {
+    if (transaction.category === fallbackCategory) {
+      return;
+    }
+
+    if (normalizeMerchantName(transaction.description) !== normalizedDescription) {
+      return;
+    }
+
+    categoryCounts.set(transaction.category, (categoryCounts.get(transaction.category) || 0) + 1);
+  });
+
+  const [bestMatch] = Array.from(categoryCounts.entries()).sort((a, b) => b[1] - a[1]);
+  return bestMatch?.[0] || fallbackCategory;
 };
 
 export const formatCurrency = (amount: number) =>

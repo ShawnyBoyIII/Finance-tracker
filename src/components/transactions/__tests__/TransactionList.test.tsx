@@ -58,6 +58,7 @@ describe('TransactionList filtering', () => {
       addAccount: jest.fn(() => 'card-3'),
       addTransaction: jest.fn(),
       deleteTransaction: jest.fn(),
+      updateTransactionCategory: jest.fn(),
     });
   });
 
@@ -108,5 +109,26 @@ describe('TransactionList filtering', () => {
     expect(screen.queryByText('Main paycheck')).not.toBeInTheDocument();
     expect(screen.getByText('Chase Freedom snapshot')).toBeInTheDocument();
     expect(screen.getByText('$42.50')).toBeInTheDocument();
+  });
+
+  it('updates a transaction category inline', async () => {
+    const user = userEvent.setup();
+    const updateTransactionCategory = jest.fn();
+
+    (useFinance as jest.Mock).mockReturnValue({
+      transactions: mockTransactions,
+      accounts: mockAccounts,
+      addAccount: jest.fn(() => 'card-3'),
+      addTransaction: jest.fn(),
+      deleteTransaction: jest.fn(),
+      updateTransactionCategory,
+    });
+
+    render(<TransactionList />);
+
+    const categoryInput = screen.getByLabelText('Category for Trader Joe');
+    await user.type(categoryInput, 's');
+
+    expect(updateTransactionCategory).toHaveBeenLastCalledWith('1', 'Groceriess');
   });
 });

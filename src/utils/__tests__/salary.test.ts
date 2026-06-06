@@ -1,5 +1,5 @@
 import { getNextPayDate, getProjectedIncome, getUpcomingPaychecks } from '../salary';
-import { detectRecurringBills, summarizeMonthlyTransactions, summarizeTransactions } from '../finance';
+import { detectRecurringBills, getSuggestedCategory, summarizeMonthlyTransactions, summarizeTransactions } from '../finance';
 import { Transaction } from '@/types';
 
 describe('salary utilities', () => {
@@ -95,5 +95,16 @@ describe('salary utilities', () => {
       averageAmount: 18,
       nextExpectedDate: '2026-07-10',
     });
+  });
+
+  it('suggests a category from prior matching merchant descriptions', () => {
+    const transactions: Transaction[] = [
+      { id: '1', amount: 44, type: 'expense', category: 'Groceries', date: '2026-06-01', description: 'Trader Joe Store 123' },
+      { id: '2', amount: 19, type: 'expense', category: 'Groceries', date: '2026-06-08', description: 'Trader Joe Store 987' },
+      { id: '3', amount: 15, type: 'expense', category: 'Dining', date: '2026-06-09', description: 'Coffee Shop' },
+    ];
+
+    expect(getSuggestedCategory('Trader Joe Store 456', transactions)).toBe('Groceries');
+    expect(getSuggestedCategory('Unknown Merchant', transactions)).toBe('Uncategorized');
   });
 });

@@ -14,6 +14,7 @@ interface FinanceContextType {
   deleteTransaction: (id: string) => void;
   addTransactionsBulk: (transactions: Omit<Transaction, 'id'>[]) => void;
   addAccount: (account: Omit<FinancialAccount, 'id'>) => string;
+  updateTransactionCategory: (id: string, category: string) => void;
   updateBudget: (category: string, amount: number) => void;
   deleteBudget: (category: string) => void;
   salarySchedule: SalarySchedule | null;
@@ -174,6 +175,17 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
     return newAccount.id;
   };
 
+  const updateTransactionCategory = (id: string, category: string) => {
+    const normalizedCategory = category.trim();
+    if (!normalizedCategory) return;
+
+    setTransactions((prev) =>
+      prev.map((transaction) =>
+        transaction.id === id ? { ...transaction, category: normalizedCategory } : transaction
+      )
+    );
+  };
+
   const updateBudget = (category: string, amount: number) => {
     setBudgets((prev) => {
       const existing = prev.find((b) => b.category === category);
@@ -199,6 +211,7 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
         deleteTransaction,
         addTransactionsBulk,
         addAccount,
+        updateTransactionCategory,
         updateBudget,
         deleteBudget,
         salarySchedule,

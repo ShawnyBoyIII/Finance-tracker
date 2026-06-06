@@ -5,7 +5,7 @@ import { useFinance } from '@/context/FinanceContext';
 import { TransactionType, Transaction } from '@/types';
 import { Trash2 } from 'lucide-react';
 import { COMMON_INPUT_CLASS, formatISODate } from '@/utils/constants';
-import { formatCurrency } from '@/utils/finance';
+import { formatCurrency, getSuggestedCategory } from '@/utils/finance';
 
 const PAGE_SIZE = 50;
 
@@ -14,11 +14,15 @@ function AddTransactionForm({
   onClose,
   accountOptions,
   defaultAccountId,
+  categoryOptions,
+  transactions,
 }: {
   addTransaction: (transaction: Omit<Transaction, 'id'>) => void,
   onClose: () => void,
   accountOptions: { id: string; name: string }[],
   defaultAccountId: string,
+  categoryOptions: string[],
+  transactions: Transaction[],
 }) {
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
   const [amount, setAmount] = useState('');
@@ -26,6 +30,19 @@ function AddTransactionForm({
   const [category, setCategory] = useState('');
   const [description, setDescription] = useState('');
   const [accountId, setAccountId] = useState(defaultAccountId);
+
+  const handleDescriptionChange = (value: string) => {
+    setDescription(value);
+
+    if (category) {
+      return;
+    }
+
+    const suggestedCategory = getSuggestedCategory(value, transactions, '');
+    if (suggestedCategory) {
+      setCategory(suggestedCategory);
+    }
+  };
 
   const handleAdd = (e: React.FormEvent) => {
     e.preventDefault();
@@ -63,7 +80,20 @@ function AddTransactionForm({
       </div>
       <div className="sm:col-span-1">
         <label className="block text-sm font-medium text-gray-700">Category<span className="text-red-500 ml-1" aria-hidden="true">*</span></label>
-        <input type="text" required value={category} onChange={e => setCategory(e.target.value)} placeholder="e.g. Groceries" className={COMMON_INPUT_CLASS} />
+        <input
+          type="text"
+          required
+          value={category}
+          onChange={e => setCategory(e.target.value)}
+          placeholder="e.g. Groceries"
+          list="manual-transaction-categories"
+          className={COMMON_INPUT_CLASS}
+        />
+        <datalist id="manual-transaction-categories">
+          {categoryOptions.map((option) => (
+            <option key={option} value={option} />
+          ))}
+        </datalist>
       </div>
       <div className="sm:col-span-1">
         <label className="block text-sm font-medium text-gray-700">Account</label>
@@ -78,7 +108,7 @@ function AddTransactionForm({
       <div className="sm:col-span-1 flex items-end gap-2">
         <div className="flex-1">
           <label className="block text-sm font-medium text-gray-700">Description</label>
-          <input type="text" value={description} onChange={e => setDescription(e.target.value)} placeholder="Optional" className={COMMON_INPUT_CLASS} />
+          <input type="text" value={description} onChange={e => handleDescriptionChange(e.target.value)} placeholder="Optional" className={COMMON_INPUT_CLASS} />
         </div>
         <button type="submit" className="mb-0.5 bg-green-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-green-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-green-500">
           Save
@@ -89,7 +119,7 @@ function AddTransactionForm({
 }
 
 export default function TransactionList() {
-  const { transactions, accounts, addAccount, addTransaction, deleteTransaction } = useFinance();
+  const { transactions, accounts, addAccount, addTransaction, deleteTransaction, updateTransactionCategory } = useFinance();
   const [isAdding, setIsAdding] = useState(false);
   const [page, setPage] = useState(1);
   const [searchQuery, setSearchQuery] = useState('');
@@ -125,6 +155,10 @@ export default function TransactionList() {
       .filter(Boolean)
       .sort((a, b) => a.localeCompare(b));
   }, [transactions]);
+
+  const handleCategoryChange = (transactionId: string, category: string) => {
+    updateTransactionCategory(transactionId, category);
+  };
 
   const filteredTransactions = useMemo(() => {
     const normalizedQuery = searchQuery.trim().toLowerCase();
@@ -253,6 +287,8 @@ export default function TransactionList() {
           onClose={() => setIsAdding(false)}
           accountOptions={visibleAccounts.map((account) => ({ id: account.id, name: account.name }))}
           defaultAccountId={defaultManualAccountId}
+          categoryOptions={categories}
+          transactions={transactions}
         />
       )}
 
@@ -426,6 +462,11 @@ export default function TransactionList() {
       </div>
 
       <div className="overflow-x-auto">
+        <datalist id="transaction-category-options">
+          {categories.map((category) => (
+            <option key={category} value={category} />
+          ))}
+        </datalist>
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
             <tr>
@@ -455,9 +496,14 @@ export default function TransactionList() {
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{t.institution || '-'}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{accountMap.get(t.accountId || '')?.name || 'Unassigned'}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-                      {t.category}
-                    </span>
+                    <input
+                      type="text"
+                      value={t.category}
+                      onChange={(event) => handleCategoryChange(t.id, event.target.value)}
+                      list="transaction-category-options"
+                      aria-label={`Category for ${t.description}`}
+                      className="w-36 rounded-md border border-gray-300 bg-white px-2 py-1 text-xs font-medium text-gray-800 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                    />
                   </td>
                   <td
                     className={`px-6 py-4 whitespace-nowrap text-sm font-medium ${

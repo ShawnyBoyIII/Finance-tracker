@@ -12,6 +12,25 @@ interface PDFImportProps {
   accountId: string;
 }
 
+const getDisplayType = (type: ParsedTransaction['type']) => {
+  if (type === 'cc_payment') return 'CC payment';
+  return type.charAt(0).toUpperCase() + type.slice(1);
+};
+
+const getDisplayAmount = (transaction: ParsedTransaction) => {
+  if (transaction.type === 'income' || transaction.type === 'cc_payment') {
+    return {
+      className: 'text-green-600',
+      value: `+$${Math.abs(transaction.amount).toFixed(2)}`,
+    };
+  }
+
+  return {
+    className: 'text-red-600',
+    value: `$${Math.abs(transaction.amount).toFixed(2)}`,
+  };
+};
+
 export default function PDFImport({ statementType, accountId }: PDFImportProps) {
   const { addTransactionsBulk } = useFinance();
   const [isProcessing, setIsProcessing] = useState(false);
@@ -145,29 +164,31 @@ export default function PDFImport({ statementType, accountId }: PDFImportProps) 
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {stagedTransactions.map((t) => (
-                  <tr key={t.id}>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{t.date}</td>
-                    <td className="px-6 py-4 text-sm text-gray-900">{t.description}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{t.institution || 'Unknown'}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 capitalize">{t.type}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                      <span className={t.type === 'income' || (t.type === 'cc_payment' && t.amount > 0) ? 'text-green-600' : 'text-red-600'}>
-                        {t.type === 'cc_payment' && t.amount < 0 ? `-$${Math.abs(t.amount).toFixed(2)}` : `${t.type === 'income' || t.type === 'cc_payment' ? '+' : '-'}$${Math.abs(t.amount).toFixed(2)}`}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      <button
-                        onClick={() => handleRemoveStaged(t.id!)}
-                        className="text-red-500 hover:text-red-700 rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500"
-                        aria-label="Remove staged transaction"
-                        title="Remove staged transaction"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </td>
-                  </tr>
-                ))}
+                {stagedTransactions.map((t) => {
+                  const displayAmount = getDisplayAmount(t);
+
+                  return (
+                    <tr key={t.id}>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{t.date}</td>
+                      <td className="px-6 py-4 text-sm text-gray-900">{t.description}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{t.institution || 'Unknown'}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{getDisplayType(t.type)}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                        <span className={displayAmount.className}>{displayAmount.value}</span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        <button
+                          onClick={() => handleRemoveStaged(t.id!)}
+                          className="text-red-500 hover:text-red-700 rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500"
+                          aria-label="Remove staged transaction"
+                          title="Remove staged transaction"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>

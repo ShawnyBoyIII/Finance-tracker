@@ -214,6 +214,12 @@ export const parseTransactionsFromText = (text: string, statementType: Statement
     return chaseTransactions;
   }
 
+  const statementDateMatch = text.match(/Statement Date:\s*(\d{1,2})\/(\d{1,2})\/(\d{2,4})/i);
+  const statementMonth = statementDateMatch ? Number(statementDateMatch[1]) : null;
+  const statementYear = statementDateMatch
+    ? Number(statementDateMatch[3].length === 2 ? `20${statementDateMatch[3]}` : statementDateMatch[3])
+    : null;
+
   // Split text by date-like patterns to handle OCR outputs where newlines are missing
   const dateRegex = /(?:\b|^)(\d{1,2}[/-]\d{1,2}(?:[/-]\d{2,4})?)\s+/g;
   const splitText = text.split(dateRegex);
@@ -263,7 +269,9 @@ export const parseTransactionsFromText = (text: string, statementType: Statement
 
       if (dateParts.length === 2) {
         const [m, d] = dateParts;
-        formattedDate = `${currentYear}-${m.padStart(2, '0')}-${d.padStart(2, '0')}`;
+        formattedDate = statementYear && statementMonth
+          ? formatTransactionDate(m, d, statementYear, statementMonth)
+          : `${currentYear}-${m.padStart(2, '0')}-${d.padStart(2, '0')}`;
       } else if (dateParts.length === 3) {
         const [m, d, y] = dateParts;
         const fullYear = y.length === 2 ? `20${y}` : y;

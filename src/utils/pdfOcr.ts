@@ -14,10 +14,36 @@ export interface ParsedTransaction {
   institution?: string;
 }
 
-export const extractImagesFromPdf = async (file: File): Promise<string[]> => {
-  // Dynamically import pdfjs-dist inside the function to ensure it only runs on the client
+const loadPdfJs = async () => {
   const pdfjsLib = await import('pdfjs-dist');
   pdfjsLib.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjsLib.version}/build/pdf.worker.min.js`;
+  return pdfjsLib;
+};
+
+export const extractTextFromPdf = async (file: File): Promise<string> => {
+  const pdfjsLib = await loadPdfJs();
+  const arrayBuffer = await file.arrayBuffer();
+  const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+  const pageTexts: string[] = [];
+
+  for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
+    const page = await pdf.getPage(pageNum);
+    const content = await page.getTextContent();
+    const text = content.items
+      .map((item: any) => ('str' in item ? item.str : ''))
+      .join(' ')
+      .replace(/\s+/g, ' ')
+      .trim();
+
+    pageTexts.push(text);
+  }
+
+  return pageTexts.join('\n');
+};
+
+export const extractImagesFromPdf = async (file: File): Promise<string[]> => {
+  // Dynamically import pdfjs-dist inside the function to ensure it only runs on the client
+  const pdfjsLib = await loadPdfJs();
 
   const arrayBuffer = await file.arrayBuffer();
   const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
@@ -86,6 +112,89 @@ const paymentRegex = /payment|pymt|online payment/i;
 const autoPaymentRegex = /autopay|auto[\s-]?payment/i;
 const ignoreDescRegex = /previous balance|credit limit|available credit|payment due|total fees|interest charged/i;
 
+const formatTransactionDate = (month: string, day: string, statementYear: number, statementMonth: number) => {
+  const numericMonth = Number(month);
+  const numericDay = Number(day);
+
+  if (!numericMonth || !numericDay) return '';
+
+  const inferredYear = numericMonth > statementMonth ? statementYear - 1 : statementYear;
+  return `${inferredYear}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+};
+
+const buildTransaction = (
+  date: string,
+  amount: number,
+  description: string,
+  statementType: StatementType,
+  institution?: string
+): ParsedTransaction => {
+  let type: TransactionType = 'expense';
+  const isPayment = paymentRegex.test(description);
+  const isAutoPayment = autoPaymentRegex.test(description);
+
+  if (isAutoPayment) {
+    type = 'cc_payment';
+  } else if (statementType === 'credit_card') {
+    type = amount > 0 ? 'expense' : 'cc_payment';
+  } else if (amount > 0) {
+    type = 'income';
+  } else if (isPayment) {
+    type = 'cc_payment';
+  }
+
+  return {
+    id: uuidv4(),
+    date,
+    amount: type === 'cc_payment' ? amount : Math.abs(amount),
+    type,
+    description: description.trim() || 'Imported Transaction',
+    category: 'Uncategorized',
+    ...(institution && { institution }),
+  };
+};
+
+const parseChaseCreditCardTransactions = (
+  text: string,
+  statementType: StatementType,
+  institution?: string
+): ParsedTransaction[] => {
+  const statementDateMatch = text.match(/Statement Date:\s*(\d{2})\/(\d{2})\/(\d{2,4})/i);
+  if (!statementDateMatch) return [];
+
+  const statementMonth = Number(statementDateMatch[1]);
+  const statementYear = Number(statementDateMatch[3].length === 2 ? `20${statementDateMatch[3]}` : statementDateMatch[3]);
+  const activityMatch = text.match(
+    /Date of Transaction\s+Merchant Name or Transaction Description\s+\$ Amount\s+(.*?)\s+Total fees charged in/i
+  );
+
+  if (!activityMatch) return [];
+
+  const rows = activityMatch[1]
+    .replace(/\s+/g, ' ')
+    .match(/\d{2}\/\d{2}\s+.*?(?=\s+\d{2}\/\d{2}\s+|$)/g);
+
+  if (!rows) return [];
+
+  const transactions: ParsedTransaction[] = [];
+
+  for (const row of rows) {
+    const match = row.match(/^(\d{2})\/(\d{2})\s+(.*?)\s+(-?[\d,]+\.\d{2})$/);
+    if (!match) continue;
+
+    const [, month, day, rawDescription, rawAmount] = match;
+    const description = rawDescription.trim();
+    const amount = Number(rawAmount.replace(/,/g, ''));
+    const date = formatTransactionDate(month, day, statementYear, statementMonth);
+
+    if (!date || !description || Number.isNaN(amount)) continue;
+
+    transactions.push(buildTransaction(date, amount, description, statementType, institution));
+  }
+
+  return transactions;
+};
+
 export const parseTransactionsFromText = (text: string, statementType: StatementType): ParsedTransaction[] => {
   const transactions: ParsedTransaction[] = [];
 
@@ -98,6 +207,11 @@ export const parseTransactionsFromText = (text: string, statementType: Statement
       detectedInstitution = inst;
       break;
     }
+  }
+
+  const chaseTransactions = parseChaseCreditCardTransactions(text, statementType, detectedInstitution);
+  if (chaseTransactions.length > 0) {
+    return chaseTransactions;
   }
 
   // Split text by date-like patterns to handle OCR outputs where newlines are missing
@@ -158,40 +272,9 @@ export const parseTransactionsFromText = (text: string, statementType: Statement
 
       if (!formattedDate) continue;
 
-      let type: TransactionType = 'expense'; // Default to expense
-      const isPayment = paymentRegex.test(description);
-      const isAutoPayment = autoPaymentRegex.test(description);
-
-      if (isAutoPayment) {
-        // Force these matches to be a CC payment regardless of sign or statement type
-        type = 'cc_payment';
-      } else if (statementType === 'credit_card') {
-        // Credit Card rules: + is expense (spent money), - is cc_payment (paying bill/refund)
-        if (parsedAmount > 0) {
-          type = 'expense';
-        } else {
-          type = 'cc_payment';
-        }
-      } else {
-        // Bank Statement rules: + is income, - is expense (or cc_payment if 'payment' in desc)
-        if (parsedAmount > 0) {
-          type = 'income';
-        } else if (isPayment) {
-          type = 'cc_payment';
-        } else {
-          type = 'expense';
-        }
-      }
-
-      transactions.push({
-        id: uuidv4(), // Temporarily add an ID for rendering lists in staging area
-        date: formattedDate,
-        amount: type === 'cc_payment' ? parsedAmount : Math.abs(parsedAmount),
-        type,
-        description: description.trim() || 'OCR Transaction',
-        category: 'Uncategorized',
-        ...(detectedInstitution && { institution: detectedInstitution }),
-      });
+      transactions.push(
+        buildTransaction(formattedDate, parsedAmount, description, statementType, detectedInstitution)
+      );
     }
   }
 

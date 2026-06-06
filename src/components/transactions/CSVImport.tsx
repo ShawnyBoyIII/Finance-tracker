@@ -9,9 +9,10 @@ import { StatementType } from './ImportSection';
 
 interface CSVImportProps {
   statementType: StatementType;
+  accountId: string;
 }
 
-export default function CSVImport({ statementType }: CSVImportProps) {
+export default function CSVImport({ statementType, accountId }: CSVImportProps) {
   const { addTransactionsBulk } = useFinance();
   const [error, setError] = useState<string | null>(null);
 
@@ -58,6 +59,7 @@ export default function CSVImport({ statementType }: CSVImportProps) {
               type,
               description,
               category: row.Category || 'Uncategorized',
+              accountId,
             };
           });
 

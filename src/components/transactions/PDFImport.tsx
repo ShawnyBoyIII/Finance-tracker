@@ -2,16 +2,17 @@
 
 import React, { useState } from 'react';
 import { useFinance } from '@/context/FinanceContext';
-import { extractImagesFromPdf, performOcrOnImages, parseTransactionsFromText, ParsedTransaction } from '@/utils/pdfOcr';
+import { extractImagesFromPdf, extractTextFromPdf, performOcrOnImages, parseTransactionsFromText, ParsedTransaction } from '@/utils/pdfOcr';
 import { Trash2 } from 'lucide-react';
 
 import { StatementType } from './ImportSection';
 
 interface PDFImportProps {
   statementType: StatementType;
+  accountId: string;
 }
 
-export default function PDFImport({ statementType }: PDFImportProps) {
+export default function PDFImport({ statementType, accountId }: PDFImportProps) {
   const { addTransactionsBulk } = useFinance();
   const [isProcessing, setIsProcessing] = useState(false);
   const [progress, setProgress] = useState(0);
@@ -34,18 +35,22 @@ export default function PDFImport({ statementType }: PDFImportProps) {
 
     try {
       setProgress(10);
-      const images = await extractImagesFromPdf(file);
-
-      setProgress(30);
-      const extractedText = await performOcrOnImages(images, (p) => {
-        setProgress(30 + Math.round(p * 0.6)); // OCR progress accounts for 60% of the bar
-      });
-
-      setProgress(95);
-      const transactions = parseTransactionsFromText(extractedText, statementType);
+      const directText = await extractTextFromPdf(file);
+      let transactions = parseTransactionsFromText(directText, statementType);
 
       if (transactions.length === 0) {
-        setError('No valid transactions could be parsed from the PDF. It may not match expected formats or the OCR failed to read it clearly.');
+        setProgress(30);
+        const images = await extractImagesFromPdf(file);
+        const extractedText = await performOcrOnImages(images, (p) => {
+          setProgress(30 + Math.round(p * 0.6)); // OCR progress accounts for 60% of the bar
+        });
+        transactions = parseTransactionsFromText(extractedText, statementType);
+      }
+
+      setProgress(95);
+
+      if (transactions.length === 0) {
+        setError('No valid transactions could be parsed from the PDF. It may not match the expected statement format.');
       } else {
         setStagedTransactions(transactions);
       }
@@ -66,7 +71,10 @@ export default function PDFImport({ statementType }: PDFImportProps) {
 
   const handleConfirmImport = () => {
     // Remove the temporary 'id' and import to context
-    const readyToImport = stagedTransactions.map(({ id: _, ...rest }) => rest);
+    const readyToImport = stagedTransactions.map(({ id: _, ...rest }) => ({
+      ...rest,
+      accountId,
+    }));
     addTransactionsBulk(readyToImport);
     setStagedTransactions([]);
     alert(`Successfully imported ${readyToImport.length} transactions!`);

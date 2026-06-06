@@ -4,13 +4,19 @@ import userEvent from '@testing-library/user-event';
 import '@testing-library/jest-dom';
 import TransactionList from '../TransactionList';
 import { useFinance } from '@/context/FinanceContext';
-import { Transaction } from '@/types';
+import { FinancialAccount, Transaction } from '@/types';
 
 jest.mock('@/context/FinanceContext', () => ({
   useFinance: jest.fn(),
 }));
 
 describe('TransactionList filtering', () => {
+  const mockAccounts: FinancialAccount[] = [
+    { id: 'cash-1', name: 'Household Cash Flow', type: 'cash' },
+    { id: 'card-1', name: 'Chase Freedom', type: 'credit_card', issuer: 'Chase', last4: '1234' },
+    { id: 'card-2', name: 'Capital One Venture', type: 'credit_card', issuer: 'Capital One', last4: '9876' },
+  ];
+
   const mockTransactions: Transaction[] = [
     {
       id: '1',
@@ -20,6 +26,7 @@ describe('TransactionList filtering', () => {
       date: '2026-06-03',
       description: 'Trader Joe',
       institution: 'Chase',
+      accountId: 'card-1',
     },
     {
       id: '2',
@@ -29,6 +36,7 @@ describe('TransactionList filtering', () => {
       date: '2026-06-01',
       description: 'Main paycheck',
       institution: 'Bank of America',
+      accountId: 'cash-1',
     },
     {
       id: '3',
@@ -38,6 +46,7 @@ describe('TransactionList filtering', () => {
       date: '2026-05-29',
       description: 'Autopay thank you',
       institution: 'Capital One',
+      accountId: 'card-2',
     },
   ];
 
@@ -45,6 +54,8 @@ describe('TransactionList filtering', () => {
     jest.clearAllMocks();
     (useFinance as jest.Mock).mockReturnValue({
       transactions: mockTransactions,
+      accounts: mockAccounts,
+      addAccount: jest.fn(() => 'card-3'),
       addTransaction: jest.fn(),
       deleteTransaction: jest.fn(),
     });
@@ -84,5 +95,18 @@ describe('TransactionList filtering', () => {
     expect(screen.getByText('Trader Joe')).toBeInTheDocument();
     expect(screen.getByText('Main paycheck')).toBeInTheDocument();
     expect(screen.queryByText('Autopay thank you')).not.toBeInTheDocument();
+  });
+
+  it('switches between account tabs for individual card views', async () => {
+    const user = userEvent.setup();
+
+    render(<TransactionList />);
+
+    await user.click(screen.getByRole('button', { name: 'Chase Freedom' }));
+
+    expect(screen.getByText('Trader Joe')).toBeInTheDocument();
+    expect(screen.queryByText('Main paycheck')).not.toBeInTheDocument();
+    expect(screen.getByText('Chase Freedom snapshot')).toBeInTheDocument();
+    expect(screen.getByText('$42.50')).toBeInTheDocument();
   });
 });

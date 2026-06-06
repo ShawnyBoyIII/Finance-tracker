@@ -33,6 +33,7 @@ const nextConfig = {
     'localhost',
     ...localIps
   ],
+  turbopack: {},
   webpack(config) {
     config.resolve = config.resolve || {};
     config.resolve.alias = {

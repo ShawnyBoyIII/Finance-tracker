@@ -4,6 +4,7 @@ import React, { useState, useMemo } from 'react';
 import { useFinance } from '@/context/FinanceContext';
 import { Trash2, AlertCircle } from 'lucide-react';
 import { COMMON_INPUT_CLASS } from '@/utils/constants';
+import { formatCurrency, isTransactionInMonth } from '@/utils/finance';
 
 export default function BudgetManager() {
   const { budgets, updateBudget, deleteBudget, transactions } = useFinance();
@@ -28,7 +29,7 @@ export default function BudgetManager() {
     const rawCategorySpentMap: Record<string, number> = Object.create(null);
     for (let i = 0; i < transactions.length; i++) {
       const t = transactions[i];
-      if (t.type === 'expense') {
+      if (t.type === 'expense' && isTransactionInMonth(t)) {
         rawCategorySpentMap[t.category] = (rawCategorySpentMap[t.category] || 0) + t.amount;
       }
     }
@@ -98,7 +99,12 @@ export default function BudgetManager() {
 
       {/* Budget Progress List */}
       <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
-        <h3 className="text-lg font-medium text-gray-900 mb-6">Budget Progress</h3>
+        <div className="flex items-center justify-between mb-6 gap-4">
+          <div>
+            <h3 className="text-lg font-medium text-gray-900">Budget Progress</h3>
+            <p className="text-sm text-gray-500 mt-1">Tracking spending for the current calendar month only.</p>
+          </div>
+        </div>
 
         {budgetProgress.length === 0 ? (
           <p className="text-gray-500 text-center py-4">No budgets set yet. Create one above to start tracking!</p>
@@ -117,7 +123,7 @@ export default function BudgetManager() {
                   </div>
                   <div className="flex items-center gap-4">
                     <span className={`text-sm ${budget.isOverBudget ? 'text-red-600 font-medium' : 'text-gray-600'}`}>
-                      ${budget.spent.toFixed(2)} / ${budget.amount.toFixed(2)}
+                      {formatCurrency(budget.spent)} / {formatCurrency(budget.amount)}
                     </span>
                     <button
                       onClick={() => {
@@ -143,7 +149,7 @@ export default function BudgetManager() {
                 </div>
                 <p className="text-xs text-gray-500 mt-1">
                   {budget.realPercentage.toFixed(0)}% used
-                  {budget.isOverBudget && ` (${(budget.spent - budget.amount).toFixed(2)} over limit)`}
+                  {budget.isOverBudget && ` (${formatCurrency(budget.spent - budget.amount)} over limit)`}
                 </p>
               </div>
             ))}

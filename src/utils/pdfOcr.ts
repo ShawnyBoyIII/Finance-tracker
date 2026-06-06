@@ -82,6 +82,10 @@ const KNOWN_INSTITUTIONS = [
   'Citi'
 ];
 
+const paymentRegex = /payment|pymt|online payment/i;
+const autoPaymentRegex = /autopay|auto[\s-]?payment/i;
+const ignoreDescRegex = /previous balance|credit limit|available credit|payment due|total fees|interest charged/i;
+
 export const parseTransactionsFromText = (text: string, statementType: StatementType): ParsedTransaction[] => {
   const transactions: ParsedTransaction[] = [];
 
@@ -100,20 +104,9 @@ export const parseTransactionsFromText = (text: string, statementType: Statement
   const dateRegex = /(?:\b|^)(\d{1,2}[/-]\d{1,2}(?:[/-]\d{2,4})?)\s+/g;
   const splitText = text.split(dateRegex);
 
-  // Improved Regex: Allows for spaces, tabs between parts, negative amounts, and commas in the numbers
-  const transactionRegex = /^(\d{1,2}[/-]\d{1,2}(?:[/-]\d{2,4})?)\s+(.*?)\s*([-\u2013\u2014\u2212]?(?:\$\s*[\d,]+|[\d,]+)\.\d{2})$/i;
-
   // ⚡ Bolt: Hoist currentYear calculation outside the loop.
   // We avoid repeatedly instantiating new Date() for each transaction row.
   const currentYear = new Date().getFullYear().toString();
-  for (let i = 1; i < splitText.length; i += 2) {
-    const dateStr = splitText[i];
-    let rest = splitText[i + 1];
-
-  for (let i = 1; i < splitText.length; i += 2) {
-    const dateStr = splitText[i];
-    let rest = splitText[i + 1];
-
   for (let i = 1; i < splitText.length; i += 2) {
     const dateStr = splitText[i];
     let rest = splitText[i + 1];
@@ -162,6 +155,8 @@ export const parseTransactionsFromText = (text: string, statementType: Statement
         const fullYear = y.length === 2 ? `20${y}` : y;
         formattedDate = `${fullYear}-${m.padStart(2, '0')}-${d.padStart(2, '0')}`;
       }
+
+      if (!formattedDate) continue;
 
       let type: TransactionType = 'expense'; // Default to expense
       const isPayment = paymentRegex.test(description);

@@ -35,14 +35,23 @@ jest.mock('recharts', () => {
 });
 
 describe('Dashboard Component', () => {
+  beforeAll(() => {
+    jest.useFakeTimers();
+    jest.setSystemTime(new Date('2026-06-15T12:00:00Z'));
+  });
+
   beforeEach(() => {
     // Clear all mocks before each test
     jest.clearAllMocks();
   });
 
+  afterAll(() => {
+    jest.useRealTimers();
+  });
+
   it('renders correctly with empty transactions', () => {
     // Setup mock to return empty transactions
-    (useFinance as jest.Mock).mockReturnValue({ transactions: [] });
+    (useFinance as jest.Mock).mockReturnValue({ transactions: [], salarySchedule: null });
 
     render(<Dashboard />);
 
@@ -50,6 +59,8 @@ describe('Dashboard Component', () => {
     expect(screen.getByText('Total Balance').nextElementSibling).toHaveTextContent('$0.00');
     expect(screen.getByText('Total Income').nextElementSibling).toHaveTextContent('$0.00');
     expect(screen.getByText('Total Expenses').nextElementSibling).toHaveTextContent('$0.00');
+    expect(screen.getByText('Income this month').nextElementSibling).toHaveTextContent('$0.00');
+    expect(screen.getByText('Expenses this month').nextElementSibling).toHaveTextContent('$0.00');
 
     // Check that empty state message is shown for charts
     expect(screen.getByText('No expense data available. Add some transactions to see charts.')).toBeInTheDocument();
@@ -65,7 +76,7 @@ describe('Dashboard Component', () => {
       { id: '5', amount: 50, type: 'expense', category: 'Food', date: '2023-01-05', description: 'Snacks' },
     ];
 
-    (useFinance as jest.Mock).mockReturnValue({ transactions: mockTransactions });
+    (useFinance as jest.Mock).mockReturnValue({ transactions: mockTransactions, salarySchedule: null });
 
     render(<Dashboard />);
 
@@ -96,7 +107,7 @@ describe('Dashboard Component', () => {
       { id: '2', amount: 1000, type: 'expense', category: 'Rent', date: '2023-01-02', description: 'Rent' },
     ];
 
-    (useFinance as jest.Mock).mockReturnValue({ transactions: mockTransactions });
+    (useFinance as jest.Mock).mockReturnValue({ transactions: mockTransactions, salarySchedule: null });
 
     render(<Dashboard />);
 
@@ -112,12 +123,35 @@ describe('Dashboard Component', () => {
       { id: '2', amount: 0, type: 'expense', category: 'Rent', date: '2023-01-02', description: 'Rent' },
     ];
 
-    (useFinance as jest.Mock).mockReturnValue({ transactions: mockTransactions });
+    (useFinance as jest.Mock).mockReturnValue({ transactions: mockTransactions, salarySchedule: null });
 
     render(<Dashboard />);
 
     expect(screen.getByText('Total Balance').nextElementSibling).toHaveTextContent('$0.00');
     expect(screen.getByText('Total Income').nextElementSibling).toHaveTextContent('$0.00');
     expect(screen.getByText('Total Expenses').nextElementSibling).toHaveTextContent('$0.00');
+  });
+
+  it('shows month-scoped cash flow separately from lifetime totals', () => {
+    const mockTransactions: Transaction[] = [
+      { id: '1', amount: 2000, type: 'income', category: 'Salary', date: '2026-06-01', description: 'Paycheck' },
+      { id: '2', amount: 400, type: 'expense', category: 'Rent', date: '2026-06-02', description: 'Rent' },
+      { id: '3', amount: 200, type: 'expense', category: 'Groceries', date: '2026-06-03', description: 'Groceries' },
+      { id: '4', amount: 1500, type: 'income', category: 'Salary', date: '2026-05-20', description: 'Older paycheck' },
+      { id: '5', amount: 300, type: 'expense', category: 'Travel', date: '2026-05-21', description: 'Old expense' },
+    ];
+
+    (useFinance as jest.Mock).mockReturnValue({
+      transactions: mockTransactions,
+      salarySchedule: { amount: 1000, nextPayDate: '2026-06-19' },
+    });
+
+    render(<Dashboard />);
+
+    expect(screen.getByText('Total Balance').nextElementSibling).toHaveTextContent('$2,600.00');
+    expect(screen.getByText('Income this month').nextElementSibling).toHaveTextContent('$2,000.00');
+    expect(screen.getByText('Expenses this month').nextElementSibling).toHaveTextContent('$600.00');
+    expect(screen.getByText('Net cash flow').nextElementSibling).toHaveTextContent('$1,400.00');
+    expect(screen.getByText('Monthly safe to spend').nextElementSibling).toHaveTextContent('$3,400.00');
   });
 });

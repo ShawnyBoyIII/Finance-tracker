@@ -7,6 +7,19 @@ export interface FinancialSummary {
   expensesByCategory: { name: string; value: number }[];
 }
 
+export interface MonthlyFinancialSummary extends FinancialSummary {
+  monthLabel: string;
+  savings: number;
+}
+
+const getMonthKey = (date: Date) => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+
+const getMonthLabel = (date: Date) =>
+  new Intl.DateTimeFormat('en-US', { month: 'long', year: 'numeric' }).format(date);
+
+export const isTransactionInMonth = (transaction: Transaction, referenceDate = new Date()) =>
+  transaction.date.slice(0, 7) === getMonthKey(referenceDate);
+
 export const summarizeTransactions = (transactions: Transaction[]): FinancialSummary => {
   let income = 0;
   let expense = 0;
@@ -36,6 +49,22 @@ export const summarizeTransactions = (transactions: Transaction[]): FinancialSum
     totalExpense: expense,
     balance: income - expense,
     expensesByCategory,
+  };
+};
+
+export const summarizeMonthlyTransactions = (
+  transactions: Transaction[],
+  referenceDate = new Date()
+): MonthlyFinancialSummary => {
+  const monthlyTransactions = transactions.filter((transaction) =>
+    isTransactionInMonth(transaction, referenceDate)
+  );
+  const summary = summarizeTransactions(monthlyTransactions);
+
+  return {
+    ...summary,
+    monthLabel: getMonthLabel(referenceDate),
+    savings: summary.totalIncome - summary.totalExpense,
   };
 };
 

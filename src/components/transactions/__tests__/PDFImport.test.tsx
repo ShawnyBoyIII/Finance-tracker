@@ -36,7 +36,7 @@ describe('PDFImport review flow', () => {
           institution: 'Chase',
         },
       ],
-      addTransactionsBulk: jest.fn(),
+      importStatement: jest.fn(),
     });
 
     pdfOcr.extractTextFromPdf.mockResolvedValue({
@@ -80,7 +80,7 @@ describe('PDFImport review flow', () => {
 
   it('flags duplicates and imports only reviewed included rows', async () => {
     const user = userEvent.setup();
-    const addTransactionsBulk = jest.fn();
+    const importStatement = jest.fn();
 
     (useFinance as jest.Mock).mockReturnValue({
       transactions: [
@@ -95,7 +95,7 @@ describe('PDFImport review flow', () => {
           institution: 'Chase',
         },
       ],
-      addTransactionsBulk,
+      importStatement,
     });
 
     render(<PDFImport statementType="credit_card" accountId="card-1" />);
@@ -120,17 +120,26 @@ describe('PDFImport review flow', () => {
     await user.type(screen.getByLabelText('Category for MENERALS LLC 775-684-9000 NV'), 'Shopping');
     await user.click(screen.getByRole('button', { name: 'Confirm & Import (1)' }));
 
-    expect(addTransactionsBulk).toHaveBeenCalledWith([
+    expect(importStatement).toHaveBeenCalledWith(
       expect.objectContaining({
-        date: '2025-12-20',
-        amount: 44,
-        category: 'Shopping',
         accountId: 'card-1',
+        sourceType: 'credit_card',
+        format: 'pdf',
+        fileName: 'statement.pdf',
+        institution: 'Chase',
       }),
-    ]);
+      [
+        expect.objectContaining({
+          date: '2025-12-20',
+          amount: 44,
+          category: 'Shopping',
+          accountId: 'card-1',
+        }),
+      ]
+    );
 
     await waitFor(() => {
-      expect(screen.getByText('Imported 1 transaction after review.')).toBeInTheDocument();
+      expect(screen.getByText('Imported 1 transaction from statement.pdf after review.')).toBeInTheDocument();
     });
   });
 });

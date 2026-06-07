@@ -13,6 +13,7 @@ import {
 import {
   findBatchDuplicates,
   findPotentialTransactionDuplicates,
+  formatCurrency,
   getSuggestedCategory,
 } from '@/utils/finance';
 import { COMMON_INPUT_CLASS } from '@/utils/constants';

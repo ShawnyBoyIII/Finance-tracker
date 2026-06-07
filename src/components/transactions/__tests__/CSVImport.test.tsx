@@ -29,13 +29,13 @@ describe('CSVImport review flow', () => {
           accountId: 'card-1',
         },
       ],
-      addTransactionsBulk: jest.fn(),
+      importStatement: jest.fn(),
     });
   });
 
   it('stages CSV rows for review, normalizes merchants, and blocks duplicate rows by default', async () => {
     const user = userEvent.setup();
-    const addTransactionsBulk = jest.fn();
+    const importStatement = jest.fn();
 
     (useFinance as jest.Mock).mockReturnValue({
       transactions: [
@@ -49,7 +49,7 @@ describe('CSVImport review flow', () => {
           accountId: 'card-1',
         },
       ],
-      addTransactionsBulk,
+      importStatement,
     });
 
     (Papa.parse as jest.Mock).mockImplementation((_file, config) => {
@@ -83,16 +83,24 @@ describe('CSVImport review flow', () => {
     await user.type(screen.getByLabelText('Category for Amazon'), 'Shopping');
     await user.click(screen.getByRole('button', { name: 'Confirm & Import (1)' }));
 
-    expect(addTransactionsBulk).toHaveBeenCalledWith([
+    expect(importStatement).toHaveBeenCalledWith(
       expect.objectContaining({
-        description: 'Amazon',
-        category: 'Shopping',
         accountId: 'card-1',
+        sourceType: 'credit_card',
+        format: 'csv',
+        fileName: 'sample.csv',
       }),
-    ]);
+      [
+        expect.objectContaining({
+          description: 'Amazon',
+          category: 'Shopping',
+          accountId: 'card-1',
+        }),
+      ]
+    );
 
     await waitFor(() => {
-      expect(screen.getByText('Imported 1 transaction after review.')).toBeInTheDocument();
+      expect(screen.getByText('Imported 1 transaction from sample.csv after review.')).toBeInTheDocument();
     });
   });
 });

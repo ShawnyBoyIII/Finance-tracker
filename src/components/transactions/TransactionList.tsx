@@ -151,9 +151,15 @@ export default function TransactionList() {
   const selectedAccount = selectedAccountId === 'all' ? null : accountMap.get(selectedAccountId);
 
   const categories = useMemo(() => {
-    return Array.from(new Set(transactions.map((transaction) => transaction.category)))
-      .filter(Boolean)
-      .sort((a, b) => a.localeCompare(b));
+    // ⚡ Bolt: Using standard for loop and avoiding Set/map combinations to prevent intermediate array allocations
+    const categorySet = new Set<string>();
+    for (let i = 0; i < transactions.length; i++) {
+      if (transactions[i].category) {
+        categorySet.add(transactions[i].category);
+      }
+    }
+
+    return Array.from(categorySet).sort((a, b) => a.localeCompare(b));
   }, [transactions]);
 
   const handleCategoryChange = (transactionId: string, category: string) => {
@@ -161,7 +167,11 @@ export default function TransactionList() {
   };
 
   const filteredTransactions = useMemo(() => {
-    const normalizedQuery = searchQuery.trim().toLowerCase();
+    const normalizedQuery = searchQuery.trim();
+    // ⚡ Bolt: Pre-compile RegExp outside the loop to avoid string allocations via .toLowerCase() in every iteration
+    const searchRegex = normalizedQuery
+      ? new RegExp(normalizedQuery.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i')
+      : null;
 
     return sortedTransactions.filter((transaction) => {
       if (selectedAccountId !== 'all' && transaction.accountId !== selectedAccountId) {
@@ -184,7 +194,7 @@ export default function TransactionList() {
         return false;
       }
 
-      if (!normalizedQuery) {
+      if (!searchRegex) {
         return true;
       }
 
@@ -196,10 +206,9 @@ export default function TransactionList() {
         accountMap.get(transaction.accountId || '')?.name,
       ]
         .filter(Boolean)
-        .join(' ')
-        .toLowerCase();
+        .join(' ');
 
-      return haystack.includes(normalizedQuery);
+      return searchRegex.test(haystack);
     });
   }, [sortedTransactions, selectedAccountId, typeFilter, categoryFilter, startDate, endDate, searchQuery, accountMap]);
 

@@ -1,31 +1,49 @@
 # Changelog
 
-All notable changes to this project will be documented in this file.
+All notable changes to this project are documented here.
 
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
-and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+## [Unreleased]
+
+### Added
+
+- First-class account and credit-card support
+- Account tabs on the transactions page
+- Multi-income household planning with multiple income sources
+- Bill tracking with due days
+- Manual paid/unpaid bill overrides for the current cycle
+- Local JSON backup and restore tools
+- Data management page
+- Transaction search and filtering
+- Recurring bill detection
+
+### Changed
+
+- Upgraded storage to a unified versioned app-data model
+- Migrated legacy browser-storage keys into the unified storage model
+- Improved the dashboard to focus on monthly cash flow and household planning
+- Made imports account-aware for CSV and PDF flows
+
+### Fixed
+
+- Repaired PDF/OCR parser issues that were blocking import reliability
+- Improved storage migration hygiene by cleaning up legacy keys after save
 
 ## [1.0.1] - Minor Fixes & Improvements
 
 ### Fixed
-- Fixed PDF OCR parsing for negative payments (correctly parsing typographic dashes like en-dash and em-dash).
+
+- Fixed PDF OCR parsing for negative payments by correctly handling typographic dashes.
 - Various minor UI improvements and bug fixes.
 
 ## [1.0.0] - First Official Release
 
 ### Added
-- **Dashboard:**
-  - Summary Cards for Total Balance, Total Income, and Total Expenses.
-  - Income vs Expenses bar chart visualization.
-  - Expenses by Category pie chart visualization.
-- **Transactions:**
-  - Manual entry of transactions (Income/Expenses).
-  - Ability to edit and delete individual transactions.
-  - CSV Import feature for bulk adding data (must match headers: `Date, Amount, Description, Category`).
-  - CSV Export feature for data backup.
-- **Budgets:**
-  - Ability to set monthly spending limits per category.
-  - Progress bars tracking spending against set budget limits.
-  - Visual alerts (red progress bar) when budget limits are exceeded.
-- **Data Persistence:**
-  - Fully local data storage using browser `localStorage` ensuring 100% privacy.
+
+- Dashboard summary cards for balance, income, and expenses
+- Expense-by-category visualization
+- Manual transaction entry
+- CSV import and export
+- Budget tracking by category
+- Local browser storage persistence

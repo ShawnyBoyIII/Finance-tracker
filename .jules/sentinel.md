@@ -6,3 +6,7 @@
 **Vulnerability:** Prototype pollution was possible when aggregating expenses by category using a raw object (`{}`). If a user uploaded a CSV with a category named `__proto__`, it would pollute the global object prototype, causing unexpected behavior in loops and object iteration.
 **Learning:** This existed because `Object.entries()` and `for...in` loops will iterate over `__proto__` properties if they are explicitly set on an object literal, and accessing `obj[key]` where `key` is `__proto__` on an object literal actually modifies the object prototype.
 **Prevention:** Always use `Object.create(null)` when creating dictionaries/maps for arbitrary user-provided string keys, or use ES6 `Map` objects.
+## 2025-05-24 - Escape Dynamic RegExp Strings
+**Vulnerability:** Unescaped dynamic strings were passed to `new RegExp()` in `pdfOcr.ts` (`new RegExp("\\b" + inst + "\\b", 'i')`), which can lead to Regular Expression Denial of Service (ReDoS) or broken regex syntax if the `KNOWN_INSTITUTIONS` array contains special regex characters.
+**Learning:** Even if the array of strings is currently hardcoded and safe, constructing regexes dynamically from configuration or external arrays without escaping is an unsafe pattern.
+**Prevention:** Always use an `escapeRegExp` utility (like `str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')`) when passing dynamic variables or strings from arrays into the `RegExp` constructor.

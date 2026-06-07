@@ -1,4 +1,5 @@
 import { TransactionType } from '@/types';
+import { escapeRegExp } from '@/utils/finance';
 
 import Tesseract from 'tesseract.js';
 import { v4 as uuidv4 } from 'uuid';
@@ -430,7 +431,7 @@ export const parseTransactionsFromText = (text: string, statementType: Statement
   let detectedInstitution: string | undefined;
   for (const inst of KNOWN_INSTITUTIONS) {
     // Use word boundaries to prevent matching "Chase" inside "Purchase"
-    const regex = new RegExp(`\\b${inst}\\b`, 'i');
+    const regex = new RegExp(`\\b${escapeRegExp(inst)}\\b`, 'i');
     if (regex.test(text)) {
       detectedInstitution = inst;
       break;

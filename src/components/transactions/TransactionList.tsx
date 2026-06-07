@@ -3,7 +3,7 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { useFinance } from '@/context/FinanceContext';
 import { TransactionType, Transaction } from '@/types';
-import { Trash2 } from 'lucide-react';
+import { Pencil, Trash2 } from 'lucide-react';
 import { COMMON_INPUT_CLASS, formatISODate } from '@/utils/constants';
 import { formatCurrency, getSuggestedCategory } from '@/utils/finance';
 
@@ -131,6 +131,7 @@ export default function TransactionList() {
   const [newCardName, setNewCardName] = useState('');
   const [newCardIssuer, setNewCardIssuer] = useState('');
   const [newCardLast4, setNewCardLast4] = useState('');
+  const [editingCategoryId, setEditingCategoryId] = useState<string | null>(null);
 
   const sortedTransactions = useMemo(() => {
     return [...transactions].sort(
@@ -158,6 +159,14 @@ export default function TransactionList() {
 
   const handleCategoryChange = (transactionId: string, category: string) => {
     updateTransactionCategory(transactionId, category);
+  };
+
+  const startCategoryEdit = (transactionId: string) => {
+    setEditingCategoryId(transactionId);
+  };
+
+  const stopCategoryEdit = () => {
+    setEditingCategoryId(null);
   };
 
   const filteredTransactions = useMemo(() => {
@@ -398,6 +407,9 @@ export default function TransactionList() {
               <p className="text-sm text-gray-500 mt-1">
                 Search merchants, categories, institutions, and filter down by type or date range.
               </p>
+              <p className="text-sm text-indigo-600 mt-2">
+                Need to fix a category? Use the `Edit` button in the Category column.
+              </p>
             </div>
             <div className="text-sm text-gray-500">
               Showing {filteredTransactions.length} of {sortedTransactions.length} transactions
@@ -496,14 +508,47 @@ export default function TransactionList() {
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{t.institution || '-'}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{accountMap.get(t.accountId || '')?.name || 'Unassigned'}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    <input
-                      type="text"
-                      value={t.category}
-                      onChange={(event) => handleCategoryChange(t.id, event.target.value)}
-                      list="transaction-category-options"
-                      aria-label={`Category for ${t.description}`}
-                      className="w-36 rounded-md border border-gray-300 bg-white px-2 py-1 text-xs font-medium text-gray-800 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
-                    />
+                    {editingCategoryId === t.id ? (
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="text"
+                          value={t.category}
+                          onChange={(event) => handleCategoryChange(t.id, event.target.value)}
+                          onBlur={stopCategoryEdit}
+                          onKeyDown={(event) => {
+                            if (event.key === 'Enter' || event.key === 'Escape') {
+                              stopCategoryEdit();
+                            }
+                          }}
+                          autoFocus
+                          list="transaction-category-options"
+                          aria-label={`Category for ${t.description}`}
+                          className="w-36 rounded-md border border-indigo-300 bg-white px-2 py-1 text-xs font-medium text-gray-800 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                        />
+                        <button
+                          type="button"
+                          onClick={stopCategoryEdit}
+                          className="text-xs font-medium text-indigo-600 hover:text-indigo-700"
+                        >
+                          Done
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-2">
+                        <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                          {t.category}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => startCategoryEdit(t.id)}
+                          className="inline-flex items-center gap-1 rounded-md border border-gray-300 bg-white px-2 py-1 text-xs font-medium text-gray-600 hover:bg-gray-50"
+                          aria-label={`Edit category for ${t.description}`}
+                        >
+                          <Pencil className="w-3 h-3" />
+                          Edit
+                        </button>
+                      </div>
+                    )}
                   </td>
                   <td
                     className={`px-6 py-4 whitespace-nowrap text-sm font-medium ${

@@ -1,12 +1,18 @@
 import { AppData } from '@/types';
 
-export const APP_DATA_SCHEMA_VERSION = 1;
+export const APP_DATA_SCHEMA_VERSION = 2;
 
 const APP_DATA_KEY = 'finance_tracker_app_data';
 const LEGACY_TRANSACTIONS_KEY = 'finance_tracker_transactions';
 const LEGACY_BUDGETS_KEY = 'finance_tracker_budgets';
 const LEGACY_SALARY_KEY = 'finance_tracker_salary_schedule';
 const LEGACY_ACCOUNTS_KEY = 'finance_tracker_accounts';
+const LEGACY_STORAGE_KEYS = [
+  LEGACY_TRANSACTIONS_KEY,
+  LEGACY_BUDGETS_KEY,
+  LEGACY_SALARY_KEY,
+  LEGACY_ACCOUNTS_KEY,
+] as const;
 
 export type StoredAppData = Partial<AppData>;
 
@@ -25,7 +31,10 @@ export const createEmptyAppData = (): AppData => ({
   transactions: [],
   budgets: [],
   accounts: [],
+  statements: [],
+  bills: [],
   salarySchedule: null,
+  incomeSources: [],
   metadata: {
     schemaVersion: APP_DATA_SCHEMA_VERSION,
   },
@@ -52,7 +61,10 @@ export const loadAppData = (): StoredAppData => {
     transactions: parseStoredJson(localStorage.getItem(LEGACY_TRANSACTIONS_KEY)) || [],
     budgets: parseStoredJson(localStorage.getItem(LEGACY_BUDGETS_KEY)) || [],
     accounts: parseStoredJson(localStorage.getItem(LEGACY_ACCOUNTS_KEY)) || [],
+    statements: [],
+    bills: [],
     salarySchedule: parseStoredJson(localStorage.getItem(LEGACY_SALARY_KEY)),
+    incomeSources: [],
   };
 };
 
@@ -72,6 +84,10 @@ export const saveAppData = (appData: AppData) => {
       },
     })
   );
+
+  LEGACY_STORAGE_KEYS.forEach((key) => {
+    localStorage.removeItem(key);
+  });
 };
 
 export const exportAppData = (appData: AppData) => ({

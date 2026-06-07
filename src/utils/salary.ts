@@ -1,5 +1,5 @@
 import { addDays, format, isBefore, parseISO, startOfDay } from 'date-fns';
-import { SalarySchedule } from '@/types';
+import { IncomeSource, SalarySchedule } from '@/types';
 
 export const BIWEEKLY_PAY_PERIOD_DAYS = 14;
 
@@ -8,6 +8,7 @@ export interface PaycheckProjection {
   isoDate: string;
   label: string;
   amount: number;
+  sourceName?: string;
 }
 
 const safeParseDate = (dateStr: string) => {
@@ -75,3 +76,43 @@ export const getProjectedIncome = (
 
   return total;
 };
+
+export const migrateSalaryScheduleToIncomeSources = (schedule: SalarySchedule | null): IncomeSource[] => {
+  if (!schedule) return [];
+
+  return [
+    {
+      id: 'income-source-primary',
+      name: 'Primary income',
+      amount: schedule.amount,
+      nextPayDate: schedule.nextPayDate,
+    },
+  ];
+};
+
+export const getUpcomingIncomeSourcesPaychecks = (
+  incomeSources: IncomeSource[],
+  count = 6,
+  referenceDate = new Date()
+): PaycheckProjection[] => {
+  const paychecks = incomeSources.flatMap((incomeSource) =>
+    getUpcomingPaychecks(incomeSource, count, referenceDate).map((paycheck) => ({
+      ...paycheck,
+      sourceName: incomeSource.name,
+    }))
+  );
+
+  return paychecks
+    .sort((a, b) => a.isoDate.localeCompare(b.isoDate))
+    .slice(0, count);
+};
+
+export const getProjectedIncomeFromSources = (
+  incomeSources: IncomeSource[],
+  daysAhead = 30,
+  referenceDate = new Date()
+) =>
+  incomeSources.reduce(
+    (total, incomeSource) => total + getProjectedIncome(incomeSource, daysAhead, referenceDate),
+    0
+  );

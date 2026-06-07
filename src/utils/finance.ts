@@ -1,4 +1,4 @@
-import { Transaction } from '@/types';
+import { Bill, Transaction } from '@/types';
 
 export interface FinancialSummary {
   totalIncome: number;
@@ -24,13 +24,73 @@ export interface RecurringBill {
   nextExpectedDate: string;
 }
 
-const normalizeMerchantName = (description: string) =>
+export interface BillStatus {
+  billId: string;
+  name: string;
+  dueDate: string;
+  amount?: number;
+  category?: string;
+  accountId?: string;
+  autopay?: boolean;
+  status: 'paid' | 'upcoming' | 'overdue';
+  matchedTransactionDate?: string;
+  matchedTransactionAmount?: number;
+  daysUntilDue: number;
+}
+
+export interface PotentialDuplicateMatch {
+  importedTransactionId: string;
+  existingTransactionIds: string[];
+  duplicateFingerprint: string;
+}
+
+const MERCHANT_NORMALIZATION_RULES: Array<{ pattern: RegExp; canonical: string }> = [
+  { pattern: /spotify/i, canonical: 'Spotify' },
+  { pattern: /netflix/i, canonical: 'Netflix' },
+  { pattern: /hulu/i, canonical: 'Hulu' },
+  { pattern: /youtube|google youtube/i, canonical: 'YouTube' },
+  { pattern: /apple|icloud|app store/i, canonical: 'Apple' },
+  { pattern: /amazon|amzn/i, canonical: 'Amazon' },
+  { pattern: /target/i, canonical: 'Target' },
+  { pattern: /walmart/i, canonical: 'Walmart' },
+  { pattern: /whole ?fds|whole foods/i, canonical: 'Whole Foods' },
+  { pattern: /publix/i, canonical: 'Publix' },
+  { pattern: /tello/i, canonical: 'Tello' },
+  { pattern: /adobe/i, canonical: 'Adobe' },
+  { pattern: /planet fitness|fitness|gym/i, canonical: 'Gym Membership' },
+];
+
+const normalizeMerchantKey = (description: string) =>
   description
     .toLowerCase()
     .replace(/\d+/g, '')
     .replace(/[^a-z\s]/g, ' ')
     .replace(/\s+/g, ' ')
     .trim();
+
+export const normalizeMerchantName = (description: string) => {
+  const trimmedDescription = description.trim();
+
+  if (!trimmedDescription) {
+    return '';
+  }
+
+  const knownRule = MERCHANT_NORMALIZATION_RULES.find((rule) => rule.pattern.test(trimmedDescription));
+  if (knownRule) {
+    return knownRule.canonical;
+  }
+
+  const normalizedKey = normalizeMerchantKey(trimmedDescription);
+  if (!normalizedKey) {
+    return trimmedDescription;
+  }
+
+  return normalizedKey
+    .split(' ')
+    .slice(0, 4)
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ');
+};
 
 const getMonthKey = (date: Date) => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
 
@@ -39,7 +99,15 @@ const getMonthLabel = (date: Date) =>
 
 const DAY_IN_MS = 24 * 60 * 60 * 1000;
 
-const normalizeDescription = normalizeMerchantName;
+const normalizeDescription = normalizeMerchantKey;
+
+const buildDuplicateFingerprint = (transaction: Pick<Transaction, 'date' | 'amount' | 'description' | 'accountId'>) =>
+  [
+    transaction.accountId || '',
+    transaction.date,
+    Math.abs(transaction.amount).toFixed(2),
+    normalizeDescription(transaction.description),
+  ].join('|');
 
 const getDateDifferenceInDays = (firstDate: string, secondDate: string) => {
   const first = new Date(`${firstDate}T00:00:00`);
@@ -51,6 +119,24 @@ const addDaysToIsoDate = (date: string, days: number) => {
   const nextDate = new Date(`${date}T00:00:00`);
   nextDate.setDate(nextDate.getDate() + days);
   return nextDate.toISOString().slice(0, 10);
+};
+
+const toIsoDate = (date: Date) => date.toISOString().slice(0, 10);
+
+const getDaysInMonth = (year: number, monthIndex: number) => new Date(year, monthIndex + 1, 0).getDate();
+
+const buildDueDate = (referenceDate: Date, dueDay: number) => {
+  const year = referenceDate.getFullYear();
+  const monthIndex = referenceDate.getMonth();
+  const dueDate = new Date(year, monthIndex, Math.min(dueDay, getDaysInMonth(year, monthIndex)));
+  return toIsoDate(dueDate);
+};
+
+const buildNextMonthDueDate = (referenceDate: Date, dueDay: number) => {
+  const year = referenceDate.getFullYear();
+  const monthIndex = referenceDate.getMonth() + 1;
+  const nextDueDate = new Date(year, monthIndex, Math.min(dueDay, getDaysInMonth(year, monthIndex)));
+  return toIsoDate(nextDueDate);
 };
 
 const getCadenceForIntervals = (intervals: number[]) => {
@@ -179,7 +265,7 @@ export const detectRecurringBills = (
 
     const totalAmount = sortedGroup.reduce((sum, transaction) => sum + transaction.amount, 0);
     recurringBills.push({
-      name: lastTransaction.description,
+      name: normalizeMerchantName(lastTransaction.description),
       category: lastTransaction.category,
       institution: lastTransaction.institution,
       cadence: cadenceMatch.cadence,
@@ -193,6 +279,68 @@ export const detectRecurringBills = (
 
   return recurringBills.sort((a, b) => a.nextExpectedDate.localeCompare(b.nextExpectedDate));
 };
+
+export const getBillStatuses = (
+  bills: Bill[],
+  transactions: Transaction[],
+  referenceDate = new Date()
+): BillStatus[] => {
+  const todayIso = toIsoDate(referenceDate);
+
+  return bills
+    .map((bill) => {
+      const currentMonthDueDate = buildDueDate(referenceDate, bill.dueDay);
+      const monthKey = currentMonthDueDate.slice(0, 7);
+      const matchingTransactions = transactions
+        .filter((transaction) => {
+          if (transaction.type !== 'expense') return false;
+          if (bill.accountId && transaction.accountId !== bill.accountId) return false;
+          if (bill.category && transaction.category !== bill.category) return false;
+          if (transaction.date.slice(0, 7) !== monthKey) return false;
+
+          const normalizedBillName = normalizeDescription(bill.name);
+          const normalizedTransactionName = normalizeDescription(transaction.description || transaction.category);
+          return normalizedTransactionName.includes(normalizedBillName) || normalizedBillName.includes(normalizedTransactionName);
+        })
+        .sort((a, b) => b.date.localeCompare(a.date));
+
+      const matchedTransaction = matchingTransactions[0];
+      const manualOverrideApplies = bill.manualStatusMonth === monthKey && bill.manualStatus;
+      const isPaid = manualOverrideApplies
+        ? bill.manualStatus === 'paid'
+        : Boolean(matchedTransaction && matchedTransaction.date <= currentMonthDueDate);
+      const dueDate = isPaid ? buildNextMonthDueDate(referenceDate, bill.dueDay) : currentMonthDueDate;
+      const daysUntilDue = getDateDifferenceInDays(todayIso, dueDate);
+      const status: BillStatus['status'] = isPaid ? 'paid' : daysUntilDue < 0 ? 'overdue' : 'upcoming';
+
+      return {
+        billId: bill.id,
+        name: bill.name,
+        dueDate,
+        amount: bill.amount,
+        category: bill.category,
+        accountId: bill.accountId,
+        autopay: bill.autopay,
+        status,
+        matchedTransactionDate: manualOverrideApplies && bill.manualStatus === 'paid'
+          ? bill.manualPaidDate || todayIso
+          : matchedTransaction?.date,
+        matchedTransactionAmount: matchedTransaction?.amount,
+        daysUntilDue,
+      };
+    })
+    .sort((a, b) => a.dueDate.localeCompare(b.dueDate));
+};
+
+export const getDueSoonBills = (
+  bills: Bill[],
+  transactions: Transaction[],
+  referenceDate = new Date(),
+  daysAhead = 14
+) =>
+  getBillStatuses(bills, transactions, referenceDate).filter(
+    (bill) => bill.status !== 'paid' || bill.daysUntilDue <= daysAhead
+  );
 
 export const getSuggestedCategory = (
   description: string,
@@ -221,6 +369,46 @@ export const getSuggestedCategory = (
 
   const [bestMatch] = Array.from(categoryCounts.entries()).sort((a, b) => b[1] - a[1]);
   return bestMatch?.[0] || fallbackCategory;
+};
+
+export const findPotentialTransactionDuplicates = (
+  importedTransactions: Transaction[],
+  existingTransactions: Transaction[]
+): PotentialDuplicateMatch[] => {
+  const existingFingerprints = new Map<string, string[]>();
+
+  existingTransactions.forEach((transaction) => {
+    const fingerprint = buildDuplicateFingerprint(transaction);
+    const matches = existingFingerprints.get(fingerprint) || [];
+    matches.push(transaction.id);
+    existingFingerprints.set(fingerprint, matches);
+  });
+
+  return importedTransactions
+    .map((transaction) => {
+      const fingerprint = buildDuplicateFingerprint(transaction);
+      return {
+        importedTransactionId: transaction.id,
+        existingTransactionIds: existingFingerprints.get(fingerprint) || [],
+        duplicateFingerprint: fingerprint,
+      };
+    })
+    .filter((match) => match.existingTransactionIds.length > 0);
+};
+
+export const findBatchDuplicates = (transactions: Transaction[]) => {
+  const groupedIds = new Map<string, string[]>();
+
+  transactions.forEach((transaction) => {
+    const fingerprint = buildDuplicateFingerprint(transaction);
+    const matches = groupedIds.get(fingerprint) || [];
+    matches.push(transaction.id);
+    groupedIds.set(fingerprint, matches);
+  });
+
+  return new Map(
+    Array.from(groupedIds.entries()).filter(([, ids]) => ids.length > 1)
+  );
 };
 
 export const formatCurrency = (amount: number) =>

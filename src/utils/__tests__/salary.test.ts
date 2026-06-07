@@ -1,5 +1,5 @@
-import { getNextPayDate, getProjectedIncome, getUpcomingPaychecks } from '../salary';
-import { detectRecurringBills, getSuggestedCategory, summarizeMonthlyTransactions, summarizeTransactions } from '../finance';
+import { getNextPayDate, getProjectedIncome, getProjectedIncomeFromSources, getUpcomingIncomeSourcesPaychecks, getUpcomingPaychecks, migrateSalaryScheduleToIncomeSources } from '../salary';
+import { detectRecurringBills, findBatchDuplicates, findPotentialTransactionDuplicates, getBillStatuses, getDueSoonBills, getSuggestedCategory, normalizeMerchantName, summarizeMonthlyTransactions, summarizeTransactions } from '../finance';
 import { Transaction } from '@/types';
 
 describe('salary utilities', () => {
@@ -30,6 +30,34 @@ describe('salary utilities', () => {
     });
 
     expect(getProjectedIncome(schedule, 30, referenceDate)).toBe(3000);
+  });
+
+  it('combines multiple household income sources into one projection', () => {
+    const incomeSources = [
+      { id: 'income-1', name: 'Partner A', amount: 1500, nextPayDate: '2026-06-05' },
+      { id: 'income-2', name: 'Partner B', amount: 1200, nextPayDate: '2026-06-12' },
+    ];
+    const referenceDate = new Date('2026-06-02T12:00:00Z');
+
+    const upcomingPaychecks = getUpcomingIncomeSourcesPaychecks(incomeSources, 4, referenceDate);
+
+    expect(upcomingPaychecks).toHaveLength(4);
+    expect(upcomingPaychecks[0]).toMatchObject({ sourceName: 'Partner A', isoDate: '2026-06-05', amount: 1500 });
+    expect(upcomingPaychecks[1]).toMatchObject({ sourceName: 'Partner B', isoDate: '2026-06-12', amount: 1200 });
+    expect(getProjectedIncomeFromSources(incomeSources, 30, referenceDate)).toBe(5400);
+  });
+
+  it('migrates a legacy salary schedule into a named income source', () => {
+    expect(
+      migrateSalaryScheduleToIncomeSources({ amount: 2000, nextPayDate: '2026-06-12' })
+    ).toEqual([
+      {
+        id: 'income-source-primary',
+        name: 'Primary income',
+        amount: 2000,
+        nextPayDate: '2026-06-12',
+      },
+    ]);
   });
 
   it('summarizes transactions the same way the dashboard does', () => {
@@ -106,5 +134,90 @@ describe('salary utilities', () => {
 
     expect(getSuggestedCategory('Trader Joe Store 456', transactions)).toBe('Groceries');
     expect(getSuggestedCategory('Unknown Merchant', transactions)).toBe('Uncategorized');
+  });
+
+  it('finds imported transactions that already exist in the ledger', () => {
+    const existing: Transaction[] = [
+      { id: 'existing-1', amount: 15.85, type: 'expense', category: 'Phone', date: '2025-12-04', description: 'TELLO US 866-3770294 GA', accountId: 'card-1' },
+      { id: 'existing-2', amount: 44, type: 'expense', category: 'Shopping', date: '2025-12-20', description: 'MENERALS LLC 775-684-9000 NV', accountId: 'card-1' },
+    ];
+    const imported: Transaction[] = [
+      { id: 'import-1', amount: 15.85, type: 'expense', category: 'Uncategorized', date: '2025-12-04', description: 'TELLO US 866-3770294 GA', accountId: 'card-1' },
+      { id: 'import-2', amount: 10, type: 'expense', category: 'Food', date: '2025-12-05', description: 'Coffee Shop', accountId: 'card-1' },
+    ];
+
+    expect(findPotentialTransactionDuplicates(imported, existing)).toEqual([
+      expect.objectContaining({
+        importedTransactionId: 'import-1',
+        existingTransactionIds: ['existing-1'],
+      }),
+    ]);
+  });
+
+  it('finds duplicate rows inside the same import batch', () => {
+    const imported: Transaction[] = [
+      { id: 'import-1', amount: 15.85, type: 'expense', category: 'Uncategorized', date: '2025-12-04', description: 'TELLO US 866-3770294 GA', accountId: 'card-1' },
+      { id: 'import-2', amount: 15.85, type: 'expense', category: 'Uncategorized', date: '2025-12-04', description: 'TELLO US 866-3770294 GA', accountId: 'card-1' },
+      { id: 'import-3', amount: 44, type: 'expense', category: 'Uncategorized', date: '2025-12-20', description: 'MENERALS LLC 775-684-9000 NV', accountId: 'card-1' },
+    ];
+
+    expect(Array.from(findBatchDuplicates(imported).values())).toEqual([['import-1', 'import-2']]);
+  });
+
+  it('computes due-soon bill statuses from tracked bills and transactions', () => {
+    const bills = [
+      { id: 'bill-1', name: 'Internet', dueDay: 18, amount: 85, category: 'Utilities' },
+      { id: 'bill-2', name: 'Rent Payment', dueDay: 10, amount: 1200, category: 'Housing' },
+    ];
+    const transactions: Transaction[] = [
+      { id: 'tx-1', amount: 1200, type: 'expense', category: 'Housing', date: '2026-06-05', description: 'Rent Payment' },
+    ];
+
+    const statuses = getBillStatuses(bills, transactions, new Date('2026-06-15T12:00:00Z'));
+    const dueSoon = getDueSoonBills(bills, transactions, new Date('2026-06-15T12:00:00Z'), 7);
+
+    expect(statuses).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ billId: 'bill-1', status: 'upcoming', dueDate: '2026-06-18' }),
+        expect.objectContaining({ billId: 'bill-2', status: 'paid', matchedTransactionDate: '2026-06-05' }),
+      ])
+    );
+    expect(dueSoon).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ billId: 'bill-1', status: 'upcoming' }),
+      ])
+    );
+  });
+
+  it('normalizes common merchant strings into cleaner recurring names', () => {
+    expect(normalizeMerchantName('SPOTIFY USA 12345 NEW YORK NY')).toBe('Spotify');
+    expect(normalizeMerchantName('AMAZON.COM*MKTP US AMZN.COM/BILL WA')).toBe('Amazon');
+    expect(normalizeMerchantName('WHOLEFDS SUGARLOAF GA')).toBe('Whole Foods');
+  });
+
+  it('lets a manual bill override mark the current cycle as paid', () => {
+    const bills = [
+      {
+        id: 'bill-1',
+        name: 'Internet',
+        dueDay: 18,
+        amount: 85,
+        category: 'Utilities',
+        manualStatus: 'paid' as const,
+        manualStatusMonth: '2026-06',
+        manualPaidDate: '2026-06-14',
+      },
+    ];
+
+    const statuses = getBillStatuses(bills, [], new Date('2026-06-15T12:00:00Z'));
+
+    expect(statuses).toEqual([
+      expect.objectContaining({
+        billId: 'bill-1',
+        status: 'paid',
+        matchedTransactionDate: '2026-06-14',
+        dueDate: '2026-07-18',
+      }),
+    ]);
   });
 });

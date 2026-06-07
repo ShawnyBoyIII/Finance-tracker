@@ -12,6 +12,28 @@ export interface ParsedTransaction {
   description: string;
   category: string;
   institution?: string;
+  confidence?: 'high' | 'medium' | 'low';
+  reviewFlags?: string[];
+  parserProfile?: string;
+}
+
+export interface PdfTextExtractionResult {
+  text: string;
+  totalItems: number;
+  nonEmptyItems: number;
+  pagesWithText: number;
+  pageCount: number;
+}
+
+export interface PdfImportAnalysis {
+  shouldUseOcr: boolean;
+  reason: 'empty_text' | 'sparse_text' | 'parse_failed' | 'text_ok';
+}
+
+interface StatementParserProfile {
+  name: string;
+  institutionMatch: RegExp;
+  parse: (text: string, statementType: StatementType, institution?: string) => ParsedTransaction[];
 }
 
 const loadPdfJs = async () => {
@@ -20,25 +42,44 @@ const loadPdfJs = async () => {
   return pdfjsLib;
 };
 
-export const extractTextFromPdf = async (file: File): Promise<string> => {
+export const extractTextFromPdf = async (file: File): Promise<PdfTextExtractionResult> => {
   const pdfjsLib = await loadPdfJs();
   const arrayBuffer = await file.arrayBuffer();
   const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
   const pageTexts: string[] = [];
+  let totalItems = 0;
+  let nonEmptyItems = 0;
+  let pagesWithText = 0;
 
   for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
     const page = await pdf.getPage(pageNum);
     const content = await page.getTextContent();
-    const text = content.items
+    const strings = content.items
       .map((item: any) => ('str' in item ? item.str : ''))
+      .map((value: string) => value.trim());
+
+    totalItems += strings.length;
+    nonEmptyItems += strings.filter(Boolean).length;
+
+    const text = strings
       .join(' ')
       .replace(/\s+/g, ' ')
       .trim();
 
+    if (text.length > 0) {
+      pagesWithText += 1;
+    }
+
     pageTexts.push(text);
   }
 
-  return pageTexts.join('\n');
+  return {
+    text: pageTexts.join('\n').trim(),
+    totalItems,
+    nonEmptyItems,
+    pagesWithText,
+    pageCount: pdf.numPages,
+  };
 };
 
 export const extractImagesFromPdf = async (file: File): Promise<string[]> => {
@@ -98,6 +139,40 @@ export const performOcrOnImages = async (images: string[], onProgress?: (progres
   return fullText;
 };
 
+export const analyzePdfTextExtraction = (
+  extraction: PdfTextExtractionResult,
+  parsedTransactionsCount: number
+): PdfImportAnalysis => {
+  if (!extraction.text || extraction.nonEmptyItems === 0 || extraction.pagesWithText === 0) {
+    return {
+      shouldUseOcr: true,
+      reason: 'empty_text',
+    };
+  }
+
+  const averageItemsPerPage = extraction.nonEmptyItems / Math.max(extraction.pageCount, 1);
+  const averageTextLengthPerPage = extraction.text.length / Math.max(extraction.pageCount, 1);
+
+  if (parsedTransactionsCount > 0) {
+    return {
+      shouldUseOcr: false,
+      reason: 'text_ok',
+    };
+  }
+
+  if (averageItemsPerPage < 12 || averageTextLengthPerPage < 80) {
+    return {
+      shouldUseOcr: true,
+      reason: 'sparse_text',
+    };
+  }
+
+  return {
+    shouldUseOcr: true,
+    reason: 'parse_failed',
+  };
+};
+
 const KNOWN_INSTITUTIONS = [
   'Chase',
   'Bank of America',
@@ -127,7 +202,8 @@ const buildTransaction = (
   amount: number,
   description: string,
   statementType: StatementType,
-  institution?: string
+  institution?: string,
+  metadata?: Pick<ParsedTransaction, 'confidence' | 'reviewFlags' | 'parserProfile'>
 ): ParsedTransaction => {
   let type: TransactionType = 'expense';
   const isPayment = paymentRegex.test(description);
@@ -151,7 +227,26 @@ const buildTransaction = (
     description: description.trim() || 'Imported Transaction',
     category: 'Uncategorized',
     ...(institution && { institution }),
+    ...(metadata || {}),
   };
+};
+
+const normalizeStatementText = (text: string) => text.replace(/\s+/g, ' ').trim();
+
+const parseClosingDate = (text: string) => {
+  const numericDateMatch = text.match(
+    /(?:Statement Date|Statement Closing Date|Closing Date)\s*:?\s*(\d{1,2})\/(\d{1,2})\/(\d{2,4})/i
+  );
+
+  if (numericDateMatch) {
+    const [, month, , year] = numericDateMatch;
+    return {
+      statementMonth: Number(month),
+      statementYear: Number(year.length === 2 ? `20${year}` : year),
+    };
+  }
+
+  return null;
 };
 
 const parseChaseCreditCardTransactions = (
@@ -159,13 +254,11 @@ const parseChaseCreditCardTransactions = (
   statementType: StatementType,
   institution?: string
 ): ParsedTransaction[] => {
-  const statementDateMatch = text.match(/Statement Date:\s*(\d{2})\/(\d{2})\/(\d{2,4})/i);
-  if (!statementDateMatch) return [];
+  const closingDate = parseClosingDate(text);
+  if (!closingDate) return [];
 
-  const statementMonth = Number(statementDateMatch[1]);
-  const statementYear = Number(statementDateMatch[3].length === 2 ? `20${statementDateMatch[3]}` : statementDateMatch[3]);
-  const activityMatch = text.match(
-    /Date of Transaction\s+Merchant Name or Transaction Description\s+\$ Amount\s+(.*?)\s+Total fees charged in/i
+  const activityMatch = normalizeStatementText(text).match(
+    /Date of Transaction\s+Merchant Name or Transaction Description\s+\$ Amount\s+(.*?)(?:\s+Total fees charged in|\s+Interest charged|\s+202\d Totals Year-to-Date|\s+Fees charged)/i
   );
 
   if (!activityMatch) return [];
@@ -185,14 +278,149 @@ const parseChaseCreditCardTransactions = (
     const [, month, day, rawDescription, rawAmount] = match;
     const description = rawDescription.trim();
     const amount = Number(rawAmount.replace(/,/g, ''));
-    const date = formatTransactionDate(month, day, statementYear, statementMonth);
+    const date = formatTransactionDate(month, day, closingDate.statementYear, closingDate.statementMonth);
 
     if (!date || !description || Number.isNaN(amount)) continue;
 
-    transactions.push(buildTransaction(date, amount, description, statementType, institution));
+    const reviewFlags =
+      description.includes('WWW.') || description.includes('*')
+        ? ['Merchant text was normalized from a statement row.']
+        : [];
+
+    transactions.push(
+      buildTransaction(date, amount, description, statementType, institution, {
+        confidence: reviewFlags.length > 0 ? 'medium' : 'high',
+        reviewFlags,
+        parserProfile: 'Chase credit card',
+      })
+    );
   }
 
   return transactions;
+};
+
+const parseCapitalOneCreditCardTransactions = (
+  text: string,
+  statementType: StatementType,
+  institution?: string
+): ParsedTransaction[] => {
+  const closingDate = parseClosingDate(text);
+  if (!closingDate) return [];
+
+  const activityMatch = normalizeStatementText(text).match(
+    /Transactions\s+Trans Date\s+Post Date\s+Description\s+Amount\s+(.*?)\s+Total Transactions/i
+  );
+
+  if (!activityMatch) return [];
+
+  const rows = activityMatch[1]
+    .match(/\d{2}\/\d{2}\s+\d{2}\/\d{2}\s+.*?(?=\s+\d{2}\/\d{2}\s+\d{2}\/\d{2}\s+|$)/g);
+
+  if (!rows) return [];
+
+  const transactions: ParsedTransaction[] = [];
+
+  for (const row of rows) {
+    const match = row.match(/^(\d{2})\/(\d{2})\s+\d{2}\/\d{2}\s+(.*?)\s+(-?[\d,]+\.\d{2})$/);
+    if (!match) continue;
+
+    const [, month, day, rawDescription, rawAmount] = match;
+    const description = rawDescription.trim();
+    const amount = Number(rawAmount.replace(/,/g, ''));
+    const date = formatTransactionDate(month, day, closingDate.statementYear, closingDate.statementMonth);
+
+    if (!date || !description || Number.isNaN(amount)) continue;
+
+    transactions.push(
+      buildTransaction(date, amount, description, statementType, institution, {
+        confidence: 'high',
+        reviewFlags: [],
+        parserProfile: 'Capital One credit card',
+      })
+    );
+  }
+
+  return transactions;
+};
+
+const parseAmexCreditCardTransactions = (
+  text: string,
+  statementType: StatementType,
+  institution?: string
+): ParsedTransaction[] => {
+  const closingDate = parseClosingDate(text);
+  if (!closingDate) return [];
+
+  const activityMatch = normalizeStatementText(text).match(
+    /Date\s+Description\s+Amount\s+(.*?)\s+(?:Fees|Interest Charge Calculation|Total fees for this period)/i
+  );
+
+  if (!activityMatch) return [];
+
+  const rows = activityMatch[1]
+    .match(/\d{2}\/\d{2}\s+.*?(?=\s+\d{2}\/\d{2}\s+|$)/g);
+
+  if (!rows) return [];
+
+  const transactions: ParsedTransaction[] = [];
+
+  for (const row of rows) {
+    const match = row.match(/^(\d{2})\/(\d{2})\s+(.*?)\s+(-?[\d,]+\.\d{2})$/);
+    if (!match) continue;
+
+    const [, month, day, rawDescription, rawAmount] = match;
+    const description = rawDescription.trim();
+    const amount = Number(rawAmount.replace(/,/g, ''));
+    const date = formatTransactionDate(month, day, closingDate.statementYear, closingDate.statementMonth);
+
+    if (!date || !description || Number.isNaN(amount)) continue;
+
+    transactions.push(
+      buildTransaction(date, amount, description, statementType, institution, {
+        confidence: paymentRegex.test(description) ? 'medium' : 'high',
+        reviewFlags: paymentRegex.test(description) ? ['Payment row detected from AmEx statement.'] : [],
+        parserProfile: 'American Express credit card',
+      })
+    );
+  }
+
+  return transactions;
+};
+
+const STATEMENT_PARSER_PROFILES: StatementParserProfile[] = [
+  {
+    name: 'Chase credit card',
+    institutionMatch: /\bChase\b/i,
+    parse: parseChaseCreditCardTransactions,
+  },
+  {
+    name: 'Capital One credit card',
+    institutionMatch: /\bCapital One\b/i,
+    parse: parseCapitalOneCreditCardTransactions,
+  },
+  {
+    name: 'American Express credit card',
+    institutionMatch: /\bAmerican Express\b|\bAmEx\b/i,
+    parse: parseAmexCreditCardTransactions,
+  },
+];
+
+const buildGenericReviewFlags = (description: string, amount: number) => {
+  const flags: string[] = [];
+
+  if (description.length < 6) {
+    flags.push('Description is very short.');
+  }
+
+  if (!/[a-z]/i.test(description)) {
+    flags.push('Description has weak merchant text.');
+  }
+
+  if (Math.abs(amount) >= 5000) {
+    flags.push('Large amount parsed. Review before import.');
+  }
+
+  return flags;
 };
 
 export const parseTransactionsFromText = (text: string, statementType: StatementType): ParsedTransaction[] => {
@@ -209,9 +437,15 @@ export const parseTransactionsFromText = (text: string, statementType: Statement
     }
   }
 
-  const chaseTransactions = parseChaseCreditCardTransactions(text, statementType, detectedInstitution);
-  if (chaseTransactions.length > 0) {
-    return chaseTransactions;
+  for (const profile of STATEMENT_PARSER_PROFILES) {
+    if (!profile.institutionMatch.test(text)) {
+      continue;
+    }
+
+    const profileTransactions = profile.parse(text, statementType, detectedInstitution);
+    if (profileTransactions.length > 0) {
+      return profileTransactions;
+    }
   }
 
   const statementDateMatch = text.match(/Statement Date:\s*(\d{1,2})\/(\d{1,2})\/(\d{2,4})/i);
@@ -280,8 +514,14 @@ export const parseTransactionsFromText = (text: string, statementType: Statement
 
       if (!formattedDate) continue;
 
+      const reviewFlags = buildGenericReviewFlags(description, parsedAmount);
+
       transactions.push(
-        buildTransaction(formattedDate, parsedAmount, description, statementType, detectedInstitution)
+        buildTransaction(formattedDate, parsedAmount, description, statementType, detectedInstitution, {
+          confidence: reviewFlags.length >= 2 ? 'low' : reviewFlags.length === 1 ? 'medium' : 'medium',
+          reviewFlags,
+          parserProfile: 'Generic statement parser',
+        })
       );
     }
   }

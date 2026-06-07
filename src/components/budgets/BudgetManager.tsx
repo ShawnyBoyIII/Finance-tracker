@@ -61,11 +61,11 @@ export default function BudgetManager() {
   return (
     <div className="space-y-6">
       {/* Add new budget form */}
-      <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
-        <h3 className="text-lg font-medium text-gray-900 mb-4">Set a Budget</h3>
+      <div className="cockpit-panel rounded-[28px] p-6">
+        <h3 className="text-lg font-medium text-white mb-4">Set a Budget</h3>
         <form onSubmit={handleAddBudget} className="flex gap-4 items-end">
           <div className="flex-1">
-            <label className="block text-sm font-medium text-gray-700">Category Name<span className="text-red-500 ml-1" aria-hidden="true">*</span></label>
+            <label className="block text-sm font-medium text-slate-200">Category Name<span className="text-red-500 ml-1" aria-hidden="true">*</span></label>
             <input
               type="text"
               required
@@ -76,7 +76,7 @@ export default function BudgetManager() {
             />
           </div>
           <div className="flex-1">
-            <label className="block text-sm font-medium text-gray-700">Monthly Limit ($)<span className="text-red-500 ml-1" aria-hidden="true">*</span></label>
+            <label className="block text-sm font-medium text-slate-200">Monthly Limit ($)<span className="text-red-500 ml-1" aria-hidden="true">*</span></label>
             <input
               type="number"
               required
@@ -90,7 +90,7 @@ export default function BudgetManager() {
           </div>
           <button
             type="submit"
-            className="mb-0.5 bg-indigo-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-indigo-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-indigo-500"
+            className="mb-0.5 rounded-xl bg-gradient-to-r from-cyan-400 to-indigo-500 px-4 py-2 text-sm font-medium text-slate-950 hover:from-cyan-300 hover:to-indigo-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-indigo-500"
           >
             Save Budget
           </button>
@@ -98,23 +98,23 @@ export default function BudgetManager() {
       </div>
 
       {/* Budget Progress List */}
-      <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
+      <div className="cockpit-panel rounded-[28px] p-6">
         <div className="flex items-center justify-between mb-6 gap-4">
           <div>
-            <h3 className="text-lg font-medium text-gray-900">Budget Progress</h3>
-            <p className="text-sm text-gray-500 mt-1">Tracking spending for the current calendar month only.</p>
+            <h3 className="text-lg font-medium text-white">Budget Progress</h3>
+            <p className="text-sm cockpit-muted mt-1">Tracking spending for the current calendar month only.</p>
           </div>
         </div>
 
         {budgetProgress.length === 0 ? (
-          <p className="text-gray-500 text-center py-4">No budgets set yet. Create one above to start tracking!</p>
+          <p className="cockpit-muted text-center py-4">No budgets set yet. Create one above to start tracking!</p>
         ) : (
           <div className="space-y-6">
             {budgetProgress.map((budget) => (
-              <div key={budget.category} className="border-b border-gray-50 pb-4 last:border-0 last:pb-0">
+              <div key={budget.category} className="rounded-2xl border border-white/10 bg-white/5 p-4">
                 <div className="flex justify-between items-center mb-2">
                   <div className="flex items-center gap-2">
-                    <span className="font-medium text-gray-900">{budget.category}</span>
+                    <span className="font-medium text-white">{budget.category}</span>
                     {budget.isOverBudget && (
                       <div title="Over budget!">
                         <AlertCircle className="w-4 h-4 text-red-500" />
@@ -122,7 +122,7 @@ export default function BudgetManager() {
                     )}
                   </div>
                   <div className="flex items-center gap-4">
-                    <span className={`text-sm ${budget.isOverBudget ? 'text-red-600 font-medium' : 'text-gray-600'}`}>
+                    <span className={`text-sm ${budget.isOverBudget ? 'text-red-400 font-medium' : 'text-slate-300'}`}>
                       {formatCurrency(budget.spent)} / {formatCurrency(budget.amount)}
                     </span>
                     <button
@@ -131,7 +131,7 @@ export default function BudgetManager() {
                           deleteBudget(budget.category);
                         }
                       }}
-                      className="text-gray-400 hover:text-red-600 rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500"
+                      className="text-slate-500 hover:text-red-400 rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500"
                       aria-label="Delete budget"
                       title="Delete budget"
                     >
@@ -141,13 +141,13 @@ export default function BudgetManager() {
                 </div>
 
                 {/* Progress Bar */}
-                <div className="w-full bg-gray-200 rounded-full h-2.5">
+                <div className="w-full bg-white/10 rounded-full h-2.5">
                   <div
-                    className={`h-2.5 rounded-full ${budget.isOverBudget ? 'bg-red-500' : 'bg-indigo-600'}`}
+                    className={`h-2.5 rounded-full ${budget.isOverBudget ? 'bg-rose-400' : 'bg-cyan-400'}`}
                     style={{ width: `${budget.percentage}%` }}
                   ></div>
                 </div>
-                <p className="text-xs text-gray-500 mt-1">
+                <p className="text-xs cockpit-muted mt-1">
                   {budget.realPercentage.toFixed(0)}% used
                   {budget.isOverBudget && ` (${formatCurrency(budget.spent - budget.amount)} over limit)`}
                 </p>

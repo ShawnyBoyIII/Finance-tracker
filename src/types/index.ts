@@ -1,5 +1,8 @@
 export type TransactionType = 'income' | 'expense' | 'cc_payment';
 export type FinancialAccountType = 'cash' | 'bank' | 'credit_card';
+export type StatementSourceType = 'bank' | 'credit_card';
+export type StatementImportFormat = 'csv' | 'pdf';
+export type ImportedStatementStatus = 'review' | 'imported' | 'failed';
 
 export interface FinancialAccount {
   id: string;
@@ -18,6 +21,24 @@ export interface Transaction {
   description: string;
   accountId?: string;
   institution?: string;
+  sourceType?: StatementSourceType;
+  statementId?: string;
+}
+
+export interface ImportedStatement {
+  id: string;
+  accountId: string;
+  sourceType: StatementSourceType;
+  format: StatementImportFormat;
+  fileName: string;
+  institution?: string;
+  parserProfile?: string;
+  periodStart?: string;
+  periodEnd?: string;
+  importedAt: string;
+  status: ImportedStatementStatus;
+  parseVersion: number;
+  transactionCount: number;
 }
 
 export interface Budget {
@@ -25,9 +46,27 @@ export interface Budget {
   amount: number;
 }
 
+export interface Bill {
+  id: string;
+  name: string;
+  dueDay: number;
+  amount?: number;
+  category?: string;
+  accountId?: string;
+  autopay?: boolean;
+  manualStatus?: 'paid' | 'unpaid';
+  manualStatusMonth?: string;
+  manualPaidDate?: string;
+}
+
 export interface SalarySchedule {
   amount: number;
   nextPayDate: string;
+}
+
+export interface IncomeSource extends SalarySchedule {
+  id: string;
+  name: string;
 }
 
 export interface AppMetadata {
@@ -40,6 +79,9 @@ export interface AppData {
   transactions: Transaction[];
   budgets: Budget[];
   accounts: FinancialAccount[];
+  statements?: ImportedStatement[];
+  bills?: Bill[];
   salarySchedule: SalarySchedule | null;
+  incomeSources?: IncomeSource[];
   metadata: AppMetadata;
 }

@@ -126,6 +126,7 @@ describe('TransactionList filtering', () => {
 
     render(<TransactionList />);
 
+    await user.click(screen.getByRole('button', { name: 'Edit category for Trader Joe' }));
     const categoryInput = screen.getByLabelText('Category for Trader Joe');
     await user.type(categoryInput, 's');
 

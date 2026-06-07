@@ -37,7 +37,7 @@ const readFileAsText = (file: File) => {
 };
 
 export default function DataManager() {
-  const { transactions, budgets, accounts, salarySchedule, getBackupData, restoreBackupData } = useFinance();
+  const { transactions, budgets, accounts, statements, bills, incomeSources, getBackupData, restoreBackupData } = useFinance();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [status, setStatus] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -86,48 +86,57 @@ export default function DataManager() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">Data Management</h1>
-        <p className="text-sm text-gray-500 mt-1">Export and restore your local finance data.</p>
+        <p className="text-xs uppercase tracking-[0.24em] text-cyan-200/80">Storage control</p>
+        <h1 className="text-3xl font-semibold text-white mt-2">Data Management</h1>
+        <p className="text-sm cockpit-muted mt-1">Export and restore your local finance data.</p>
       </div>
 
-      <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
-          <div className="rounded-md border border-gray-200 bg-gray-50 p-4">
-            <p className="text-xs uppercase tracking-wide text-gray-500">Transactions</p>
-            <p className="text-2xl font-bold text-gray-900 mt-2">{transactions.length}</p>
+      <div className="cockpit-panel rounded-[28px] p-6">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-6">
+          <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+            <p className="text-xs uppercase tracking-wide cockpit-muted">Transactions</p>
+            <p className="text-2xl font-bold text-white mt-2">{transactions.length}</p>
           </div>
-          <div className="rounded-md border border-gray-200 bg-gray-50 p-4">
-            <p className="text-xs uppercase tracking-wide text-gray-500">Accounts</p>
-            <p className="text-2xl font-bold text-gray-900 mt-2">{accounts.length}</p>
+          <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+            <p className="text-xs uppercase tracking-wide cockpit-muted">Accounts</p>
+            <p className="text-2xl font-bold text-white mt-2">{accounts.length}</p>
           </div>
-          <div className="rounded-md border border-gray-200 bg-gray-50 p-4">
-            <p className="text-xs uppercase tracking-wide text-gray-500">Budgets</p>
-            <p className="text-2xl font-bold text-gray-900 mt-2">{budgets.length}</p>
+          <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+            <p className="text-xs uppercase tracking-wide cockpit-muted">Budgets</p>
+            <p className="text-2xl font-bold text-white mt-2">{budgets.length}</p>
           </div>
-          <div className="rounded-md border border-gray-200 bg-gray-50 p-4">
-            <p className="text-xs uppercase tracking-wide text-gray-500">Salary Schedule</p>
-            <p className="text-2xl font-bold text-gray-900 mt-2">{salarySchedule ? 'Set' : 'None'}</p>
+          <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+            <p className="text-xs uppercase tracking-wide cockpit-muted">Statements</p>
+            <p className="text-2xl font-bold text-white mt-2">{statements.length}</p>
+          </div>
+          <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+            <p className="text-xs uppercase tracking-wide cockpit-muted">Bills</p>
+            <p className="text-2xl font-bold text-white mt-2">{bills.length}</p>
+          </div>
+          <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+            <p className="text-xs uppercase tracking-wide cockpit-muted">Income Sources</p>
+            <p className="text-2xl font-bold text-white mt-2">{incomeSources.length}</p>
           </div>
         </div>
       </div>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-        <section className="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
-          <h2 className="text-lg font-semibold text-gray-900">Export Backup</h2>
-          <p className="text-sm text-gray-500 mt-2">Download a JSON backup that includes transactions, accounts, budgets, and salary schedule data.</p>
+        <section className="cockpit-panel rounded-[28px] p-6">
+          <h2 className="text-lg font-semibold text-white">Export Backup</h2>
+          <p className="text-sm cockpit-muted mt-2">Download a JSON backup that includes transactions, accounts, budgets, and income source data.</p>
           <button
             type="button"
             onClick={handleExport}
-            className="mt-5 inline-flex items-center gap-2 rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700"
+            className="mt-5 inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-cyan-400 to-indigo-500 px-4 py-2 text-sm font-medium text-slate-950 hover:from-cyan-300 hover:to-indigo-400"
           >
             <Download className="h-4 w-4" />
             Export backup
           </button>
         </section>
 
-        <section className="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
-          <h2 className="text-lg font-semibold text-gray-900">Restore Backup</h2>
-          <p className="text-sm text-gray-500 mt-2">Choose a Finance Tracker backup file to replace the data stored in this browser.</p>
+        <section className="cockpit-panel rounded-[28px] p-6">
+          <h2 className="text-lg font-semibold text-white">Restore Backup</h2>
+          <p className="text-sm cockpit-muted mt-2">Choose a Finance Tracker backup file to replace the data stored in this browser.</p>
           <input
             ref={fileInputRef}
             aria-label="Restore backup file"
@@ -139,7 +148,7 @@ export default function DataManager() {
           <button
             type="button"
             onClick={() => fileInputRef.current?.click()}
-            className="mt-5 inline-flex items-center gap-2 rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800"
+            className="mt-5 inline-flex items-center gap-2 rounded-xl bg-white/10 px-4 py-2 text-sm font-medium text-white hover:bg-white/15"
           >
             <Upload className="h-4 w-4" />
             Restore backup
@@ -147,8 +156,8 @@ export default function DataManager() {
         </section>
       </div>
 
-      {status && <p className="rounded-md border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">{status}</p>}
-      {error && <p className="rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{error}</p>}
+      {status && <p className="rounded-2xl border border-emerald-400/20 bg-emerald-400/10 px-4 py-3 text-sm text-emerald-200">{status}</p>}
+      {error && <p className="rounded-2xl border border-red-400/20 bg-red-400/10 px-4 py-3 text-sm text-red-200">{error}</p>}
     </div>
   );
 }

@@ -44,6 +44,10 @@ export interface PotentialDuplicateMatch {
   duplicateFingerprint: string;
 }
 
+export const escapeRegExp = (string: string) => {
+  return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+};
+
 const MERCHANT_NORMALIZATION_RULES: Array<{ pattern: RegExp; canonical: string }> = [
   { pattern: /spotify/i, canonical: 'Spotify' },
   { pattern: /netflix/i, canonical: 'Netflix' },

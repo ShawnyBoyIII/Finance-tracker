@@ -13,3 +13,7 @@
 ## 2023-10-27 - Dynamic Active Navigation States
 **Learning:** For Next.js navigation menus, active routes were statically set, causing confusion about the current page, and missing the `aria-current="page"` attribute for screen readers.
 **Action:** Always dynamically determine active routes using `usePathname` from `next/navigation`, and apply `aria-current="page"` along with active visual styles to the active link element to ensure accessibility and clear UX.
+
+## 2024-06-06 - Form Label Associations
+**Learning:** In the `AddTransactionForm` component, the label elements were visually placed near the form inputs but lacked explicit programmatic association (e.g., using the `htmlFor` attribute on the label with a matching `id` on the input). Screen reader users will not understand the purpose of the input fields if they are missing these associations. Inputs without explicit labels also need `aria-label`s.
+**Action:** Always ensure that form inputs have explicitly associated labels using `htmlFor` and `id`, or have explicit `aria-label` attributes if visual labels are not provided (like in the credit card tab form).

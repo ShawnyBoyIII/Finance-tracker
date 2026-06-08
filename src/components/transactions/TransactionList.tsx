@@ -152,9 +152,15 @@ export default function TransactionList() {
   const selectedAccount = selectedAccountId === 'all' ? null : accountMap.get(selectedAccountId);
 
   const categories = useMemo(() => {
-    return Array.from(new Set(transactions.map((transaction) => transaction.category)))
-      .filter(Boolean)
-      .sort((a, b) => a.localeCompare(b));
+    // ⚡ Bolt: Single pass loop with Set to avoid chaining map/filter and array allocations
+    const uniqueCategories = new Set<string>();
+    for (let i = 0; i < transactions.length; i++) {
+      const category = transactions[i].category;
+      if (category) {
+        uniqueCategories.add(category);
+      }
+    }
+    return Array.from(uniqueCategories).sort((a, b) => a.localeCompare(b));
   }, [transactions]);
 
   const handleCategoryChange = (transactionId: string, category: string) => {
@@ -170,7 +176,11 @@ export default function TransactionList() {
   };
 
   const filteredTransactions = useMemo(() => {
-    const normalizedQuery = searchQuery.trim().toLowerCase();
+    const trimmedQuery = searchQuery.trim();
+    // Escape regex characters
+    const escapedQuery = trimmedQuery.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    // ⚡ Bolt: Pre-compile regex outside loop to avoid per-transaction lowercasing/allocation
+    const searchRegex = trimmedQuery ? new RegExp(escapedQuery, 'i') : null;
 
     return sortedTransactions.filter((transaction) => {
       if (selectedAccountId !== 'all' && transaction.accountId !== selectedAccountId) {
@@ -193,22 +203,20 @@ export default function TransactionList() {
         return false;
       }
 
-      if (!normalizedQuery) {
+      if (!searchRegex) {
         return true;
       }
 
-      const haystack = [
-        transaction.description,
-        transaction.category,
-        transaction.institution,
-        transaction.type,
-        accountMap.get(transaction.accountId || '')?.name,
-      ]
-        .filter(Boolean)
-        .join(' ')
-        .toLowerCase();
+      const accountName = accountMap.get(transaction.accountId || '')?.name || '';
 
-      return haystack.includes(normalizedQuery);
+      // ⚡ Bolt: Direct string concatenation avoids array alloc + filter(Boolean) + join overhead
+      const haystack = ((transaction.description || '') + ' ' +
+                       (transaction.category || '') + ' ' +
+                       (transaction.institution || '') + ' ' +
+                       (transaction.type || '') + ' ' +
+                       accountName);
+
+      return searchRegex.test(haystack);
     });
   }, [sortedTransactions, selectedAccountId, typeFilter, categoryFilter, startDate, endDate, searchQuery, accountMap]);
 
@@ -241,18 +249,27 @@ export default function TransactionList() {
   const selectedAccountSpend = useMemo(() => {
     if (selectedAccountId === 'all') return null;
 
-    const accountTransactions = sortedTransactions.filter((transaction) => transaction.accountId === selectedAccountId);
-    const charges = accountTransactions
-      .filter((transaction) => transaction.type === 'expense')
-      .reduce((sum, transaction) => sum + transaction.amount, 0);
-    const payments = accountTransactions
-      .filter((transaction) => transaction.type === 'cc_payment')
-      .reduce((sum, transaction) => sum + Math.abs(transaction.amount), 0);
+    let charges = 0;
+    let payments = 0;
+    let transactionCount = 0;
+
+    // ⚡ Bolt: Single pass iteration removes multiple filters, reduces, and intermediate arrays
+    for (let i = 0; i < sortedTransactions.length; i++) {
+      const transaction = sortedTransactions[i];
+      if (transaction.accountId === selectedAccountId) {
+        transactionCount++;
+        if (transaction.type === 'expense') {
+          charges += transaction.amount;
+        } else if (transaction.type === 'cc_payment') {
+          payments += Math.abs(transaction.amount);
+        }
+      }
+    }
 
     return {
       charges,
       payments,
-      transactionCount: accountTransactions.length,
+      transactionCount,
     };
   }, [selectedAccountId, sortedTransactions]);
 

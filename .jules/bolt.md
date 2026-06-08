@@ -33,3 +33,6 @@
 ## 2024-06-04 - toLowerCase().includes() Memory Allocation in Loops
 **Learning:** Using `toLowerCase().includes('string')` inside high-iteration loops (like parsing OCR output or iterating over thousands of CSV rows) creates unnecessary memory allocations by returning a new string on every iteration, leading to GC pressure and increased execution time.
 **Action:** Replace `string.toLowerCase().includes('pattern')` with a case-insensitive regular expression (`/pattern/i`) that is compiled and hoisted *outside* the loop, and use `regex.test(string)` for fast, allocation-free evaluation.
+## 2024-05-19 - Avoid filter(Boolean).join() in hot loops
+**Learning:** In Next.js/React `useMemo` hooks operating on large data sets (like `TransactionList`), chaining `.filter(Boolean).join(' ')` to create search haystacks dynamically inside a `.filter()` iteration is a significant performance bottleneck due to continuous intermediate array allocation and destruction.
+**Action:** Replace dynamic array construction and `.filter(Boolean).join()` with direct string concatenation, using inline fallbacks like `(prop || '') + ' ' + (prop2 || '')` to dramatically reduce garbage collection pressure.

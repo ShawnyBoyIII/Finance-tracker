@@ -38,7 +38,7 @@ export default function Dashboard() {
 
   const recurringBills = useMemo(() => detectRecurringBills(transactions), [transactions]);
   const upcomingPaychecks = useMemo(() => getUpcomingIncomeSourcesPaychecks(incomeSources, 4), [incomeSources]);
-  const recentTransactions = useMemo(() => [...transactions].sort((a, b) => b.date.localeCompare(a.date)).slice(0, 5), [transactions]);
+  const recentTransactions = useMemo(() => [...transactions].sort((a, b) => b.date < a.date ? -1 : b.date > a.date ? 1 : 0).slice(0, 5), [transactions]);
   const focusCategories = useMemo(() => monthlySummary.expensesByCategory.slice(0, 5), [monthlySummary.expensesByCategory]);
   const cardSummaries = useMemo(() => {
     return accounts

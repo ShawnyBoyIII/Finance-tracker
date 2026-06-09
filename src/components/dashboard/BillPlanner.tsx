@@ -23,9 +23,19 @@ export default function BillPlanner() {
   const [autopay, setAutopay] = useState(false);
 
   const dueSoonBills = useMemo(() => getDueSoonBills(bills, transactions), [bills, transactions]);
-  const accountOptions = accounts.filter((account) => account.type === 'cash' || account.type === 'bank' || account.type === 'credit_card');
-  const categories = Array.from(new Set(transactions.map((transaction) => transaction.category))).filter(Boolean).sort((a, b) => a.localeCompare(b));
-  const accountMap = new Map(accounts.map((account) => [account.id, account]));
+  const accountOptions = useMemo(() => accounts.filter((account) => account.type === 'cash' || account.type === 'bank' || account.type === 'credit_card'), [accounts]);
+
+  const categories = useMemo(() => {
+    const uniqueCategories = new Set<string>();
+    for (let i = 0; i < transactions.length; i++) {
+      if (transactions[i].category) {
+        uniqueCategories.add(transactions[i].category);
+      }
+    }
+    return Array.from(uniqueCategories).sort((a, b) => a < b ? -1 : a > b ? 1 : 0);
+  }, [transactions]);
+
+  const accountMap = useMemo(() => new Map(accounts.map((account) => [account.id, account])), [accounts]);
   const currentMonthKey = new Date().toISOString().slice(0, 7);
 
   const resetForm = () => {

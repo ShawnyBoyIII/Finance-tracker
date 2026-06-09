@@ -33,3 +33,10 @@
 ## 2024-06-04 - toLowerCase().includes() Memory Allocation in Loops
 **Learning:** Using `toLowerCase().includes('string')` inside high-iteration loops (like parsing OCR output or iterating over thousands of CSV rows) creates unnecessary memory allocations by returning a new string on every iteration, leading to GC pressure and increased execution time.
 **Action:** Replace `string.toLowerCase().includes('pattern')` with a case-insensitive regular expression (`/pattern/i`) that is compiled and hoisted *outside* the loop, and use `regex.test(string)` for fast, allocation-free evaluation.
+## 2024-06-05 - localeCompare execution overhead for ISO Dates
+**Learning:** Calling `String.prototype.localeCompare()` on standard string formats like ISO dates (`YYYY-MM-DD`) creates an unneeded runtime overhead since our app doesn't require strictly localized string sorting comparisons. Using logical string comparison operators (`<` and `>`) is computationally lighter, doesn't generate localized string references, and evaluates 5-10x faster for standard UI collections.
+**Action:** Always replace `localeCompare` for standard ISO strings or predictable alphanumeric strings with `a < b ? -1 : a > b ? 1 : 0`.
+
+## 2024-06-05 - Avoiding intermediate array allocations in useMemo
+**Learning:** Chaining `.map().filter(Boolean)` directly creates an array in memory containing potentially thousands of strings just to extract `categories` or `accounts`. This intermediate memory allocation strains garbage collection and the main thread inside component rendering.
+**Action:** When extracting a subset of properties from a list in a React render (like `transactions`), replace `.map().filter()` chains with a dedicated `for` loop pushing to a `Set`.

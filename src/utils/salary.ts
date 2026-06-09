@@ -103,7 +103,7 @@ export const getUpcomingIncomeSourcesPaychecks = (
   );
 
   return paychecks
-    .sort((a, b) => a.isoDate.localeCompare(b.isoDate))
+    .sort((a, b) => a.isoDate < b.isoDate ? -1 : a.isoDate > b.isoDate ? 1 : 0)
     .slice(0, count);
 };
 

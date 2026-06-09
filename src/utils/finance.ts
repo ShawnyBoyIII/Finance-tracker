@@ -245,7 +245,7 @@ export const detectRecurringBills = (
       return;
     }
 
-    const sortedGroup = [...group].sort((a, b) => a.date.localeCompare(b.date));
+    const sortedGroup = [...group].sort((a, b) => a.date < b.date ? -1 : a.date > b.date ? 1 : 0);
     const intervals = sortedGroup.slice(1).map((transaction, index) =>
       getDateDifferenceInDays(sortedGroup[index].date, transaction.date)
     );
@@ -277,7 +277,7 @@ export const detectRecurringBills = (
     });
   });
 
-  return recurringBills.sort((a, b) => a.nextExpectedDate.localeCompare(b.nextExpectedDate));
+  return recurringBills.sort((a, b) => a.nextExpectedDate < b.nextExpectedDate ? -1 : a.nextExpectedDate > b.nextExpectedDate ? 1 : 0);
 };
 
 export const getBillStatuses = (
@@ -302,7 +302,7 @@ export const getBillStatuses = (
           const normalizedTransactionName = normalizeDescription(transaction.description || transaction.category);
           return normalizedTransactionName.includes(normalizedBillName) || normalizedBillName.includes(normalizedTransactionName);
         })
-        .sort((a, b) => b.date.localeCompare(a.date));
+        .sort((a, b) => b.date < a.date ? -1 : b.date > a.date ? 1 : 0);
 
       const matchedTransaction = matchingTransactions[0];
       const manualOverrideApplies = bill.manualStatusMonth === monthKey && bill.manualStatus;
@@ -329,7 +329,7 @@ export const getBillStatuses = (
         daysUntilDue,
       };
     })
-    .sort((a, b) => a.dueDate.localeCompare(b.dueDate));
+    .sort((a, b) => a.dueDate < b.dueDate ? -1 : a.dueDate > b.dueDate ? 1 : 0);
 };
 
 export const getDueSoonBills = (

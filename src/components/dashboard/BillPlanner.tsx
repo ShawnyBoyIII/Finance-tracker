@@ -216,7 +216,11 @@ export default function BillPlanner() {
                     </button>
                     <button
                       type="button"
-                      onClick={() => deleteBill(bill.billId)}
+                      onClick={() => {
+                        if (window.confirm('Are you sure you want to delete this bill?')) {
+                          deleteBill(bill.billId);
+                        }
+                      }}
                       className="inline-flex items-center gap-1 rounded-md px-2 py-1 hover:bg-black/5"
                     >
                       <Trash2 className="h-3.5 w-3.5" />

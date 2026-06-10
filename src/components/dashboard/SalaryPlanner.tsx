@@ -63,8 +63,9 @@ export default function SalaryPlanner() {
 
       <form onSubmit={handleSubmit} className="grid grid-cols-1 gap-4 md:grid-cols-4">
         <div>
-          <label className="block text-sm font-medium text-slate-200">Income source</label>
+          <label htmlFor="income-source" className="block text-sm font-medium text-slate-200">Income source<span className="text-red-500 ml-1" aria-hidden="true">*</span></label>
           <input
+            id="income-source"
             type="text"
             required
             value={name}
@@ -75,8 +76,9 @@ export default function SalaryPlanner() {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-slate-200">Bi-weekly amount</label>
+          <label htmlFor="bi-weekly-amount" className="block text-sm font-medium text-slate-200">Bi-weekly amount<span className="text-red-500 ml-1" aria-hidden="true">*</span></label>
           <input
+            id="bi-weekly-amount"
             type="number"
             min="0"
             step="0.01"
@@ -89,8 +91,9 @@ export default function SalaryPlanner() {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-slate-200">Next payday</label>
+          <label htmlFor="next-payday" className="block text-sm font-medium text-slate-200">Next payday<span className="text-red-500 ml-1" aria-hidden="true">*</span></label>
           <input
+            id="next-payday"
             type="date"
             required
             value={nextPayDate}
@@ -130,8 +133,12 @@ export default function SalaryPlanner() {
                   </div>
                   <button
                     type="button"
-                    onClick={() => deleteIncomeSource(incomeSource.id)}
-                    className="inline-flex items-center gap-2 rounded-xl bg-white/10 px-3 py-2 text-sm font-medium text-slate-100 hover:bg-white/15"
+                    onClick={() => {
+                      if (window.confirm('Are you sure you want to remove this income source?')) {
+                        deleteIncomeSource(incomeSource.id);
+                      }
+                    }}
+                    className="inline-flex items-center gap-2 rounded-xl bg-white/10 px-3 py-2 text-sm font-medium text-slate-100 hover:bg-white/15 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500"
                   >
                     <Trash2 className="w-4 h-4" />
                     Remove

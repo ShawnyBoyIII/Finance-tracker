@@ -130,8 +130,13 @@ export default function SalaryPlanner() {
                   </div>
                   <button
                     type="button"
-                    onClick={() => deleteIncomeSource(incomeSource.id)}
-                    className="inline-flex items-center gap-2 rounded-xl bg-white/10 px-3 py-2 text-sm font-medium text-slate-100 hover:bg-white/15"
+                    onClick={() => {
+                      if (window.confirm('Are you sure you want to delete this income source?')) {
+                        deleteIncomeSource(incomeSource.id);
+                      }
+                    }}
+                    className="inline-flex items-center gap-2 rounded-xl bg-white/10 px-3 py-2 text-sm font-medium text-slate-100 hover:bg-white/15 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500"
+                    aria-label={`Delete ${incomeSource.name} income source`}
                   >
                     <Trash2 className="w-4 h-4" />
                     Remove

@@ -216,8 +216,13 @@ export default function BillPlanner() {
                     </button>
                     <button
                       type="button"
-                      onClick={() => deleteBill(bill.billId)}
-                      className="inline-flex items-center gap-1 rounded-md px-2 py-1 hover:bg-black/5"
+                      onClick={() => {
+                        if (window.confirm('Are you sure you want to delete this bill?')) {
+                          deleteBill(bill.billId);
+                        }
+                      }}
+                      className="inline-flex items-center gap-1 rounded-md px-2 py-1 hover:bg-black/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500"
+                      aria-label={`Delete ${bill.name} bill`}
                     >
                       <Trash2 className="h-3.5 w-3.5" />
                       Remove

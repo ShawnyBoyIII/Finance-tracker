@@ -13,3 +13,6 @@
 ## 2023-10-27 - Dynamic Active Navigation States
 **Learning:** For Next.js navigation menus, active routes were statically set, causing confusion about the current page, and missing the `aria-current="page"` attribute for screen readers.
 **Action:** Always dynamically determine active routes using `usePathname` from `next/navigation`, and apply `aria-current="page"` along with active visual styles to the active link element to ensure accessibility and clear UX.
+## 2024-05-18 - Dashboard Delete Confirmations & A11y
+**Learning:** Found inconsistent confirmation patterns across the app. `TransactionList` and `BudgetManager` use `window.confirm` for deletions and have specific aria-labels, while `BillPlanner` and `SalaryPlanner` deleted immediately on click without confirmation or proper screen-reader labels for icon-heavy actions.
+**Action:** Implemented `window.confirm` on dashboard panels. Ensure all future delete/destructive buttons have an `aria-label` stating what is being deleted (e.g. `aria-label="Delete ${itemName} bill"`) and proper keyboard focus states.

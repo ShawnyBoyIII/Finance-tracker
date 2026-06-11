@@ -13,3 +13,7 @@
 ## 2023-10-27 - Dynamic Active Navigation States
 **Learning:** For Next.js navigation menus, active routes were statically set, causing confusion about the current page, and missing the `aria-current="page"` attribute for screen readers.
 **Action:** Always dynamically determine active routes using `usePathname` from `next/navigation`, and apply `aria-current="page"` along with active visual styles to the active link element to ensure accessibility and clear UX.
+
+## 2024-05-18 - Form Accessibility & Confirmation Dialogs
+**Learning:** Adding `htmlFor`/`id` bindings, visual `*` indicators combined with `aria-hidden="true"`, and `window.confirm` for destructive actions significantly improves baseline accessibility and prevents accidental data loss. Missing ARIA labels on icon-only buttons (like Trash icons) and missing `focus-visible` states are common anti-patterns in this application's custom components.
+**Action:** When working on new or existing forms, ensure all inputs have explicit labels and visual required indicators are hidden from screen readers. Always add `aria-label` and `focus-visible` ring styling to icon buttons, and wrap `.filter()` or `.splice()` delete handlers with native `window.confirm` dialogs.

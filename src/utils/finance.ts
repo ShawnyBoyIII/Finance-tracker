@@ -135,11 +135,11 @@ export const normalizeMerchantName = (description: string) => {
 
 const getMonthKey = (date: Date) => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
 
-const getMonthLabel = (date: Date) =>
-  new Intl.DateTimeFormat('en-US', { month: 'long', year: 'numeric' }).format(date);
+const monthLabelFormatter = new Intl.DateTimeFormat('en-US', { month: 'long', year: 'numeric' });
+const getMonthLabel = (date: Date) => monthLabelFormatter.format(date);
 
-const getShortMonthLabel = (date: Date) =>
-  new Intl.DateTimeFormat('en-US', { month: 'short' }).format(date);
+const shortMonthLabelFormatter = new Intl.DateTimeFormat('en-US', { month: 'short' });
+const getShortMonthLabel = (date: Date) => shortMonthLabelFormatter.format(date);
 
 const DAY_IN_MS = 24 * 60 * 60 * 1000;
 
@@ -672,10 +672,11 @@ export const getElectricityInsight = (
   };
 };
 
-export const formatCurrency = (amount: number) =>
-  new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: 'USD',
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  }).format(amount);
+const currencyFormatter = new Intl.NumberFormat('en-US', {
+  style: 'currency',
+  currency: 'USD',
+  minimumFractionDigits: 2,
+  maximumFractionDigits: 2,
+});
+
+export const formatCurrency = (amount: number) => currencyFormatter.format(amount);

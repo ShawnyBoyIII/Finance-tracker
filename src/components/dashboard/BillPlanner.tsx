@@ -3,7 +3,7 @@
 import React, { useMemo, useState } from 'react';
 import { BellRing, Pencil, Plus, Trash2 } from 'lucide-react';
 import { useFinance } from '@/context/FinanceContext';
-import { COMMON_INPUT_CLASS, formatISODate } from '@/utils/constants';
+import { COMMON_INPUT_CLASS, DEFAULT_TRANSACTION_CATEGORIES, formatISODate } from '@/utils/constants';
 import { formatCurrency, getDueSoonBills } from '@/utils/finance';
 
 const statusTone: Record<string, string> = {
@@ -24,7 +24,10 @@ export default function BillPlanner() {
 
   const dueSoonBills = useMemo(() => getDueSoonBills(bills, transactions), [bills, transactions]);
   const accountOptions = accounts.filter((account) => account.type === 'cash' || account.type === 'bank' || account.type === 'credit_card');
-  const categories = Array.from(new Set(transactions.map((transaction) => transaction.category))).filter(Boolean).sort((a, b) => a.localeCompare(b));
+  const categories = Array.from(new Set([
+    ...DEFAULT_TRANSACTION_CATEGORIES,
+    ...transactions.map((transaction) => transaction.category),
+  ])).filter(Boolean).sort((a, b) => a.localeCompare(b));
   const accountMap = new Map(accounts.map((account) => [account.id, account]));
   const currentMonthKey = new Date().toISOString().slice(0, 7);
 
@@ -55,6 +58,7 @@ export default function BillPlanner() {
       const existingBill = bills.find((bill) => bill.id === editingBillId);
       updateBill(editingBillId, {
         ...billPayload,
+        usageKwh: existingBill?.usageKwh,
         manualStatus: existingBill?.manualStatus,
         manualStatusMonth: existingBill?.manualStatusMonth,
         manualPaidDate: existingBill?.manualPaidDate,
@@ -87,6 +91,7 @@ export default function BillPlanner() {
       name: bill.name,
       dueDay: bill.dueDay,
       amount: bill.amount,
+      usageKwh: bill.usageKwh,
       category: bill.category,
       accountId: bill.accountId,
       autopay: bill.autopay,

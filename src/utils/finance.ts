@@ -1,4 +1,4 @@
-import { Bill, Transaction } from '@/types';
+import { Bill, ImportedStatement, Transaction } from '@/types';
 
 export interface FinancialSummary {
   totalIncome: number;
@@ -42,6 +42,47 @@ export interface PotentialDuplicateMatch {
   importedTransactionId: string;
   existingTransactionIds: string[];
   duplicateFingerprint: string;
+}
+
+export interface StatementSummary {
+  transactionCount: number;
+  expenseTotal: number;
+  incomeTotal: number;
+  paymentTotal: number;
+}
+
+export interface StatementValidationSummary {
+  health: 'healthy' | 'needs_review' | 'high_risk';
+  excludedCount: number;
+  flaggedCount: number;
+  warnings: string[];
+}
+
+export interface ElectricityMonthlyDatum {
+  monthKey: string;
+  monthLabel: string;
+  amount: number;
+  isCurrentMonth: boolean;
+}
+
+export interface ElectricityMetrics {
+  currentMonthSpend: number;
+  lastBillAmount: number;
+  threeMonthAverage: number;
+  vsLastMonthAmount: number;
+  latestChargeAmount: number;
+  latestChargeDate: string | null;
+}
+
+export interface ElectricityHealthSummary {
+  status: 'healthy' | 'watch' | 'urgent';
+  title: string;
+  detail: string;
+}
+
+export interface ElectricityInsightSummary {
+  title: string;
+  detail: string;
 }
 
 const MERCHANT_NORMALIZATION_RULES: Array<{ pattern: RegExp; canonical: string }> = [
@@ -96,6 +137,9 @@ const getMonthKey = (date: Date) => `${date.getFullYear()}-${String(date.getMont
 
 const getMonthLabel = (date: Date) =>
   new Intl.DateTimeFormat('en-US', { month: 'long', year: 'numeric' }).format(date);
+
+const getShortMonthLabel = (date: Date) =>
+  new Intl.DateTimeFormat('en-US', { month: 'short' }).format(date);
 
 const DAY_IN_MS = 24 * 60 * 60 * 1000;
 
@@ -172,7 +216,6 @@ export const summarizeTransactions = (transactions: Transaction[]): FinancialSum
     }
 
     if (transaction.type === 'cc_payment') {
-      income += Math.abs(transaction.amount);
       return;
     }
 
@@ -409,6 +452,224 @@ export const findBatchDuplicates = (transactions: Transaction[]) => {
   return new Map(
     Array.from(groupedIds.entries()).filter(([, ids]) => ids.length > 1)
   );
+};
+
+export const summarizeStatementTransactions = (
+  statement: ImportedStatement,
+  transactions: Transaction[]
+): StatementSummary => {
+  const linkedTransactions = transactions.filter((transaction) => transaction.statementId === statement.id);
+
+  return linkedTransactions.reduce<StatementSummary>(
+    (summary, transaction) => {
+      summary.transactionCount += 1;
+
+      if (transaction.type === 'income') {
+        summary.incomeTotal += transaction.amount;
+      } else if (transaction.type === 'cc_payment') {
+        summary.paymentTotal += Math.abs(transaction.amount);
+      } else {
+        summary.expenseTotal += Math.abs(transaction.amount);
+      }
+
+      return summary;
+    },
+    {
+      transactionCount: 0,
+      expenseTotal: 0,
+      incomeTotal: 0,
+      paymentTotal: 0,
+    }
+  );
+};
+
+export const getStatementTransactions = (
+  statement: ImportedStatement,
+  transactions: Transaction[]
+) => transactions.filter((transaction) => transaction.statementId === statement.id);
+
+export const getStatementValidationSummary = (
+  statement: ImportedStatement,
+  transactions: Transaction[]
+): StatementValidationSummary => {
+  const linkedTransactions = getStatementTransactions(statement, transactions);
+  const reviewedCount = statement.reviewedTransactionCount || statement.transactionCount;
+  const excludedCount = Math.max(reviewedCount - linkedTransactions.length, 0);
+  const duplicateCount = statement.duplicateCandidateCount || 0;
+  const reviewFlagCount = statement.reviewFlagCount || 0;
+  const lowConfidenceCount = statement.lowConfidenceCount || 0;
+  const mediumConfidenceCount = statement.mediumConfidenceCount || 0;
+  const flaggedCount =
+    duplicateCount + lowConfidenceCount + Math.max(reviewFlagCount - duplicateCount, 0);
+
+  const warnings: string[] = [];
+
+  if (excludedCount > 0) {
+    warnings.push(`${excludedCount} row${excludedCount === 1 ? '' : 's'} were excluded during review.`);
+  }
+
+  if (duplicateCount > 0) {
+    warnings.push(`${duplicateCount} potential duplicate${duplicateCount === 1 ? '' : 's'} were flagged.`);
+  }
+
+  if (lowConfidenceCount > 0) {
+    warnings.push(
+      `${lowConfidenceCount} low-confidence row${lowConfidenceCount === 1 ? '' : 's'} ${lowConfidenceCount === 1 ? 'needs' : 'need'} extra review.`
+    );
+  }
+
+  if (mediumConfidenceCount > 0) {
+    warnings.push(
+      `${mediumConfidenceCount} medium-confidence row${mediumConfidenceCount === 1 ? '' : 's'} ${mediumConfidenceCount === 1 ? 'was' : 'were'} imported.`
+    );
+  }
+
+  if (reviewFlagCount > 0 && lowConfidenceCount === 0 && duplicateCount === 0) {
+    warnings.push(`${reviewFlagCount} parser or cleanup flag${reviewFlagCount === 1 ? '' : 's'} were recorded during import.`);
+  }
+
+  if (linkedTransactions.length === 0) {
+    warnings.push('No linked transactions are currently attached to this statement.');
+  }
+
+  let health: StatementValidationSummary['health'] = 'healthy';
+
+  if (lowConfidenceCount > 0 || duplicateCount >= 2 || linkedTransactions.length === 0) {
+    health = 'high_risk';
+  } else if (excludedCount > 0 || mediumConfidenceCount > 0 || reviewFlagCount > 0) {
+    health = 'needs_review';
+  }
+
+  return {
+    health,
+    excludedCount,
+    flaggedCount,
+    warnings,
+  };
+};
+
+export const getElectricityMonthlySeries = (
+  transactions: Transaction[],
+  months = 12,
+  referenceDate = new Date()
+): ElectricityMonthlyDatum[] => {
+  const entries: ElectricityMonthlyDatum[] = [];
+  const current = new Date(referenceDate.getFullYear(), referenceDate.getMonth(), 1);
+
+  for (let index = months - 1; index >= 0; index -= 1) {
+    const monthDate = new Date(current.getFullYear(), current.getMonth() - index, 1);
+    const monthKey = getMonthKey(monthDate);
+    const amount = transactions
+      .filter((transaction) => transaction.date.slice(0, 7) === monthKey)
+      .reduce((total, transaction) => total + Math.abs(transaction.amount), 0);
+
+    entries.push({
+      monthKey,
+      monthLabel: getShortMonthLabel(monthDate),
+      amount,
+      isCurrentMonth: monthKey === getMonthKey(referenceDate),
+    });
+  }
+
+  return entries;
+};
+
+export const getElectricityMetrics = (
+  transactions: Transaction[],
+  referenceDate = new Date()
+): ElectricityMetrics => {
+  const monthlySeries = getElectricityMonthlySeries(transactions, 3, referenceDate);
+  const currentMonthSpend = monthlySeries[2]?.amount || 0;
+  const previousMonthSpend = monthlySeries[1]?.amount || 0;
+  const nonZeroMonths = monthlySeries.filter((entry) => entry.amount > 0);
+  const threeMonthAverage =
+    nonZeroMonths.length > 0
+      ? nonZeroMonths.reduce((total, entry) => total + entry.amount, 0) / nonZeroMonths.length
+      : 0;
+  const latestCharge = [...transactions].sort((left, right) => right.date.localeCompare(left.date))[0];
+
+  return {
+    currentMonthSpend,
+    lastBillAmount: previousMonthSpend,
+    threeMonthAverage,
+    vsLastMonthAmount: currentMonthSpend - previousMonthSpend,
+    latestChargeAmount: latestCharge ? Math.abs(latestCharge.amount) : 0,
+    latestChargeDate: latestCharge?.date || null,
+  };
+};
+
+export const getElectricityHealth = (
+  billStatuses: BillStatus[],
+  accountMap: Map<string, { name: string }>
+): ElectricityHealthSummary => {
+  const nextDue = billStatuses[0];
+
+  if (!nextDue) {
+    return {
+      status: 'watch',
+      title: 'No bill tracked yet',
+      detail: 'Add your electricity bill so this page can track due dates and payment status.',
+    };
+  }
+
+  if (nextDue.status === 'overdue') {
+    return {
+      status: 'urgent',
+      title: 'Electric bill overdue',
+      detail: `${nextDue.name} is overdue${nextDue.accountId ? ` on ${accountMap.get(nextDue.accountId)?.name || 'its account'}` : ''}.`,
+    };
+  }
+
+  if (nextDue.status === 'upcoming' && nextDue.daysUntilDue <= 5) {
+    return {
+      status: 'watch',
+      title: 'Due soon',
+      detail: `${nextDue.name} is due in ${nextDue.daysUntilDue} day(s).`,
+    };
+  }
+
+  return {
+    status: 'healthy',
+    title: 'Electric bill on track',
+    detail: `${nextDue.name} is currently marked ${nextDue.status}.`,
+  };
+};
+
+export const getElectricityInsight = (
+  metrics: ElectricityMetrics,
+  health: ElectricityHealthSummary,
+  monthlyData: ElectricityMonthlyDatum[]
+): ElectricityInsightSummary => {
+  if (health.status === 'urgent') {
+    return {
+      title: 'Immediate attention needed',
+      detail: health.detail,
+    };
+  }
+
+  const currentMonth = monthlyData[monthlyData.length - 1];
+  const previousMonth = monthlyData[monthlyData.length - 2];
+
+  if (currentMonth && previousMonth && previousMonth.amount > 0 && currentMonth.amount > previousMonth.amount * 1.2) {
+    return {
+      title: 'Usage spike detected',
+      detail: `Current month electricity spend is ${formatCurrency(currentMonth.amount - previousMonth.amount)} above last month so far.`,
+    };
+  }
+
+  if (metrics.vsLastMonthAmount < 0) {
+    return {
+      title: 'Trending lower than last month',
+      detail: `Electricity spend is down ${formatCurrency(Math.abs(metrics.vsLastMonthAmount))} compared with last month.`,
+    };
+  }
+
+  return {
+    title: 'Stable utility pattern',
+    detail: metrics.threeMonthAverage > 0
+      ? `Three-month average is ${formatCurrency(metrics.threeMonthAverage)} and the latest charge is ${formatCurrency(metrics.latestChargeAmount)}.`
+      : 'Import more electricity activity to unlock stronger billing insights.',
+  };
 };
 
 export const formatCurrency = (amount: number) =>

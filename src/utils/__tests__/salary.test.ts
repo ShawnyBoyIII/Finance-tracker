@@ -1,6 +1,6 @@
-import { getNextPayDate, getProjectedIncome, getProjectedIncomeFromSources, getUpcomingIncomeSourcesPaychecks, getUpcomingPaychecks, migrateSalaryScheduleToIncomeSources } from '../salary';
-import { detectRecurringBills, findBatchDuplicates, findPotentialTransactionDuplicates, getBillStatuses, getDueSoonBills, getSuggestedCategory, normalizeMerchantName, summarizeMonthlyTransactions, summarizeTransactions } from '../finance';
-import { Transaction } from '@/types';
+import { getCurrentMonthIncomeFromSources, getNextPayDate, getProjectedIncome, getProjectedIncomeFromSources, getUpcomingIncomeSourcesPaychecks, getUpcomingPaychecks, migrateSalaryScheduleToIncomeSources } from '../salary';
+import { detectRecurringBills, findBatchDuplicates, findPotentialTransactionDuplicates, getBillStatuses, getDueSoonBills, getStatementValidationSummary, getSuggestedCategory, normalizeMerchantName, summarizeMonthlyTransactions, summarizeStatementTransactions, summarizeTransactions } from '../finance';
+import { ImportedStatement, Transaction } from '@/types';
 
 describe('salary utilities', () => {
   it('projects bi-weekly paydays from the next payday anchor', () => {
@@ -47,6 +47,15 @@ describe('salary utilities', () => {
     expect(getProjectedIncomeFromSources(incomeSources, 30, referenceDate)).toBe(5400);
   });
 
+  it('totals scheduled income for the current month across all sources', () => {
+    const incomeSources = [
+      { id: 'income-1', name: 'Partner A', amount: 1500, nextPayDate: '2026-06-05' },
+      { id: 'income-2', name: 'Partner B', amount: 1200, nextPayDate: '2026-06-12' },
+    ];
+
+    expect(getCurrentMonthIncomeFromSources(incomeSources, new Date('2026-06-15T12:00:00Z'))).toBe(5400);
+  });
+
   it('migrates a legacy salary schedule into a named income source', () => {
     expect(
       migrateSalaryScheduleToIncomeSources({ amount: 2000, nextPayDate: '2026-06-12' })
@@ -70,9 +79,9 @@ describe('salary utilities', () => {
 
     const summary = summarizeTransactions(transactions);
 
-    expect(summary.totalIncome).toBe(2300);
+    expect(summary.totalIncome).toBe(2000);
     expect(summary.totalExpense).toBe(200);
-    expect(summary.balance).toBe(2100);
+    expect(summary.balance).toBe(1800);
     expect(summary.expensesByCategory).toEqual([{ name: 'Groceries', value: 200 }]);
   });
 
@@ -193,6 +202,68 @@ describe('salary utilities', () => {
     expect(normalizeMerchantName('SPOTIFY USA 12345 NEW YORK NY')).toBe('Spotify');
     expect(normalizeMerchantName('AMAZON.COM*MKTP US AMZN.COM/BILL WA')).toBe('Amazon');
     expect(normalizeMerchantName('WHOLEFDS SUGARLOAF GA')).toBe('Whole Foods');
+  });
+
+  it('summarizes transactions linked to an imported statement', () => {
+    const statement: ImportedStatement = {
+      id: 'statement-1',
+      accountId: 'card-1',
+      sourceType: 'credit_card',
+      format: 'pdf',
+      fileName: 'june-statement.pdf',
+      importedAt: '2026-06-07T12:00:00.000Z',
+      status: 'imported',
+      parseVersion: 1,
+      transactionCount: 3,
+    };
+    const transactions: Transaction[] = [
+      { id: '1', amount: 120, type: 'expense', category: 'Groceries', date: '2026-06-01', description: 'Trader Joe', statementId: 'statement-1' },
+      { id: '2', amount: 45, type: 'expense', category: 'Dining', date: '2026-06-02', description: 'Lunch', statementId: 'statement-1' },
+      { id: '3', amount: 300, type: 'cc_payment', category: 'Credit Card', date: '2026-06-03', description: 'Payment', statementId: 'statement-1' },
+      { id: '4', amount: 900, type: 'income', category: 'Salary', date: '2026-06-04', description: 'Paycheck', statementId: 'statement-2' },
+    ];
+
+    expect(summarizeStatementTransactions(statement, transactions)).toEqual({
+      transactionCount: 3,
+      expenseTotal: 165,
+      incomeTotal: 0,
+      paymentTotal: 300,
+    });
+  });
+
+  it('classifies imported statement trust signals for later review', () => {
+    const statement: ImportedStatement = {
+      id: 'statement-risky',
+      accountId: 'card-1',
+      sourceType: 'credit_card',
+      format: 'pdf',
+      fileName: 'risky.pdf',
+      importedAt: '2026-06-07T12:00:00.000Z',
+      status: 'imported',
+      parseVersion: 1,
+      transactionCount: 2,
+      reviewedTransactionCount: 4,
+      duplicateCandidateCount: 2,
+      reviewFlagCount: 4,
+      mediumConfidenceCount: 1,
+      lowConfidenceCount: 1,
+    };
+    const transactions: Transaction[] = [
+      { id: '1', amount: 40, type: 'expense', category: 'Utilities', date: '2026-06-01', description: 'Utility Charge', statementId: 'statement-risky' },
+      { id: '2', amount: 22, type: 'expense', category: 'Utilities', date: '2026-06-02', description: 'Power Charge', statementId: 'statement-risky' },
+    ];
+
+    expect(getStatementValidationSummary(statement, transactions)).toEqual({
+      health: 'high_risk',
+      excludedCount: 2,
+      flaggedCount: 5,
+      warnings: [
+        '2 rows were excluded during review.',
+        '2 potential duplicates were flagged.',
+        '1 low-confidence row needs extra review.',
+        '1 medium-confidence row was imported.',
+      ],
+    });
   });
 
   it('lets a manual bill override mark the current cycle as paid', () => {

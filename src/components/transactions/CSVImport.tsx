@@ -212,6 +212,14 @@ export default function CSVImport({ statementType, accountId }: CSVImportProps) 
         periodStart: statementDates[0],
         periodEnd: statementDates[statementDates.length - 1],
         parseVersion: 1,
+        reviewedTransactionCount: stagedTransactions.length,
+        duplicateCandidateCount: duplicateCount,
+        reviewFlagCount: stagedTransactions.reduce(
+          (total, transaction) => total + transaction.reviewFlags.length,
+          0
+        ),
+        mediumConfidenceCount: 0,
+        lowConfidenceCount: 0,
       },
       readyToImport
     );

@@ -4,7 +4,7 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { useFinance } from '@/context/FinanceContext';
 import { TransactionType, Transaction } from '@/types';
 import { Pencil, Trash2 } from 'lucide-react';
-import { COMMON_INPUT_CLASS, formatISODate } from '@/utils/constants';
+import { COMMON_INPUT_CLASS, DEFAULT_TRANSACTION_CATEGORIES, formatISODate } from '@/utils/constants';
 import { formatCurrency, getSuggestedCategory } from '@/utils/finance';
 
 const PAGE_SIZE = 50;
@@ -132,6 +132,8 @@ export default function TransactionList() {
   const [newCardIssuer, setNewCardIssuer] = useState('');
   const [newCardLast4, setNewCardLast4] = useState('');
   const [editingCategoryId, setEditingCategoryId] = useState<string | null>(null);
+  const [customCategoryTransactionId, setCustomCategoryTransactionId] = useState<string | null>(null);
+  const [customCategoryValue, setCustomCategoryValue] = useState('');
 
   const sortedTransactions = useMemo(() => {
     return [...transactions].sort(
@@ -152,7 +154,10 @@ export default function TransactionList() {
   const selectedAccount = selectedAccountId === 'all' ? null : accountMap.get(selectedAccountId);
 
   const categories = useMemo(() => {
-    return Array.from(new Set(transactions.map((transaction) => transaction.category)))
+    return Array.from(new Set([
+      ...DEFAULT_TRANSACTION_CATEGORIES,
+      ...transactions.map((transaction) => transaction.category),
+    ]))
       .filter(Boolean)
       .sort((a, b) => a.localeCompare(b));
   }, [transactions]);
@@ -163,10 +168,33 @@ export default function TransactionList() {
 
   const startCategoryEdit = (transactionId: string) => {
     setEditingCategoryId(transactionId);
+    setCustomCategoryTransactionId(null);
+    setCustomCategoryValue('');
   };
 
   const stopCategoryEdit = () => {
     setEditingCategoryId(null);
+  };
+
+  const startCustomCategoryEdit = (transactionId: string, currentCategory: string) => {
+    setEditingCategoryId(null);
+    setCustomCategoryTransactionId(transactionId);
+    setCustomCategoryValue(currentCategory === 'Uncategorized' ? '' : currentCategory);
+  };
+
+  const stopCustomCategoryEdit = () => {
+    setCustomCategoryTransactionId(null);
+    setCustomCategoryValue('');
+  };
+
+  const saveCustomCategory = () => {
+    if (!customCategoryTransactionId || !customCategoryValue.trim()) {
+      stopCustomCategoryEdit();
+      return;
+    }
+
+    updateTransactionCategory(customCategoryTransactionId, customCategoryValue.trim());
+    stopCustomCategoryEdit();
   };
 
   const filteredTransactions = useMemo(() => {
@@ -367,30 +395,51 @@ export default function TransactionList() {
             <div>
               <p className="text-sm font-semibold text-gray-900">Add a credit card tab</p>
               <p className="text-sm text-gray-500 mt-1">Create a reusable card/account so transactions can be tracked individually.</p>
+              <p className="text-xs text-gray-500 mt-2">Enter a display name, the card issuer, and optionally the last 4 digits.</p>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-              <input
-                type="text"
-                value={newCardName}
-                onChange={(event) => setNewCardName(event.target.value)}
-                placeholder="Card name"
-                className={COMMON_INPUT_CLASS}
-              />
-              <input
-                type="text"
-                value={newCardIssuer}
-                onChange={(event) => setNewCardIssuer(event.target.value)}
-                placeholder="Issuer"
-                className={COMMON_INPUT_CLASS}
-              />
-              <input
-                type="text"
-                value={newCardLast4}
-                onChange={(event) => setNewCardLast4(event.target.value)}
-                placeholder="Last 4"
-                maxLength={4}
-                className={COMMON_INPUT_CLASS}
-              />
+              <div>
+                <label htmlFor="new-card-name" className="block text-sm font-medium text-gray-700">
+                  Card name
+                </label>
+                <input
+                  id="new-card-name"
+                  type="text"
+                  value={newCardName}
+                  onChange={(event) => setNewCardName(event.target.value)}
+                  placeholder="e.g. Chase Freedom"
+                  className={COMMON_INPUT_CLASS}
+                />
+              </div>
+              <div>
+                <label htmlFor="new-card-issuer" className="block text-sm font-medium text-gray-700">
+                  Issuer
+                </label>
+                <input
+                  id="new-card-issuer"
+                  type="text"
+                  value={newCardIssuer}
+                  onChange={(event) => setNewCardIssuer(event.target.value)}
+                  placeholder="e.g. Chase"
+                  className={COMMON_INPUT_CLASS}
+                />
+              </div>
+              <div>
+                <label htmlFor="new-card-last4" className="block text-sm font-medium text-gray-700">
+                  Last 4 digits
+                </label>
+                <input
+                  id="new-card-last4"
+                  type="text"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
+                  value={newCardLast4}
+                  onChange={(event) => setNewCardLast4(event.target.value.replace(/\D/g, ''))}
+                  placeholder="Optional"
+                  maxLength={4}
+                  className={COMMON_INPUT_CLASS}
+                />
+              </div>
             </div>
             <button type="submit" className="rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800">
               Add card tab
@@ -408,13 +457,52 @@ export default function TransactionList() {
                 Search merchants, categories, institutions, and filter down by type or date range.
               </p>
               <p className="text-sm text-indigo-600 mt-2">
-                Need to fix a category? Use the `Edit` button in the Category column.
+                Need to fix a category? Use `Edit` for starter categories or `Custom` for your own label.
               </p>
             </div>
             <div className="text-sm text-gray-500">
               Showing {filteredTransactions.length} of {sortedTransactions.length} transactions
             </div>
           </div>
+
+          {customCategoryTransactionId && (
+            <div className="rounded-lg border border-indigo-200 bg-indigo-50 p-4">
+              <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
+                <div className="flex-1">
+                  <label htmlFor="custom-category-name" className="block text-sm font-medium text-gray-700">
+                    Custom category
+                  </label>
+                  <input
+                    id="custom-category-name"
+                    type="text"
+                    value={customCategoryValue}
+                    onChange={(event) => setCustomCategoryValue(event.target.value)}
+                    placeholder="e.g. Holiday Gifts"
+                    className={COMMON_INPUT_CLASS}
+                  />
+                  <p className="mt-2 text-xs text-gray-500">
+                    Use this only when the starter dropdown does not fit what you need.
+                  </p>
+                </div>
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={stopCustomCategoryEdit}
+                    className="rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    onClick={saveCustomCategory}
+                    className="rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700"
+                  >
+                    Save custom category
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
 
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-5">
             <div className="xl:col-span-2">
@@ -510,8 +598,7 @@ export default function TransactionList() {
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                     {editingCategoryId === t.id ? (
                       <div className="flex items-center gap-2">
-                        <input
-                          type="text"
+                        <select
                           value={t.category}
                           onChange={(event) => handleCategoryChange(t.id, event.target.value)}
                           onBlur={stopCategoryEdit}
@@ -521,16 +608,28 @@ export default function TransactionList() {
                             }
                           }}
                           autoFocus
-                          list="transaction-category-options"
                           aria-label={`Category for ${t.description}`}
-                          className="w-36 rounded-md border border-indigo-300 bg-white px-2 py-1 text-xs font-medium text-gray-800 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
-                        />
+                          className="w-44 rounded-md border border-indigo-300 bg-white px-2 py-1 text-xs font-medium text-gray-800 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                        >
+                          {categories.map((category) => (
+                            <option key={category} value={category}>
+                              {category}
+                            </option>
+                          ))}
+                        </select>
                         <button
                           type="button"
                           onClick={stopCategoryEdit}
                           className="text-xs font-medium text-indigo-600 hover:text-indigo-700"
                         >
                           Done
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => startCustomCategoryEdit(t.id, t.category)}
+                          className="text-xs font-medium text-gray-600 hover:text-gray-800"
+                        >
+                          Custom
                         </button>
                       </div>
                     ) : (
@@ -546,6 +645,14 @@ export default function TransactionList() {
                         >
                           <Pencil className="w-3 h-3" />
                           Edit
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => startCustomCategoryEdit(t.id, t.category)}
+                          className="inline-flex items-center gap-1 rounded-md border border-gray-300 bg-white px-2 py-1 text-xs font-medium text-gray-600 hover:bg-gray-50"
+                          aria-label={`Set custom category for ${t.description}`}
+                        >
+                          Custom
                         </button>
                       </div>
                     )}

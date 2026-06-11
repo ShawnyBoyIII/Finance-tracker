@@ -1,12 +1,12 @@
 'use client';
 
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useRef, useState } from 'react';
 import { CalendarDays, Plus, Trash2, Wallet } from 'lucide-react';
 import { format, addDays } from 'date-fns';
 import { useFinance } from '@/context/FinanceContext';
 import { COMMON_INPUT_CLASS } from '@/utils/constants';
 import { formatCurrency } from '@/utils/finance';
-import { getProjectedIncomeFromSources, getUpcomingIncomeSourcesPaychecks } from '@/utils/salary';
+import { getCurrentMonthIncomeFromSources, getProjectedIncomeFromSources, getUpcomingIncomeSourcesPaychecks } from '@/utils/salary';
 
 const DEFAULT_NEXT_PAY_DATE = format(addDays(new Date(), 7), 'yyyy-MM-dd');
 
@@ -15,6 +15,7 @@ export default function SalaryPlanner() {
   const [name, setName] = useState('');
   const [amount, setAmount] = useState('');
   const [nextPayDate, setNextPayDate] = useState(DEFAULT_NEXT_PAY_DATE);
+  const nextPayDateInputRef = useRef<HTMLInputElement | null>(null);
 
   const upcomingPaychecks = useMemo(
     () => getUpcomingIncomeSourcesPaychecks(incomeSources, 8),
@@ -22,6 +23,10 @@ export default function SalaryPlanner() {
   );
   const projectedIncome30Days = useMemo(
     () => getProjectedIncomeFromSources(incomeSources, 30),
+    [incomeSources]
+  );
+  const currentMonthIncome = useMemo(
+    () => getCurrentMonthIncomeFromSources(incomeSources),
     [incomeSources]
   );
 
@@ -54,10 +59,17 @@ export default function SalaryPlanner() {
           </p>
         </div>
 
-        <div className="rounded-2xl border border-cyan-400/20 bg-cyan-400/10 px-4 py-3 min-w-[180px]">
-          <p className="text-xs font-medium uppercase tracking-wide text-cyan-200">Projected income</p>
-          <p className="text-2xl font-bold text-white mt-1">{formatCurrency(projectedIncome30Days)}</p>
-          <p className="text-xs text-cyan-100/80 mt-1">next 30 days</p>
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:min-w-[360px]">
+          <div className="rounded-2xl border border-emerald-400/20 bg-emerald-400/10 px-4 py-3">
+            <p className="text-xs font-medium uppercase tracking-wide text-emerald-200">Current month income</p>
+            <p className="text-2xl font-bold text-white mt-1">{formatCurrency(currentMonthIncome)}</p>
+            <p className="text-xs text-emerald-100/80 mt-1">scheduled this month</p>
+          </div>
+          <div className="rounded-2xl border border-cyan-400/20 bg-cyan-400/10 px-4 py-3">
+            <p className="text-xs font-medium uppercase tracking-wide text-cyan-200">Projected income</p>
+            <p className="text-2xl font-bold text-white mt-1">{formatCurrency(projectedIncome30Days)}</p>
+            <p className="text-xs text-cyan-100/80 mt-1">next 30 days</p>
+          </div>
         </div>
       </div>
 
@@ -91,10 +103,13 @@ export default function SalaryPlanner() {
         <div>
           <label className="block text-sm font-medium text-slate-200">Next payday</label>
           <input
+            ref={nextPayDateInputRef}
             type="date"
             required
             value={nextPayDate}
             onChange={(event) => setNextPayDate(event.target.value)}
+            onFocus={() => nextPayDateInputRef.current?.showPicker?.()}
+            onClick={() => nextPayDateInputRef.current?.showPicker?.()}
             className={COMMON_INPUT_CLASS}
           />
         </div>

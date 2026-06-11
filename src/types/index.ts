@@ -39,6 +39,11 @@ export interface ImportedStatement {
   status: ImportedStatementStatus;
   parseVersion: number;
   transactionCount: number;
+  reviewedTransactionCount?: number;
+  duplicateCandidateCount?: number;
+  reviewFlagCount?: number;
+  mediumConfidenceCount?: number;
+  lowConfidenceCount?: number;
 }
 
 export interface Budget {
@@ -51,12 +56,33 @@ export interface Bill {
   name: string;
   dueDay: number;
   amount?: number;
+  usageKwh?: number;
   category?: string;
   accountId?: string;
   autopay?: boolean;
   manualStatus?: 'paid' | 'unpaid';
   manualStatusMonth?: string;
   manualPaidDate?: string;
+}
+
+export interface ElectricityStatement {
+  id: string;
+  provider: string;
+  accountNumber: string;
+  billDate: string;
+  dueDate: string;
+  servicePeriodStart: string;
+  servicePeriodEnd: string;
+  daysOfService?: number;
+  ratePlan?: string;
+  previousBalance?: number;
+  paymentAmount?: number;
+  totalDue: number;
+  totalConsumptionKwh?: number;
+  solarGenerationKwh?: number;
+  billedConsumptionKwh?: number;
+  sourceFileName: string;
+  importedAt: string;
 }
 
 export interface SalarySchedule {
@@ -80,6 +106,7 @@ export interface AppData {
   budgets: Budget[];
   accounts: FinancialAccount[];
   statements?: ImportedStatement[];
+  electricityStatements?: ElectricityStatement[];
   bills?: Bill[];
   salarySchedule: SalarySchedule | null;
   incomeSources?: IncomeSource[];

@@ -11,6 +11,7 @@ import {
   IncomeSource,
   Bill,
   ImportedStatement,
+  ElectricityStatement,
 } from '@/types';
 import { APP_DATA_SCHEMA_VERSION, exportAppData, loadAppData, saveAppData } from '@/utils/storage';
 import { migrateSalaryScheduleToIncomeSources } from '@/utils/salary';
@@ -21,12 +22,16 @@ interface FinanceContextType {
   budgets: Budget[];
   accounts: FinancialAccount[];
   statements: ImportedStatement[];
+  electricityStatements: ElectricityStatement[];
   bills: Bill[];
   addTransaction: (transaction: Omit<Transaction, 'id'>) => void;
   updateTransaction: (id: string, transaction: Omit<Transaction, 'id'>) => void;
   deleteTransaction: (id: string) => void;
   addTransactionsBulk: (transactions: Omit<Transaction, 'id'>[]) => void;
-  importStatement: (statement: Omit<ImportedStatement, 'id' | 'importedAt' | 'status' | 'transactionCount'>, transactions: Omit<Transaction, 'id' | 'statementId' | 'sourceType'>[]) => string;
+  importStatement: (
+    statement: Omit<ImportedStatement, 'id' | 'importedAt' | 'status' | 'transactionCount'>,
+    transactions: Omit<Transaction, 'id' | 'statementId' | 'sourceType'>[]
+  ) => string;
   addAccount: (account: Omit<FinancialAccount, 'id'>) => string;
   updateTransactionCategory: (id: string, category: string) => void;
   updateBudget: (category: string, amount: number) => void;
@@ -34,6 +39,7 @@ interface FinanceContextType {
   addBill: (bill: Omit<Bill, 'id'>) => void;
   updateBill: (id: string, bill: Omit<Bill, 'id'>) => void;
   deleteBill: (id: string) => void;
+  importElectricityStatement: (statement: Omit<ElectricityStatement, 'id' | 'importedAt'>) => string;
   incomeSources: IncomeSource[];
   addIncomeSource: (incomeSource: Omit<IncomeSource, 'id'>) => void;
   updateIncomeSource: (id: string, incomeSource: Omit<IncomeSource, 'id'>) => void;
@@ -124,6 +130,7 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const [budgets, setBudgets] = useState<Budget[]>([]);
   const [accounts, setAccounts] = useState<FinancialAccount[]>([DEFAULT_ACCOUNT]);
   const [statements, setStatements] = useState<ImportedStatement[]>([]);
+  const [electricityStatements, setElectricityStatements] = useState<ElectricityStatement[]>([]);
   const [bills, setBills] = useState<Bill[]>([]);
   const [incomeSources, setIncomeSources] = useState<IncomeSource[]>([]);
   const [metadata, setMetadata] = useState<AppMetadata>({ schemaVersion: APP_DATA_SCHEMA_VERSION });
@@ -140,6 +147,7 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
     setAccounts(migratedData.accounts);
     setBudgets(storedAppData.budgets || []);
     setStatements(storedAppData.statements || []);
+    setElectricityStatements(storedAppData.electricityStatements || []);
     setBills(storedAppData.bills || []);
     setIncomeSources(
       storedAppData.incomeSources && storedAppData.incomeSources.length > 0
@@ -162,12 +170,13 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
       budgets,
       accounts,
       statements,
+      electricityStatements,
       bills,
       salarySchedule: null,
       incomeSources,
       metadata,
     });
-  }, [transactions, budgets, accounts, statements, bills, incomeSources, metadata, isLoaded]);
+  }, [transactions, budgets, accounts, statements, electricityStatements, bills, incomeSources, metadata, isLoaded]);
 
   const addTransaction = (transaction: Omit<Transaction, 'id'>) => {
     const newTransaction: Transaction = {
@@ -217,6 +226,10 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
       importedAt: new Date().toISOString(),
       status: 'imported',
       transactionCount: transactionsWithIds.length,
+      reviewedTransactionCount:
+        statement.reviewedTransactionCount === undefined
+          ? importedTransactions.length
+          : statement.reviewedTransactionCount,
     };
 
     setTransactions((prev) => [...prev, ...transactionsWithIds]);
@@ -277,6 +290,32 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
     setBills((prev) => prev.filter((bill) => bill.id !== id));
   };
 
+  const importElectricityStatement = (
+    statement: Omit<ElectricityStatement, 'id' | 'importedAt'>
+  ) => {
+    const electricityStatement: ElectricityStatement = {
+      ...statement,
+      id: uuidv4(),
+      importedAt: new Date().toISOString(),
+    };
+
+    setElectricityStatements((prev) => {
+      const withoutMatchingStatement = prev.filter(
+        (existingStatement) =>
+          !(
+            existingStatement.accountNumber === electricityStatement.accountNumber &&
+            existingStatement.billDate === electricityStatement.billDate
+          )
+      );
+
+      return [electricityStatement, ...withoutMatchingStatement].sort((left, right) =>
+        right.billDate.localeCompare(left.billDate)
+      );
+    });
+
+    return electricityStatement.id;
+  };
+
   const addIncomeSource = (incomeSource: Omit<IncomeSource, 'id'>) => {
     setIncomeSources((prev) => [
       ...prev,
@@ -303,6 +342,7 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
       budgets,
       accounts,
       statements,
+      electricityStatements,
       bills,
       salarySchedule: null,
       incomeSources,
@@ -319,6 +359,7 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
     setAccounts(migratedData.accounts);
     setBudgets(appData.budgets || []);
     setStatements(appData.statements || []);
+    setElectricityStatements(appData.electricityStatements || []);
     setBills(appData.bills || []);
     setIncomeSources(
       appData.incomeSources && appData.incomeSources.length > 0
@@ -339,6 +380,7 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
         budgets,
         accounts,
         statements,
+        electricityStatements,
         bills,
         addTransaction,
         updateTransaction,
@@ -352,6 +394,7 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
         addBill,
         updateBill,
         deleteBill,
+        importElectricityStatement,
         incomeSources,
         addIncomeSource,
         updateIncomeSource,

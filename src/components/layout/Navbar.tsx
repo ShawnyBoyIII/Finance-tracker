@@ -53,6 +53,28 @@ export default function Navbar() {
                 Budgets
               </Link>
               <Link
+                href="/statements"
+                aria-current={pathname === '/statements' ? 'page' : undefined}
+                className={`${
+                  pathname === '/statements'
+                    ? 'border-cyan-400 text-white'
+                    : 'border-transparent text-slate-400 hover:border-slate-500 hover:text-slate-100'
+                } inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium`}
+              >
+                Statements
+              </Link>
+              <Link
+                href="/electricity"
+                aria-current={pathname === '/electricity' ? 'page' : undefined}
+                className={`${
+                  pathname === '/electricity'
+                    ? 'border-cyan-400 text-white'
+                    : 'border-transparent text-slate-400 hover:border-slate-500 hover:text-slate-100'
+                } inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium`}
+              >
+                Electricity
+              </Link>
+              <Link
                 href="/data"
                 aria-current={pathname === '/data' ? 'page' : undefined}
                 className={`${

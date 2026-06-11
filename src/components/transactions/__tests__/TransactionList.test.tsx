@@ -128,8 +128,31 @@ describe('TransactionList filtering', () => {
 
     await user.click(screen.getByRole('button', { name: 'Edit category for Trader Joe' }));
     const categoryInput = screen.getByLabelText('Category for Trader Joe');
-    await user.type(categoryInput, 's');
+    await user.selectOptions(categoryInput, 'Dining');
 
-    expect(updateTransactionCategory).toHaveBeenLastCalledWith('1', 'Groceriess');
+    expect(updateTransactionCategory).toHaveBeenLastCalledWith('1', 'Dining');
+  });
+
+  it('lets a user save a custom category outside the row editor', async () => {
+    const user = userEvent.setup();
+    const updateTransactionCategory = jest.fn();
+
+    (useFinance as jest.Mock).mockReturnValue({
+      transactions: mockTransactions,
+      accounts: mockAccounts,
+      addAccount: jest.fn(() => 'card-3'),
+      addTransaction: jest.fn(),
+      deleteTransaction: jest.fn(),
+      updateTransactionCategory,
+    });
+
+    render(<TransactionList />);
+
+    await user.click(screen.getByRole('button', { name: 'Set custom category for Trader Joe' }));
+    await user.clear(screen.getByLabelText('Custom category'));
+    await user.type(screen.getByLabelText('Custom category'), 'Farmers Market');
+    await user.click(screen.getByRole('button', { name: 'Save custom category' }));
+
+    expect(updateTransactionCategory).toHaveBeenLastCalledWith('1', 'Farmers Market');
   });
 });

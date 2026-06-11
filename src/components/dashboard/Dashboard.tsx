@@ -96,7 +96,7 @@ export default function Dashboard() {
                 Your household command center for cash flow, recurring bills, card activity, and monthly pressure points.
               </p>
             </div>
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+            <div className="grid w-full max-w-[760px] grid-cols-2 gap-3 xl:grid-cols-4">
               <MetricCard title="Total Balance" value={formatCurrency(balance)} tone={balance >= 0 ? 'neutral' : 'danger'} />
               <MetricCard title="Safe to Spend" value={formatCurrency(safeToSpend)} tone={safeToSpend >= 0 ? 'success' : 'danger'} />
               <MetricCard title="Total Income" value={formatCurrency(totalIncome)} tone="success" />
@@ -426,9 +426,11 @@ function MetricCard({
         : 'text-white';
 
   return (
-    <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-4">
+    <div className="min-w-0 rounded-2xl border border-white/10 bg-white/5 px-4 py-4">
       <h3 className="text-xs font-medium uppercase tracking-[0.24em] text-slate-400">{title}</h3>
-      <p className={`text-2xl font-bold mt-3 ${tone === 'danger' ? 'text-red-600' : toneClass}`}>{value}</p>
+      <p className={`mt-3 overflow-hidden text-[clamp(1.45rem,1.6vw,1.95rem)] font-bold leading-none tracking-tight ${tone === 'danger' ? 'text-red-600' : toneClass}`}>
+        {value}
+      </p>
     </div>
   );
 }

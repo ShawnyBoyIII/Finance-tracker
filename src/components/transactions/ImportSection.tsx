@@ -1,6 +1,7 @@
 'use client';
 import React, { useEffect, useState } from 'react';
 import dynamic from 'next/dynamic';
+import Link from 'next/link';
 import CSVImport from './CSVImport';
 import { useFinance } from '@/context/FinanceContext';
 import { COMMON_INPUT_CLASS } from '@/utils/constants';
@@ -111,7 +112,15 @@ export default function ImportSection() {
       <div className="mt-6 border-t border-white/10 pt-4">
         <div className="flex items-center justify-between">
           <h4 className="text-sm font-medium text-white">Recent Imported Statements</h4>
-          <span className="text-xs text-slate-400">{statements.length} total</span>
+          <div className="flex items-center gap-3">
+            <span className="text-xs text-slate-400">{statements.length} total</span>
+            <Link
+              href="/statements"
+              className="text-xs font-medium text-cyan-200 transition hover:text-cyan-100"
+            >
+              Open Statements Hub
+            </Link>
+          </div>
         </div>
         {statements.length === 0 ? (
           <p className="mt-3 text-sm text-slate-400">No imported statements yet. Reviewed imports will show here.</p>
@@ -137,6 +146,10 @@ export default function ImportSection() {
                     {statement.institution && <span>Institution: {statement.institution}</span>}
                     {statement.parserProfile && <span>Parser: {statement.parserProfile}</span>}
                     {statement.periodStart && statement.periodEnd && <span>Period: {statement.periodStart} to {statement.periodEnd}</span>}
+                    {statement.duplicateCandidateCount !== undefined && <span>Duplicates flagged: {statement.duplicateCandidateCount}</span>}
+                    {statement.lowConfidenceCount !== undefined && statement.lowConfidenceCount > 0 && (
+                      <span>Low confidence: {statement.lowConfidenceCount}</span>
+                    )}
                   </div>
                 </div>
               );

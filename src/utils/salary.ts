@@ -1,4 +1,4 @@
-import { addDays, format, isBefore, parseISO, startOfDay } from 'date-fns';
+import { addDays, endOfMonth, format, isBefore, parseISO, startOfDay, startOfMonth } from 'date-fns';
 import { IncomeSource, SalarySchedule } from '@/types';
 
 export const BIWEEKLY_PAY_PERIOD_DAYS = 14;
@@ -116,3 +116,19 @@ export const getProjectedIncomeFromSources = (
     (total, incomeSource) => total + getProjectedIncome(incomeSource, daysAhead, referenceDate),
     0
   );
+
+export const getCurrentMonthIncomeFromSources = (
+  incomeSources: IncomeSource[],
+  referenceDate = new Date()
+) => {
+  const monthStart = startOfMonth(referenceDate);
+  const monthEnd = endOfMonth(referenceDate);
+
+  return incomeSources.reduce((total, incomeSource) => {
+    const paychecks = getUpcomingPaychecks(incomeSource, 6, monthStart);
+
+    return total + paychecks
+      .filter((paycheck) => !isBefore(paycheck.date, monthStart) && !isBefore(monthEnd, paycheck.date))
+      .reduce((sum, paycheck) => sum + paycheck.amount, 0);
+  }, 0);
+};

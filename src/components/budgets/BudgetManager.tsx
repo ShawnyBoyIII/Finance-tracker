@@ -3,13 +3,25 @@
 import React, { useState, useMemo } from 'react';
 import { useFinance } from '@/context/FinanceContext';
 import { Trash2, AlertCircle } from 'lucide-react';
-import { COMMON_INPUT_CLASS } from '@/utils/constants';
+import { COMMON_INPUT_CLASS, DEFAULT_TRANSACTION_CATEGORIES } from '@/utils/constants';
 import { formatCurrency, isTransactionInMonth } from '@/utils/finance';
 
 export default function BudgetManager() {
   const { budgets, updateBudget, deleteBudget, transactions } = useFinance();
   const [newCategory, setNewCategory] = useState('');
   const [newAmount, setNewAmount] = useState('');
+
+  const categoryOptions = useMemo(
+    () =>
+      Array.from(new Set([
+        ...DEFAULT_TRANSACTION_CATEGORIES,
+        ...transactions.map((transaction) => transaction.category),
+        ...budgets.map((budget) => budget.category),
+      ]))
+        .filter(Boolean)
+        .sort((a, b) => a.localeCompare(b)),
+    [budgets, transactions]
+  );
 
   const handleAddBudget = (e: React.FormEvent) => {
     e.preventDefault();
@@ -72,8 +84,14 @@ export default function BudgetManager() {
               value={newCategory}
               onChange={e => setNewCategory(e.target.value)}
               placeholder="e.g. Groceries"
+              list="budget-category-options"
               className={COMMON_INPUT_CLASS}
             />
+            <datalist id="budget-category-options">
+              {categoryOptions.map((category) => (
+                <option key={category} value={category} />
+              ))}
+            </datalist>
           </div>
           <div className="flex-1">
             <label className="block text-sm font-medium text-slate-200">Monthly Limit ($)<span className="text-red-500 ml-1" aria-hidden="true">*</span></label>

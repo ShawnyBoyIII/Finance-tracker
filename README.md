@@ -137,6 +137,7 @@ All of that is persisted locally in a unified app-data record and can be exporte
 ## Project Docs
 
 - Roadmap: [docs/future_phases.md](./docs/future_phases.md)
+- Burnrate comparison roadmap: [docs/burnrate_feature_roadmap.md](./docs/burnrate_feature_roadmap.md)
 - Storage durability plan: [docs/data_durability_roadmap.md](./docs/data_durability_roadmap.md)
 
 ## Privacy

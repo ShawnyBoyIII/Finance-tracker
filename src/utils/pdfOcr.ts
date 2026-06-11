@@ -36,10 +36,79 @@ interface StatementParserProfile {
   parse: (text: string, statementType: StatementType, institution?: string) => ParsedTransaction[];
 }
 
+declare global {
+  interface Window {
+    pdfjsLib?: {
+      version: string;
+      GlobalWorkerOptions: {
+        workerSrc: string;
+      };
+      getDocument: (source: { data: ArrayBuffer }) => {
+        promise: Promise<{
+          numPages: number;
+          getPage: (pageNumber: number) => Promise<{
+            getTextContent: () => Promise<{ items: Array<{ str?: string }> }>;
+            getViewport: (options: { scale: number }) => { width: number; height: number };
+            render: (context: { canvasContext: CanvasRenderingContext2D; viewport: { width: number; height: number } }) => { promise: Promise<void> };
+          }>;
+        }>;
+      };
+    };
+  }
+}
+
+let pdfJsLoaderPromise: Promise<NonNullable<Window['pdfjsLib']>> | null = null;
+
 const loadPdfJs = async () => {
-  const pdfjsLib = await import('pdfjs-dist');
-  pdfjsLib.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjsLib.version}/build/pdf.worker.min.js`;
-  return pdfjsLib;
+  if (typeof window === 'undefined') {
+    throw new Error('PDF.js can only be loaded in the browser.');
+  }
+
+  if (window.pdfjsLib) {
+    window.pdfjsLib.GlobalWorkerOptions.workerSrc =
+      `https://unpkg.com/pdfjs-dist@${window.pdfjsLib.version}/build/pdf.worker.min.js`;
+    return window.pdfjsLib;
+  }
+
+  if (!pdfJsLoaderPromise) {
+    pdfJsLoaderPromise = new Promise((resolve, reject) => {
+      const existingScript = document.querySelector<HTMLScriptElement>('script[data-pdfjs-runtime="true"]');
+
+      const finalizeLoad = () => {
+        if (!window.pdfjsLib) {
+          reject(new Error('PDF.js runtime loaded without exposing pdfjsLib.'));
+          return;
+        }
+
+        window.pdfjsLib.GlobalWorkerOptions.workerSrc =
+          `https://unpkg.com/pdfjs-dist@${window.pdfjsLib.version}/build/pdf.worker.min.js`;
+        resolve(window.pdfjsLib);
+      };
+
+      if (existingScript) {
+        if (window.pdfjsLib) {
+          finalizeLoad();
+          return;
+        }
+
+        existingScript.addEventListener('load', finalizeLoad, { once: true });
+        existingScript.addEventListener('error', () => reject(new Error('Failed to load PDF.js runtime.')), {
+          once: true,
+        });
+        return;
+      }
+
+      const script = document.createElement('script');
+      script.src = 'https://unpkg.com/pdfjs-dist@3.11.174/build/pdf.min.js';
+      script.async = true;
+      script.dataset.pdfjsRuntime = 'true';
+      script.onload = finalizeLoad;
+      script.onerror = () => reject(new Error('Failed to load PDF.js runtime.'));
+      document.head.appendChild(script);
+    });
+  }
+
+  return pdfJsLoaderPromise;
 };
 
 export const extractTextFromPdf = async (file: File): Promise<PdfTextExtractionResult> => {
@@ -180,12 +249,14 @@ const KNOWN_INSTITUTIONS = [
   'American Express',
   'Wells Fargo',
   'Discover',
-  'Citi'
+  'Citi',
+  'Synchrony',
+  'Amazon'
 ];
 
 const paymentRegex = /payment|pymt|online payment/i;
 const autoPaymentRegex = /autopay|auto[\s-]?payment/i;
-const ignoreDescRegex = /previous balance|credit limit|available credit|payment due|total fees|interest charged/i;
+const ignoreDescRegex = /previous balance|credit limit|available credit|payment due|total fees|interest charged|other credits|purchases\/debits|new balance/i;
 
 const formatTransactionDate = (month: string, day: string, statementYear: number, statementMonth: number) => {
   const numericMonth = Number(month);
@@ -387,6 +458,55 @@ const parseAmexCreditCardTransactions = (
   return transactions;
 };
 
+const parseSynchronyCreditCardTransactions = (
+  text: string,
+  statementType: StatementType,
+  institution?: string
+): ParsedTransaction[] => {
+  const normalizedText = normalizeStatementText(text);
+  const closingDateMatch = normalizedText.match(/New Balance as of\s+(\d{2})\/(\d{2})\/(\d{4})/i)
+    || normalizedText.match(/Previous Balance as of\s+(\d{2})\/(\d{2})\/(\d{4})/i);
+
+  if (!closingDateMatch) return [];
+
+  const statementMonth = Number(closingDateMatch[1]);
+  const statementYear = Number(closingDateMatch[3]);
+
+  const activityMatch = normalizedText.match(
+    /Transaction Activity\s+(.*?)(?:\s+Interest Charge Calculation|\s+Fees Charged|\s+Rewards Detail|\s+Late Payment Warning|\s+Make Payment to)/i
+  );
+
+  if (!activityMatch) return [];
+
+  const rows = activityMatch[1].match(/\d{2}\/\d{2}\s+.*?(?=\s+\d{2}\/\d{2}\s+|$)/g);
+  if (!rows) return [];
+
+  const transactions: ParsedTransaction[] = [];
+
+  for (const row of rows) {
+    const match = row.match(/^(\d{2})\/(\d{2})\s+(.*?)\s+(-?[\d,]+\.\d{2})$/);
+    if (!match) continue;
+
+    const [, month, day, rawDescription, rawAmount] = match;
+    const description = rawDescription.trim();
+    const amount = Number(rawAmount.replace(/,/g, ''));
+    const date = formatTransactionDate(month, day, statementYear, statementMonth);
+
+    if (!date || !description || Number.isNaN(amount)) continue;
+    if (ignoreDescRegex.test(description)) continue;
+
+    transactions.push(
+      buildTransaction(date, amount, description, statementType, institution || 'Synchrony', {
+        confidence: paymentRegex.test(description) ? 'medium' : 'high',
+        reviewFlags: paymentRegex.test(description) ? ['Payment row parsed from Synchrony transaction activity.'] : [],
+        parserProfile: 'Synchrony credit card',
+      })
+    );
+  }
+
+  return transactions;
+};
+
 const STATEMENT_PARSER_PROFILES: StatementParserProfile[] = [
   {
     name: 'Chase credit card',
@@ -402,6 +522,11 @@ const STATEMENT_PARSER_PROFILES: StatementParserProfile[] = [
     name: 'American Express credit card',
     institutionMatch: /\bAmerican Express\b|\bAmEx\b/i,
     parse: parseAmexCreditCardTransactions,
+  },
+  {
+    name: 'Synchrony credit card',
+    institutionMatch: /\bSynchrony\b|\bAmazon Store Card\b|\bamazon\.syf\.com\b/i,
+    parse: parseSynchronyCreditCardTransactions,
   },
 ];
 

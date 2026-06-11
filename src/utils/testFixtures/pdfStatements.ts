@@ -43,3 +43,18 @@ export const amexStatementFixture = `
   12/29 PAYMENT RECEIVED - THANK YOU -80.00
   Fees
 `;
+
+export const synchronyStatementFixture = `
+  amazon synchrony
+  Previous Balance as of 01/24/2026 588.57
+  Payments -588.57
+  Other Credits -42.60
+  Purchases/Debits + 322.12
+  New Balance as of 02/20/2026 279.52
+  Transaction Activity
+  01/28 PAYMENT RECEIVED - THANK YOU -588.57
+  02/02 AMAZON.COM 45.11
+  02/07 WHOLE FOODS MARKET 61.28
+  02/15 AMAZON MARKETPLACE 215.73
+  Interest Charge Calculation
+`;

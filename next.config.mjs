@@ -33,7 +33,13 @@ const nextConfig = {
     'localhost',
     ...localIps
   ],
-  turbopack: {},
+  turbopack: {
+    resolveAlias: {
+      canvas: {
+        browser: './src/utils/emptyBrowserModule.ts',
+      },
+    },
+  },
   webpack(config) {
     config.resolve = config.resolve || {};
     config.resolve.alias = {

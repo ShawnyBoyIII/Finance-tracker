@@ -4,6 +4,7 @@ import {
   capitalOneStatementFixture,
   chaseStatementFixture,
   chaseNoisyStatementFixture,
+  synchronyStatementFixture,
 } from '../testFixtures/pdfStatements';
 
 describe('PDF OCR transaction parsing', () => {
@@ -96,6 +97,31 @@ describe('PDF OCR transaction parsing', () => {
           amount: -80,
           type: 'cc_payment',
           institution: 'American Express',
+        }),
+      ])
+    );
+  });
+
+  it('parses Synchrony transaction activity without double-counting summary payments', () => {
+    const transactions = parseTransactionsFromText(synchronyStatementFixture, 'credit_card');
+
+    expect(transactions).toHaveLength(4);
+    expect(transactions.filter((transaction) => transaction.type === 'cc_payment')).toHaveLength(1);
+    expect(transactions).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          date: '2026-01-28',
+          description: 'PAYMENT RECEIVED - THANK YOU',
+          amount: -588.57,
+          type: 'cc_payment',
+          institution: 'Synchrony',
+          parserProfile: 'Synchrony credit card',
+        }),
+        expect.objectContaining({
+          date: '2026-02-15',
+          description: 'AMAZON MARKETPLACE',
+          amount: 215.73,
+          type: 'expense',
         }),
       ])
     );

@@ -134,6 +134,7 @@ describe('Dashboard Component', () => {
     render(<Dashboard />);
 
     expect(screen.getByText('Total Balance').nextElementSibling).toHaveTextContent('$2,600.00');
+    expect(screen.getByText('Current month income').nextElementSibling).toHaveTextContent('$4,000.00');
     expect(screen.getByText('Income this month').nextElementSibling).toHaveTextContent('$2,000.00');
     expect(screen.getByText('Expenses this month').nextElementSibling).toHaveTextContent('$600.00');
     expect(screen.getByText('Net cash flow').nextElementSibling).toHaveTextContent('$1,400.00');
@@ -181,7 +182,7 @@ describe('Dashboard Component', () => {
     render(<Dashboard />);
 
     expect(screen.getByText('Bills & Due Dates')).toBeInTheDocument();
-    expect(screen.getByText('Internet')).toBeInTheDocument();
+    expect(screen.getAllByText('Internet').length).toBeGreaterThan(0);
     expect(screen.getByText((content) => content.includes('Jun 18, 2026'))).toBeInTheDocument();
     expect(screen.getAllByText('Rent Payment').length).toBeGreaterThan(0);
   });

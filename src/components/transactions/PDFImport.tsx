@@ -2,14 +2,7 @@
 
 import React, { useState } from 'react';
 import { useFinance } from '@/context/FinanceContext';
-import {
-  analyzePdfTextExtraction,
-  extractImagesFromPdf,
-  extractTextFromPdf,
-  ParsedTransaction,
-  parseTransactionsFromText,
-  performOcrOnImages,
-} from '@/utils/pdfOcr';
+import type { ParsedTransaction } from '@/utils/pdfOcr';
 import {
   findBatchDuplicates,
   findPotentialTransactionDuplicates,
@@ -132,6 +125,14 @@ export default function PDFImport({ statementType, accountId }: PDFImportProps) 
     setSelectedFileName(file.name);
 
     try {
+      const {
+        analyzePdfTextExtraction,
+        extractImagesFromPdf,
+        extractTextFromPdf,
+        parseTransactionsFromText,
+        performOcrOnImages,
+      } = await import('@/utils/pdfOcr');
+
       setProgress(10);
       const textExtraction = await extractTextFromPdf(file);
       let parsedTransactions = parseTransactionsFromText(textExtraction.text, statementType);
@@ -252,6 +253,14 @@ export default function PDFImport({ statementType, accountId }: PDFImportProps) 
         periodStart: statementDates[0],
         periodEnd: statementDates[statementDates.length - 1],
         parseVersion: 1,
+        reviewedTransactionCount: stagedTransactions.length,
+        duplicateCandidateCount: duplicateCount,
+        reviewFlagCount: stagedTransactions.reduce(
+          (total, transaction) => total + (transaction.reviewFlags?.length || 0),
+          0
+        ),
+        mediumConfidenceCount,
+        lowConfidenceCount,
       },
       readyToImport
     );

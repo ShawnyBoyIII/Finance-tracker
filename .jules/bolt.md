@@ -33,3 +33,7 @@
 ## 2024-06-04 - toLowerCase().includes() Memory Allocation in Loops
 **Learning:** Using `toLowerCase().includes('string')` inside high-iteration loops (like parsing OCR output or iterating over thousands of CSV rows) creates unnecessary memory allocations by returning a new string on every iteration, leading to GC pressure and increased execution time.
 **Action:** Replace `string.toLowerCase().includes('pattern')` with a case-insensitive regular expression (`/pattern/i`) that is compiled and hoisted *outside* the loop, and use `regex.test(string)` for fast, allocation-free evaluation.
+
+## 2024-05-18 - Intl Object Initialization Overhead
+**Learning:** `Intl.NumberFormat` and `Intl.DateTimeFormat` are notoriously slow to initialize in V8 because they require loading locale data and internal structures. Instantiating them inside frequently called formatting functions (like `formatCurrency`) causes significant performance degradation, especially during React render loops.
+**Action:** Always cache and reuse `Intl` formatter instances at the module level rather than creating them dynamically on every function call.

@@ -13,3 +13,7 @@
 ## 2023-10-27 - Dynamic Active Navigation States
 **Learning:** For Next.js navigation menus, active routes were statically set, causing confusion about the current page, and missing the `aria-current="page"` attribute for screen readers.
 **Action:** Always dynamically determine active routes using `usePathname` from `next/navigation`, and apply `aria-current="page"` along with active visual styles to the active link element to ensure accessibility and clear UX.
+
+## 2024-02-12 - Consistency of Confirmation Dialogs
+**Learning:** While major destructive actions (like deleting transactions) had confirmation dialogs, secondary but equally destructive actions (like deleting income sources or tracked bills in planners) were missing them. This creates inconsistent safety nets across the application.
+**Action:** Always ensure *all* destructive actions across all UI components, not just primary entities, are wrapped in a `window.confirm` dialog. Consistency in safety features is key to user trust.

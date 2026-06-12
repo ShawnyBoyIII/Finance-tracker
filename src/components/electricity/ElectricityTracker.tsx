@@ -803,7 +803,11 @@ export default function ElectricityTracker() {
                       <Pencil className="h-3.5 w-3.5" />
                       Edit
                     </button>
-                    <button type="button" onClick={() => deleteBill(bill.billId)} className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-sm text-white hover:bg-white/5">
+                    <button type="button" onClick={() => {
+                      if (window.confirm('Are you sure you want to delete this historical electricity bill?')) {
+                        deleteBill(bill.billId);
+                      }
+                    }} className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-sm text-white hover:bg-white/5">
                       <Trash2 className="h-3.5 w-3.5" />
                       Remove
                     </button>

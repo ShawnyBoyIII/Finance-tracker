@@ -145,7 +145,11 @@ export default function SalaryPlanner() {
                   </div>
                   <button
                     type="button"
-                    onClick={() => deleteIncomeSource(incomeSource.id)}
+                    onClick={() => {
+                      if (window.confirm('Are you sure you want to remove this income source?')) {
+                        deleteIncomeSource(incomeSource.id);
+                      }
+                    }}
                     className="inline-flex items-center gap-2 rounded-xl bg-white/10 px-3 py-2 text-sm font-medium text-slate-100 hover:bg-white/15"
                   >
                     <Trash2 className="w-4 h-4" />

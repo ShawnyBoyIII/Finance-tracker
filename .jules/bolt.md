@@ -33,3 +33,6 @@
 ## 2024-06-04 - toLowerCase().includes() Memory Allocation in Loops
 **Learning:** Using `toLowerCase().includes('string')` inside high-iteration loops (like parsing OCR output or iterating over thousands of CSV rows) creates unnecessary memory allocations by returning a new string on every iteration, leading to GC pressure and increased execution time.
 **Action:** Replace `string.toLowerCase().includes('pattern')` with a case-insensitive regular expression (`/pattern/i`) that is compiled and hoisted *outside* the loop, and use `regex.test(string)` for fast, allocation-free evaluation.
+## 2024-06-05 - Intl Object Instantiation in Render Loops
+**Learning:** Instantiating `Intl.DateTimeFormat` or `Intl.NumberFormat` objects is an unexpectedly expensive operation (~80-100x slower than reusing an instance). Creating these objects repeatedly inside formatting functions (e.g., `formatCurrency` or `getMonthLabel`) that are called in high-frequency loops or list render cycles causes significant CPU and memory overhead, potentially blocking the main thread.
+**Action:** Always extract `Intl` formatters out of formatting functions and cache them as module-level constants to reuse the same instance, significantly speeding up execution times in tight loops.

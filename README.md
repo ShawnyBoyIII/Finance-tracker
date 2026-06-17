@@ -74,6 +74,35 @@ npm run dev
 
 Then open [http://localhost:3000](http://localhost:3000).
 
+### Windows Setup
+
+Use Node.js 20+ and npm.
+
+PowerShell:
+
+```powershell
+cd "C:\path\to\Finance-tracker"
+npm install
+npm run dev
+```
+
+Command Prompt:
+
+```cmd
+cd /d C:\path\to\Finance-tracker
+npm install
+npm run dev
+```
+
+Then open [http://localhost:3000](http://localhost:3000).
+
+Common Windows notes:
+
+- If project path has spaces, keep quotes around path in PowerShell.
+- If port `3000` already in use, Next.js will usually offer another port in terminal.
+- For production verification in this repo, use `npx next build --webpack`.
+- App data stays in browser storage on local machine, not in files on disk by default.
+
 ### Verification
 
 ```bash
@@ -108,6 +137,7 @@ All of that is persisted locally in a unified app-data record and can be exporte
 ## Project Docs
 
 - Roadmap: [docs/future_phases.md](./docs/future_phases.md)
+- Burnrate comparison roadmap: [docs/burnrate_feature_roadmap.md](./docs/burnrate_feature_roadmap.md)
 - Storage durability plan: [docs/data_durability_roadmap.md](./docs/data_durability_roadmap.md)
 
 ## Privacy

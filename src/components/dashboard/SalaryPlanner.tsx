@@ -75,8 +75,11 @@ export default function SalaryPlanner() {
 
       <form onSubmit={handleSubmit} className="grid grid-cols-1 gap-4 md:grid-cols-4">
         <div>
-          <label className="block text-sm font-medium text-slate-200">Income source</label>
+          <label htmlFor="income-source-name" className="block text-sm font-medium text-slate-200">
+            Income source <span className="text-red-500 ml-1" aria-hidden="true">*</span>
+          </label>
           <input
+            id="income-source-name"
             type="text"
             required
             value={name}
@@ -87,8 +90,11 @@ export default function SalaryPlanner() {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-slate-200">Bi-weekly amount</label>
+          <label htmlFor="income-source-amount" className="block text-sm font-medium text-slate-200">
+            Bi-weekly amount <span className="text-red-500 ml-1" aria-hidden="true">*</span>
+          </label>
           <input
+            id="income-source-amount"
             type="number"
             min="0"
             step="0.01"
@@ -101,8 +107,11 @@ export default function SalaryPlanner() {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-slate-200">Next payday</label>
+          <label htmlFor="income-source-next-payday" className="block text-sm font-medium text-slate-200">
+            Next payday <span className="text-red-500 ml-1" aria-hidden="true">*</span>
+          </label>
           <input
+            id="income-source-next-payday"
             ref={nextPayDateInputRef}
             type="date"
             required

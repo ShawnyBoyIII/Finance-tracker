@@ -36,3 +36,6 @@
 ## 2024-06-05 - Intl Object Instantiation Overhead
 **Learning:** Instantiating `new Intl.DateTimeFormat` or `new Intl.NumberFormat` inside formatting functions that are called frequently (e.g., inside `.map` loops or render cycles) incurs severe performance penalties (up to 160x slower) because object instantiation for these formatters is expensive.
 **Action:** To prevent significant overhead during render cycles or high-frequency loops, cache and reuse `Intl.NumberFormat` and `Intl.DateTimeFormat` instances at the module level instead of repeatedly instantiating them inside frequently called formatting functions.
+## 2026-06-18 - Don't drop localeCompare in UI lists for micro-optimizations
+**Learning:** The code review explicitly called out that replacing `localeCompare` with standard boolean string comparisons `a < b ? -1 : a > b ? 1 : 0` was a micro-optimization that sacrificed UI sorting correctness (it doesn't handle case insensitivity or diacritics well).
+**Action:** When optimizing performance in UI text sorting, prioritize correctness unless strict numeric or exact string ordering is an explicitly required bottleneck. Keep `localeCompare` for sorting categories or tags intended for human reading.

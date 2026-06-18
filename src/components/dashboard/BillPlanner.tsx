@@ -24,10 +24,28 @@ export default function BillPlanner() {
 
   const dueSoonBills = useMemo(() => getDueSoonBills(bills, transactions), [bills, transactions]);
   const accountOptions = accounts.filter((account) => account.type === 'cash' || account.type === 'bank' || account.type === 'credit_card');
-  const categories = Array.from(new Set([
-    ...DEFAULT_TRANSACTION_CATEGORIES,
-    ...transactions.map((transaction) => transaction.category),
-  ])).filter(Boolean).sort((a, b) => a.localeCompare(b));
+
+  // ⚡ Bolt: Optimize category extraction by avoiding intermediate array allocations and localeCompare, and memoizing the result.
+  const categories = useMemo(() => {
+    const categorySet = new Set<string>();
+
+    // Pre-populate with default categories
+    for (let i = 0; i < DEFAULT_TRANSACTION_CATEGORIES.length; i++) {
+      if (DEFAULT_TRANSACTION_CATEGORIES[i]) {
+        categorySet.add(DEFAULT_TRANSACTION_CATEGORIES[i]);
+      }
+    }
+
+    // Add transaction categories
+    for (let i = 0; i < transactions.length; i++) {
+      if (transactions[i].category) {
+        categorySet.add(transactions[i].category);
+      }
+    }
+
+    return Array.from(categorySet).sort((a, b) => a.localeCompare(b));
+  }, [transactions]);
+
   const accountMap = new Map(accounts.map((account) => [account.id, account]));
   const currentMonthKey = new Date().toISOString().slice(0, 7);
 

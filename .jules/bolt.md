@@ -36,3 +36,6 @@
 ## 2024-06-05 - Intl Object Instantiation Overhead
 **Learning:** Instantiating `new Intl.DateTimeFormat` or `new Intl.NumberFormat` inside formatting functions that are called frequently (e.g., inside `.map` loops or render cycles) incurs severe performance penalties (up to 160x slower) because object instantiation for these formatters is expensive.
 **Action:** To prevent significant overhead during render cycles or high-frequency loops, cache and reuse `Intl.NumberFormat` and `Intl.DateTimeFormat` instances at the module level instead of repeatedly instantiating them inside frequently called formatting functions.
+## 2024-06-06 - Nested Filtering Overheads in React renders
+**Learning:** Performing nested `.filter()` iterations on a large global array (like `transactions`) inside another `.map()` or `.filter()` loop over secondary entities (like `accounts`) scales exponentially $O(M \times N)$ and can severely block the main thread.
+**Action:** When aggregating data for multiple parent entities (like dashboard card summaries), pre-aggregate the raw data in a single $O(N)$ pass using a standard `for` loop and a Hash Map (`Map`), then format the final output using the map. Also, always check for operations like `new Date()` taking place implicitly inside loop callbacks and hoist them to avoid exponentially scaling object instantiation.

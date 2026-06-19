@@ -17,3 +17,6 @@
 ## 2023-10-27 - Form Label Associations
 **Learning:** The `SalaryPlanner` component's form fields were missing explicit connections between their `<label>` and `<input>` elements. This is a common accessibility failure that prevents screen readers from correctly identifying the purpose of form inputs. In addition, the visual required asterisk `*` was read aloud by screen readers because it lacked `aria-hidden="true"`.
 **Action:** Always use `htmlFor` on the `<label>` and a matching `id` on the `<input>` to bind them together. Always append `aria-hidden="true"` to visual indicators like asterisks `*` in required fields to prevent redundant and confusing screen reader announcements.
+## 2026-06-19 - Semantic Form Grouping for Radio Buttons
+**Learning:** Next.js/Tailwind components often use generic `<div>` and `<label>` elements to construct radio button groups. Without a wrapping `<fieldset>` / `<legend>` and shared `name` attributes on the radio inputs, native arrow-key navigation within the group breaks and screen readers fail to associate the options with their group context.
+**Action:** Always wrap radio button groups in `<fieldset>` with a descriptive `<legend>`, and ensure all `<input type="radio">` elements in the group share a `name` attribute.

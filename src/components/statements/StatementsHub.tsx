@@ -91,13 +91,11 @@ export default function StatementsHub() {
         return true;
       }
 
-      return [
-        statement.fileName,
-        statement.institution || '',
-        statement.parserProfile || '',
-        accountName,
-      ]
-        .join(' ')
+      // ⚡ Bolt: Avoid intermediate array allocation and iteration overhead
+      return ((statement.fileName || '') + ' ' +
+        (statement.institution || '') + ' ' +
+        (statement.parserProfile || '') + ' ' +
+        accountName)
         .toLowerCase()
         .includes(searchValue);
     });

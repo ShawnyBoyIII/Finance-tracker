@@ -36,3 +36,6 @@
 ## 2024-06-05 - Intl Object Instantiation Overhead
 **Learning:** Instantiating `new Intl.DateTimeFormat` or `new Intl.NumberFormat` inside formatting functions that are called frequently (e.g., inside `.map` loops or render cycles) incurs severe performance penalties (up to 160x slower) because object instantiation for these formatters is expensive.
 **Action:** To prevent significant overhead during render cycles or high-frequency loops, cache and reuse `Intl.NumberFormat` and `Intl.DateTimeFormat` instances at the module level instead of repeatedly instantiating them inside frequently called formatting functions.
+## 2024-06-06 - Array Allocation overhead for string building in tight loops
+**Learning:** Using `[a, b, c].filter(Boolean).join(' ')` to build a dynamic string inside high-iteration loops (like filtering transaction/statement lists inside render cycles) creates a significant number of intermediate, short-lived arrays. The garbage collection overhead scales with the dataset and negatively impacts perceived responsiveness for keystroke-driven interactions like searching.
+**Action:** Replace `[a, b, c].filter(Boolean).join(' ')` with direct string concatenation and inline fallbacks, such as `(a || '') + ' ' + (b || '')`, in critical render cycle loops.

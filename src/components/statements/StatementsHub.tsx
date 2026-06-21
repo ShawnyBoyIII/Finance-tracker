@@ -72,7 +72,11 @@ export default function StatementsHub() {
   );
 
   const filteredStatements = useMemo(() => {
-    const searchValue = search.trim().toLowerCase();
+    const normalizedQuery = search.trim();
+    // ⚡ Bolt: Pre-compile RegExp outside the loop to avoid string allocations via .toLowerCase() in every iteration
+    const searchRegex = normalizedQuery
+      ? new RegExp(normalizedQuery.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i')
+      : null;
 
     return statementCards.filter(({ statement, accountName }) => {
       if (sourceFilter !== 'all' && statement.sourceType !== sourceFilter) {
@@ -87,19 +91,16 @@ export default function StatementsHub() {
         return false;
       }
 
-      if (!searchValue) {
+      if (!searchRegex) {
         return true;
       }
 
-      return [
-        statement.fileName,
-        statement.institution || '',
-        statement.parserProfile || '',
-        accountName,
-      ]
-        .join(' ')
-        .toLowerCase()
-        .includes(searchValue);
+      const haystack = (statement.fileName || '') + ' ' +
+                       (statement.institution || '') + ' ' +
+                       (statement.parserProfile || '') + ' ' +
+                       (accountName || '');
+
+      return searchRegex.test(haystack);
     });
   }, [accountFilter, formatFilter, search, sourceFilter, statementCards]);
 

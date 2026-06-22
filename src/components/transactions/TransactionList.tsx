@@ -155,20 +155,14 @@ export default function TransactionList() {
 
   const categories = useMemo(() => {
     // ⚡ Bolt: Using standard for loop and avoiding Set/map combinations to prevent intermediate array allocations
-    const categorySet = new Set<string>();
+    const categorySet = new Set<string>(DEFAULT_TRANSACTION_CATEGORIES);
     for (let i = 0; i < transactions.length; i++) {
       if (transactions[i].category) {
         categorySet.add(transactions[i].category);
       }
     }
 
-    return Array.from(categorySet).sort((a, b) => a.localeCompare(b));
-    return Array.from(new Set([
-      ...DEFAULT_TRANSACTION_CATEGORIES,
-      ...transactions.map((transaction) => transaction.category),
-    ]))
-      .filter(Boolean)
-      .sort((a, b) => a.localeCompare(b));
+    return Array.from(categorySet).filter(Boolean).sort((a, b) => (a < b ? -1 : a > b ? 1 : 0));
   }, [transactions]);
 
   const handleCategoryChange = (transactionId: string, category: string) => {

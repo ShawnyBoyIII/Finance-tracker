@@ -19,7 +19,7 @@ export default function BudgetManager() {
         ...budgets.map((budget) => budget.category),
       ]))
         .filter(Boolean)
-        .sort((a, b) => a.localeCompare(b)),
+        .sort((a, b) => (a < b ? -1 : a > b ? 1 : 0)),
     [budgets, transactions]
   );
 

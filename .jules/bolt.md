@@ -36,3 +36,6 @@
 ## 2024-06-05 - Intl Object Instantiation Overhead
 **Learning:** Instantiating `new Intl.DateTimeFormat` or `new Intl.NumberFormat` inside formatting functions that are called frequently (e.g., inside `.map` loops or render cycles) incurs severe performance penalties (up to 160x slower) because object instantiation for these formatters is expensive.
 **Action:** To prevent significant overhead during render cycles or high-frequency loops, cache and reuse `Intl.NumberFormat` and `Intl.DateTimeFormat` instances at the module level instead of repeatedly instantiating them inside frequently called formatting functions.
+## 2024-06-06 - localeCompare performance overhead
+**Learning:** Found that `localeCompare` is being used extensively across the application to sort ISO 8601 date strings. `String.prototype.localeCompare` is significantly slower than standard comparison operators (`<` and `>`) because it handles locale-specific sorting rules, which are entirely unnecessary for ISO dates like 'YYYY-MM-DD' that naturally sort lexicographically.
+**Action:** Replace all instances of `.sort((a, b) => a.localeCompare(b))` for dates with `.sort((a, b) => (a < b ? -1 : a > b ? 1 : 0))` or `.sort((a, b) => (a === b ? 0 : a < b ? -1 : 1))` to improve array sorting performance, especially in components and utilities processing large transaction lists.

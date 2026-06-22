@@ -309,7 +309,7 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
       );
 
       return [electricityStatement, ...withoutMatchingStatement].sort((left, right) =>
-        right.billDate.localeCompare(left.billDate)
+        (right.billDate < left.billDate ? -1 : right.billDate > left.billDate ? 1 : 0)
       );
     });
 

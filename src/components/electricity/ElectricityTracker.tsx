@@ -125,7 +125,7 @@ export default function ElectricityTracker() {
   );
   const electricityBillStatuses = useMemo(() => {
     const billStatuses = getBillStatuses(electricityBills, transactions);
-    return billStatuses.sort((left, right) => left.dueDate.localeCompare(right.dueDate));
+    return billStatuses.sort((left, right) => (left.dueDate < right.dueDate ? -1 : left.dueDate > right.dueDate ? 1 : 0));
   }, [electricityBills, transactions]);
   const electricityTransactions = useMemo(
     () =>
@@ -135,7 +135,7 @@ export default function ElectricityTracker() {
             transaction.type === 'expense' &&
             matchesElectricityTransaction(transaction.description, transaction.category)
         )
-        .sort((left, right) => right.date.localeCompare(left.date)),
+        .sort((left, right) => (right.date < left.date ? -1 : right.date > left.date ? 1 : 0)),
     [transactions]
   );
 
@@ -144,7 +144,7 @@ export default function ElectricityTracker() {
     [accounts]
   );
   const recentStatements = useMemo(
-    () => [...electricityStatements].sort((left, right) => right.billDate.localeCompare(left.billDate)),
+    () => [...electricityStatements].sort((left, right) => (right.billDate < left.billDate ? -1 : right.billDate > left.billDate ? 1 : 0)),
     [electricityStatements]
   );
   const statementTrend = useMemo(

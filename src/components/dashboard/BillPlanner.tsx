@@ -27,7 +27,7 @@ export default function BillPlanner() {
   const categories = Array.from(new Set([
     ...DEFAULT_TRANSACTION_CATEGORIES,
     ...transactions.map((transaction) => transaction.category),
-  ])).filter(Boolean).sort((a, b) => a.localeCompare(b));
+  ])).filter(Boolean).sort((a, b) => (a < b ? -1 : a > b ? 1 : 0));
   const accountMap = new Map(accounts.map((account) => [account.id, account]));
   const currentMonthKey = new Date().toISOString().slice(0, 7);
 

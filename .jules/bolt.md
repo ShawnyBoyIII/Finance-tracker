@@ -36,3 +36,6 @@
 ## 2024-06-05 - Intl Object Instantiation Overhead
 **Learning:** Instantiating `new Intl.DateTimeFormat` or `new Intl.NumberFormat` inside formatting functions that are called frequently (e.g., inside `.map` loops or render cycles) incurs severe performance penalties (up to 160x slower) because object instantiation for these formatters is expensive.
 **Action:** To prevent significant overhead during render cycles or high-frequency loops, cache and reuse `Intl.NumberFormat` and `Intl.DateTimeFormat` instances at the module level instead of repeatedly instantiating them inside frequently called formatting functions.
+## 2024-06-06 - Intermediate Array Allocations in React useMemo Render Methods
+**Learning:** Destructuring global arrays using `...` operators and combining them with `.map()` inside `new Set()` (e.g., `Array.from(new Set([...arr1, ...arr2.map(x => x.key)]))`) creates severe memory pressure during frequent React re-renders because intermediate arrays are allocated and discarded before the Set is even populated.
+**Action:** Use standard `for` loops to directly populate `Set` objects iteratively when extracting unique data from large context arrays during render cycles to eliminate intermediate array allocations.

@@ -23,12 +23,32 @@ export default function BillPlanner() {
   const [autopay, setAutopay] = useState(false);
 
   const dueSoonBills = useMemo(() => getDueSoonBills(bills, transactions), [bills, transactions]);
-  const accountOptions = accounts.filter((account) => account.type === 'cash' || account.type === 'bank' || account.type === 'credit_card');
-  const categories = Array.from(new Set([
-    ...DEFAULT_TRANSACTION_CATEGORIES,
-    ...transactions.map((transaction) => transaction.category),
-  ])).filter(Boolean).sort((a, b) => a.localeCompare(b));
-  const accountMap = new Map(accounts.map((account) => [account.id, account]));
+
+  // ⚡ Bolt: Memoized derived data to avoid recalculation and allocation on every render keystroke
+  const accountOptions = useMemo(
+    () => accounts.filter((account) => account.type === 'cash' || account.type === 'bank' || account.type === 'credit_card'),
+    [accounts]
+  );
+  const accountMap = useMemo(() => {
+    // ⚡ Bolt: Using standard for loop to avoid array map allocations
+    const map = new Map<string, typeof accounts[0]>();
+    for (let i = 0; i < accounts.length; i++) {
+      map.set(accounts[i].id, accounts[i]);
+    }
+    return map;
+  }, [accounts]);
+
+  const categories = useMemo(() => {
+    // ⚡ Bolt: Using standard for loop and avoiding spread/map combinations to prevent intermediate array allocations
+    const categorySet = new Set<string>(DEFAULT_TRANSACTION_CATEGORIES);
+    for (let i = 0; i < transactions.length; i++) {
+      if (transactions[i].category) {
+        categorySet.add(transactions[i].category);
+      }
+    }
+    return Array.from(categorySet).sort((a, b) => a.localeCompare(b));
+  }, [transactions]);
+
   const currentMonthKey = new Date().toISOString().slice(0, 7);
 
   const resetForm = () => {

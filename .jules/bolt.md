@@ -36,3 +36,6 @@
 ## 2024-06-05 - Intl Object Instantiation Overhead
 **Learning:** Instantiating `new Intl.DateTimeFormat` or `new Intl.NumberFormat` inside formatting functions that are called frequently (e.g., inside `.map` loops or render cycles) incurs severe performance penalties (up to 160x slower) because object instantiation for these formatters is expensive.
 **Action:** To prevent significant overhead during render cycles or high-frequency loops, cache and reuse `Intl.NumberFormat` and `Intl.DateTimeFormat` instances at the module level instead of repeatedly instantiating them inside frequently called formatting functions.
+## 2024-06-25 - O(M*N) Nested Loops in Dashboard Render Cycles
+**Learning:** Found an $O(M \times N)$ nested loop inside a `useMemo` hook in `Dashboard.tsx` (`cardSummaries`). Filtering a large array (`transactions`) for every item in another array (`accounts`) blocks the main thread during render cycles as data grows.
+**Action:** Replace nested array filtering in renders with $O(N+M)$ Hash Map pre-aggregation to ensure performance remains stable as local datasets scale.

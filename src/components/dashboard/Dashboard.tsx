@@ -41,17 +41,31 @@ export default function Dashboard() {
   const recentTransactions = useMemo(() => [...transactions].sort((a, b) => b.date.localeCompare(a.date)).slice(0, 5), [transactions]);
   const focusCategories = useMemo(() => monthlySummary.expensesByCategory.slice(0, 5), [monthlySummary.expensesByCategory]);
   const cardSummaries = useMemo(() => {
+    // ⚡ Bolt: Optimize cardSummaries calculation
+    // Refactored from O(M*N) to O(N+M) using hash map pre-aggregation.
+    // Instead of filtering the entire transactions array for every account,
+    // we aggregate charges and payments by accountId in a single pass.
+    const currentMonth = new Date().toISOString().slice(0, 7);
+    const accountStats: Record<string, { charges: number; payments: number }> = Object.create(null);
+
+    for (let i = 0; i < transactions.length; i++) {
+      const t = transactions[i];
+      if (t.accountId && t.date.slice(0, 7) === currentMonth) {
+        if (!accountStats[t.accountId]) {
+          accountStats[t.accountId] = { charges: 0, payments: 0 };
+        }
+        if (t.type === 'expense') {
+          accountStats[t.accountId].charges += t.amount;
+        } else if (t.type === 'cc_payment') {
+          accountStats[t.accountId].payments += Math.abs(t.amount);
+        }
+      }
+    }
+
     return accounts
       .filter((account) => account.type === 'credit_card')
       .map((account) => {
-        const accountTransactions = transactions.filter((transaction) => transaction.accountId === account.id);
-        const monthlyTransactions = accountTransactions.filter((transaction) => transaction.date.slice(0, 7) === new Date().toISOString().slice(0, 7));
-        const charges = monthlyTransactions
-          .filter((transaction) => transaction.type === 'expense')
-          .reduce((sum, transaction) => sum + transaction.amount, 0);
-        const payments = monthlyTransactions
-          .filter((transaction) => transaction.type === 'cc_payment')
-          .reduce((sum, transaction) => sum + Math.abs(transaction.amount), 0);
+        const stats = accountStats[account.id] || { charges: 0, payments: 0 };
         const recurringCount = recurringBills.filter((bill) => bill.institution === account.issuer || bill.institution === account.name).length;
 
         return {
@@ -59,9 +73,9 @@ export default function Dashboard() {
           name: account.name,
           issuer: account.issuer,
           last4: account.last4,
-          charges,
-          payments,
-          openItems: Math.max(charges - payments, 0),
+          charges: stats.charges,
+          payments: stats.payments,
+          openItems: Math.max(stats.charges - stats.payments, 0),
           recurringCount,
         };
       })

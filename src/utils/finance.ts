@@ -586,7 +586,14 @@ export const getElectricityMetrics = (
     nonZeroMonths.length > 0
       ? nonZeroMonths.reduce((total, entry) => total + entry.amount, 0) / nonZeroMonths.length
       : 0;
-  const latestCharge = [...transactions].sort((left, right) => right.date.localeCompare(left.date))[0];
+
+  // Bolt: Replace O(N log N) Array.prototype.sort with an O(N) single-pass find for the latest date.
+  let latestCharge = transactions[0] || null;
+  for (let i = 1; i < transactions.length; i++) {
+    if (transactions[i].date > latestCharge.date) {
+      latestCharge = transactions[i];
+    }
+  }
 
   return {
     currentMonthSpend,

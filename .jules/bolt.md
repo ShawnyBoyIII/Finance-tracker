@@ -36,3 +36,6 @@
 ## 2024-06-05 - Intl Object Instantiation Overhead
 **Learning:** Instantiating `new Intl.DateTimeFormat` or `new Intl.NumberFormat` inside formatting functions that are called frequently (e.g., inside `.map` loops or render cycles) incurs severe performance penalties (up to 160x slower) because object instantiation for these formatters is expensive.
 **Action:** To prevent significant overhead during render cycles or high-frequency loops, cache and reuse `Intl.NumberFormat` and `Intl.DateTimeFormat` instances at the module level instead of repeatedly instantiating them inside frequently called formatting functions.
+## 2024-06-27 - Finding the Maximum Value in an Array
+**Learning:** Using `[...array].sort()[0]` to find the latest date or maximum value in an array is an anti-pattern. It creates an unnecessary shallow copy of the array and performs an $O(N \log N)$ sort operation, which is highly inefficient for merely finding a single maximum or minimum value. Using `localeCompare` inside the sort amplifies this overhead.
+**Action:** Always replace `[...array].sort()[0]` with a simple $O(N)$ single-pass iteration (using a standard `for` loop or `reduce`) when extracting a single extreme value (like the latest date) to avoid sorting overhead and unnecessary memory allocations.

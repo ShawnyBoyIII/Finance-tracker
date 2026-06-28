@@ -410,8 +410,15 @@ export const getSuggestedCategory = (
     categoryCounts.set(transaction.category, (categoryCounts.get(transaction.category) || 0) + 1);
   });
 
-  const [bestMatch] = Array.from(categoryCounts.entries()).sort((a, b) => b[1] - a[1]);
-  return bestMatch?.[0] || fallbackCategory;
+  let bestMatchCategory = fallbackCategory;
+  let maxCount = 0;
+  for (const [category, count] of categoryCounts.entries()) {
+    if (count > maxCount) {
+      maxCount = count;
+      bestMatchCategory = category;
+    }
+  }
+  return bestMatchCategory;
 };
 
 export const findPotentialTransactionDuplicates = (
@@ -586,7 +593,14 @@ export const getElectricityMetrics = (
     nonZeroMonths.length > 0
       ? nonZeroMonths.reduce((total, entry) => total + entry.amount, 0) / nonZeroMonths.length
       : 0;
-  const latestCharge = [...transactions].sort((left, right) => right.date.localeCompare(left.date))[0];
+  let latestCharge = transactions[0];
+  if (latestCharge) {
+    for (let i = 1; i < transactions.length; i++) {
+      if (transactions[i].date > latestCharge.date) {
+        latestCharge = transactions[i];
+      }
+    }
+  }
 
   return {
     currentMonthSpend,

@@ -36,3 +36,7 @@
 ## 2024-06-05 - Intl Object Instantiation Overhead
 **Learning:** Instantiating `new Intl.DateTimeFormat` or `new Intl.NumberFormat` inside formatting functions that are called frequently (e.g., inside `.map` loops or render cycles) incurs severe performance penalties (up to 160x slower) because object instantiation for these formatters is expensive.
 **Action:** To prevent significant overhead during render cycles or high-frequency loops, cache and reuse `Intl.NumberFormat` and `Intl.DateTimeFormat` instances at the module level instead of repeatedly instantiating them inside frequently called formatting functions.
+
+## 2024-06-06 - Intermediate Array Allocations from Spread Operations
+**Learning:** Found that generating `categoryOptions` by spreading multiple arrays into a `new Set([...a, ...b.map()])` causes severe memory allocation and garbage collection overhead during render cycles because it creates large intermediate arrays. Using `Array.from(new Set(...))` on top of this exacerbates the issue for high-iteration lists like transactions.
+**Action:** Initialize a `Set` with default elements (`new Set(defaults)`) and manually populate it using a fast `for` loop over the dynamic arrays. This prevents temporary array instantiations and avoids blocking the main thread during component renders.

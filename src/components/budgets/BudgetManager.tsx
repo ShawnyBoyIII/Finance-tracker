@@ -12,14 +12,24 @@ export default function BudgetManager() {
   const [newAmount, setNewAmount] = useState('');
 
   const categoryOptions = useMemo(
-    () =>
-      Array.from(new Set([
-        ...DEFAULT_TRANSACTION_CATEGORIES,
-        ...transactions.map((transaction) => transaction.category),
-        ...budgets.map((budget) => budget.category),
-      ]))
-        .filter(Boolean)
-        .sort((a, b) => a.localeCompare(b)),
+    () => {
+      // ⚡ Bolt: Using standard for loop to avoid intermediate array allocation from map() + spread
+      const categorySet = new Set<string>(DEFAULT_TRANSACTION_CATEGORIES);
+
+      for (let i = 0; i < transactions.length; i++) {
+        if (transactions[i].category) {
+          categorySet.add(transactions[i].category);
+        }
+      }
+
+      for (let i = 0; i < budgets.length; i++) {
+        if (budgets[i].category) {
+          categorySet.add(budgets[i].category);
+        }
+      }
+
+      return Array.from(categorySet).sort((a, b) => a.localeCompare(b));
+    },
     [budgets, transactions]
   );
 

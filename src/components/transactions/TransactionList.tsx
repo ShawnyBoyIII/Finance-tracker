@@ -63,24 +63,25 @@ function AddTransactionForm({
   return (
     <form onSubmit={handleAdd} className="p-6 bg-gray-50 border-b border-gray-100 grid grid-cols-1 gap-4 sm:grid-cols-6">
       <div className="sm:col-span-1">
-        <label className="block text-sm font-medium text-gray-700">Date<span className="text-red-500 ml-1" aria-hidden="true">*</span></label>
-        <input type="date" required value={date} onChange={e => setDate(e.target.value)} className={COMMON_INPUT_CLASS} />
+        <label htmlFor="add-date" className="block text-sm font-medium text-gray-700">Date<span className="text-red-500 ml-1" aria-hidden="true">*</span></label>
+        <input id="add-date" type="date" required value={date} onChange={e => setDate(e.target.value)} className={COMMON_INPUT_CLASS} />
       </div>
       <div className="sm:col-span-1">
-        <label className="block text-sm font-medium text-gray-700">Type</label>
-        <select value={type} onChange={e => setType(e.target.value as TransactionType)} className={COMMON_INPUT_CLASS}>
+        <label htmlFor="add-type" className="block text-sm font-medium text-gray-700">Type</label>
+        <select id="add-type" value={type} onChange={e => setType(e.target.value as TransactionType)} className={COMMON_INPUT_CLASS}>
           <option value="expense">Expense</option>
           <option value="income">Income</option>
           <option value="cc_payment">CC Payment</option>
         </select>
       </div>
       <div className="sm:col-span-1">
-        <label className="block text-sm font-medium text-gray-700">Amount<span className="text-red-500 ml-1" aria-hidden="true">*</span></label>
-        <input type="number" required step="0.01" value={amount} onChange={e => setAmount(e.target.value)} className={COMMON_INPUT_CLASS} />
+        <label htmlFor="add-amount" className="block text-sm font-medium text-gray-700">Amount<span className="text-red-500 ml-1" aria-hidden="true">*</span></label>
+        <input id="add-amount" type="number" required step="0.01" value={amount} onChange={e => setAmount(e.target.value)} className={COMMON_INPUT_CLASS} />
       </div>
       <div className="sm:col-span-1">
-        <label className="block text-sm font-medium text-gray-700">Category<span className="text-red-500 ml-1" aria-hidden="true">*</span></label>
+        <label htmlFor="add-category" className="block text-sm font-medium text-gray-700">Category<span className="text-red-500 ml-1" aria-hidden="true">*</span></label>
         <input
+          id="add-category"
           type="text"
           required
           value={category}
@@ -96,8 +97,8 @@ function AddTransactionForm({
         </datalist>
       </div>
       <div className="sm:col-span-1">
-        <label className="block text-sm font-medium text-gray-700">Account</label>
-        <select value={accountId} onChange={e => setAccountId(e.target.value)} className={COMMON_INPUT_CLASS}>
+        <label htmlFor="add-account" className="block text-sm font-medium text-gray-700">Account</label>
+        <select id="add-account" value={accountId} onChange={e => setAccountId(e.target.value)} className={COMMON_INPUT_CLASS}>
           {accountOptions.map((account) => (
             <option key={account.id} value={account.id}>
               {account.name}
@@ -107,8 +108,8 @@ function AddTransactionForm({
       </div>
       <div className="sm:col-span-1 flex items-end gap-2">
         <div className="flex-1">
-          <label className="block text-sm font-medium text-gray-700">Description</label>
-          <input type="text" value={description} onChange={e => handleDescriptionChange(e.target.value)} placeholder="Optional" className={COMMON_INPUT_CLASS} />
+          <label htmlFor="add-description" className="block text-sm font-medium text-gray-700">Description</label>
+          <input id="add-description" type="text" value={description} onChange={e => handleDescriptionChange(e.target.value)} placeholder="Optional" className={COMMON_INPUT_CLASS} />
         </div>
         <button type="submit" className="mb-0.5 bg-green-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-green-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-green-500">
           Save
@@ -155,7 +156,7 @@ export default function TransactionList() {
 
   const categories = useMemo(() => {
     // ⚡ Bolt: Using standard for loop and avoiding Set/map combinations to prevent intermediate array allocations
-    const categorySet = new Set<string>();
+    const categorySet = new Set<string>(DEFAULT_TRANSACTION_CATEGORIES);
     for (let i = 0; i < transactions.length; i++) {
       if (transactions[i].category) {
         categorySet.add(transactions[i].category);
@@ -163,12 +164,6 @@ export default function TransactionList() {
     }
 
     return Array.from(categorySet).sort((a, b) => a.localeCompare(b));
-    return Array.from(new Set([
-      ...DEFAULT_TRANSACTION_CATEGORIES,
-      ...transactions.map((transaction) => transaction.category),
-    ]))
-      .filter(Boolean)
-      .sort((a, b) => a.localeCompare(b));
   }, [transactions]);
 
   const handleCategoryChange = (transactionId: string, category: string) => {

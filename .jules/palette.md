@@ -17,3 +17,7 @@
 ## 2023-10-27 - Form Label Associations
 **Learning:** The `SalaryPlanner` component's form fields were missing explicit connections between their `<label>` and `<input>` elements. This is a common accessibility failure that prevents screen readers from correctly identifying the purpose of form inputs. In addition, the visual required asterisk `*` was read aloud by screen readers because it lacked `aria-hidden="true"`.
 **Action:** Always use `htmlFor` on the `<label>` and a matching `id` on the `<input>` to bind them together. Always append `aria-hidden="true"` to visual indicators like asterisks `*` in required fields to prevent redundant and confusing screen reader announcements.
+
+## 2024-06-10 - Form Label Associations Update
+**Learning:** Found similar unassociated form fields in `AddTransactionForm` within `TransactionList.tsx`, confirming the previous pattern where `<label>` elements were missing `htmlFor` and inputs lacked matching `id`s. This is a recurring issue across forms in the app.
+**Action:** Always ensure all form fields, especially newly added ones, have explicit `htmlFor` and `id` connections.

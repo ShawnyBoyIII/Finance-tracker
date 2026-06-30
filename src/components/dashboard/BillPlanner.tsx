@@ -120,20 +120,20 @@ export default function BillPlanner() {
         <form onSubmit={handleSubmit} className="rounded-[24px] border border-white/10 bg-white/5 p-5 space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-slate-200">Bill name</label>
-              <input value={name} onChange={(event) => setName(event.target.value)} placeholder="e.g. Internet bill" className={COMMON_INPUT_CLASS} />
+              <label htmlFor="bill-name" className="block text-sm font-medium text-slate-200">Bill name</label>
+              <input id="bill-name" value={name} onChange={(event) => setName(event.target.value)} placeholder="e.g. Internet bill" className={COMMON_INPUT_CLASS} />
             </div>
             <div>
-              <label className="block text-sm font-medium text-slate-200">Due day</label>
-              <input type="number" min="1" max="31" value={dueDay} onChange={(event) => setDueDay(event.target.value)} placeholder="15" className={COMMON_INPUT_CLASS} />
+              <label htmlFor="bill-due-day" className="block text-sm font-medium text-slate-200">Due day</label>
+              <input id="bill-due-day" type="number" min="1" max="31" value={dueDay} onChange={(event) => setDueDay(event.target.value)} placeholder="15" className={COMMON_INPUT_CLASS} />
             </div>
             <div>
-              <label className="block text-sm font-medium text-slate-200">Expected amount</label>
-              <input type="number" min="0" step="0.01" value={amount} onChange={(event) => setAmount(event.target.value)} placeholder="0.00" className={COMMON_INPUT_CLASS} />
+              <label htmlFor="bill-amount" className="block text-sm font-medium text-slate-200">Expected amount</label>
+              <input id="bill-amount" type="number" min="0" step="0.01" value={amount} onChange={(event) => setAmount(event.target.value)} placeholder="0.00" className={COMMON_INPUT_CLASS} />
             </div>
             <div>
-              <label className="block text-sm font-medium text-slate-200">Category</label>
-              <select value={category} onChange={(event) => setCategory(event.target.value)} className={COMMON_INPUT_CLASS}>
+              <label htmlFor="bill-category" className="block text-sm font-medium text-slate-200">Category</label>
+              <select id="bill-category" value={category} onChange={(event) => setCategory(event.target.value)} className={COMMON_INPUT_CLASS}>
                 <option value="">Any category</option>
                 {categories.map((existingCategory) => (
                   <option key={existingCategory} value={existingCategory}>
@@ -143,8 +143,8 @@ export default function BillPlanner() {
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium text-slate-200">Account</label>
-              <select value={accountId} onChange={(event) => setAccountId(event.target.value)} className={COMMON_INPUT_CLASS}>
+              <label htmlFor="bill-account" className="block text-sm font-medium text-slate-200">Account</label>
+              <select id="bill-account" value={accountId} onChange={(event) => setAccountId(event.target.value)} className={COMMON_INPUT_CLASS}>
                 {accountOptions.map((account) => (
                   <option key={account.id} value={account.id}>
                     {account.name}
@@ -152,10 +152,10 @@ export default function BillPlanner() {
                 ))}
               </select>
             </div>
-            <label className="flex items-center gap-2 text-sm text-slate-200 mt-6">
-              <input type="checkbox" checked={autopay} onChange={(event) => setAutopay(event.target.checked)} />
-              Autopay enabled
-            </label>
+            <div className="flex items-center gap-2 mt-6">
+              <input id="bill-autopay" type="checkbox" checked={autopay} onChange={(event) => setAutopay(event.target.checked)} className="rounded border-white/20 bg-white/5 text-cyan-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500 focus-visible:ring-offset-1 focus-visible:ring-offset-slate-950" />
+              <label htmlFor="bill-autopay" className="text-sm text-slate-200">Autopay enabled</label>
+            </div>
           </div>
           <div className="flex items-center gap-3">
             <button type="submit" className="inline-flex items-center gap-2 rounded-md bg-cyan-500 px-4 py-2 text-sm font-medium text-slate-950 hover:bg-cyan-400">
@@ -207,14 +207,14 @@ export default function BillPlanner() {
                     <button
                       type="button"
                       onClick={() => setBillManualStatus(bill.billId, bill.status === 'paid' ? 'unpaid' : 'paid')}
-                      className="inline-flex items-center gap-1 rounded-md px-2 py-1 hover:bg-black/5"
+                      className="inline-flex items-center gap-1 rounded-md px-2 py-1 hover:bg-black/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500"
                     >
                       {bill.status === 'paid' ? 'Mark unpaid' : 'Mark paid'}
                     </button>
                     <button
                       type="button"
                       onClick={() => startEditing(bill.billId)}
-                      className="inline-flex items-center gap-1 rounded-md px-2 py-1 hover:bg-black/5"
+                      className="inline-flex items-center gap-1 rounded-md px-2 py-1 hover:bg-black/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500"
                     >
                       <Pencil className="h-3.5 w-3.5" />
                       Edit
@@ -226,7 +226,7 @@ export default function BillPlanner() {
                           deleteBill(bill.billId);
                         }
                       }}
-                      className="inline-flex items-center gap-1 rounded-md px-2 py-1 hover:bg-black/5"
+                      className="inline-flex items-center gap-1 rounded-md px-2 py-1 hover:bg-black/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500"
                     >
                       <Trash2 className="h-3.5 w-3.5" />
                       Remove

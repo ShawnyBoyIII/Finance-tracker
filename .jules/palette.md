@@ -17,3 +17,7 @@
 ## 2023-10-27 - Form Label Associations
 **Learning:** The `SalaryPlanner` component's form fields were missing explicit connections between their `<label>` and `<input>` elements. This is a common accessibility failure that prevents screen readers from correctly identifying the purpose of form inputs. In addition, the visual required asterisk `*` was read aloud by screen readers because it lacked `aria-hidden="true"`.
 **Action:** Always use `htmlFor` on the `<label>` and a matching `id` on the `<input>` to bind them together. Always append `aria-hidden="true"` to visual indicators like asterisks `*` in required fields to prevent redundant and confusing screen reader announcements.
+
+## 2023-10-27 - Bill Planner Form Accessibility
+**Learning:** The form within the `BillPlanner` component contained `<label>` elements visually positioned near inputs, but not semantically linked via `htmlFor` and `id` attributes. This prevented screen readers from correctly announcing the inputs and made the clickable area smaller than intended. Additionally, action buttons (like "Mark paid", "Edit", and "Remove") lacked visible focus rings, hindering keyboard navigation.
+**Action:** Always link form `<label>`s to their corresponding inputs with `htmlFor` and `id`. Provide explicit `focus-visible` styling (`focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color]`) on action buttons for better accessibility.

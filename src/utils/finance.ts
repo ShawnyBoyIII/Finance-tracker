@@ -334,20 +334,25 @@ export const getBillStatuses = (
     .map((bill) => {
       const currentMonthDueDate = buildDueDate(referenceDate, bill.dueDay);
       const monthKey = currentMonthDueDate.slice(0, 7);
-      const matchingTransactions = transactions
-        .filter((transaction) => {
-          if (transaction.type !== 'expense') return false;
-          if (bill.accountId && transaction.accountId !== bill.accountId) return false;
-          if (bill.category && transaction.category !== bill.category) return false;
-          if (transaction.date.slice(0, 7) !== monthKey) return false;
+      const normalizedBillName = normalizeDescription(bill.name);
 
-          const normalizedBillName = normalizeDescription(bill.name);
-          const normalizedTransactionName = normalizeDescription(transaction.description || transaction.category);
-          return normalizedTransactionName.includes(normalizedBillName) || normalizedBillName.includes(normalizedTransactionName);
-        })
-        .sort((a, b) => b.date.localeCompare(a.date));
+      // ⚡ Bolt: Replaced chained .filter().sort() with O(N) single-pass extraction
+      let matchedTransaction: Transaction | undefined = undefined;
+      for (let i = 0; i < transactions.length; i++) {
+        const transaction = transactions[i];
+        if (transaction.type !== 'expense') continue;
+        if (bill.accountId && transaction.accountId !== bill.accountId) continue;
+        if (bill.category && transaction.category !== bill.category) continue;
+        if (transaction.date.slice(0, 7) !== monthKey) continue;
 
-      const matchedTransaction = matchingTransactions[0];
+        const normalizedTransactionName = normalizeDescription(transaction.description || transaction.category);
+        if (normalizedTransactionName.includes(normalizedBillName) || normalizedBillName.includes(normalizedTransactionName)) {
+          if (!matchedTransaction || transaction.date > matchedTransaction.date) {
+            matchedTransaction = transaction;
+          }
+        }
+      }
+
       const manualOverrideApplies = bill.manualStatusMonth === monthKey && bill.manualStatus;
       const isPaid = manualOverrideApplies
         ? bill.manualStatus === 'paid'
@@ -410,8 +415,17 @@ export const getSuggestedCategory = (
     categoryCounts.set(transaction.category, (categoryCounts.get(transaction.category) || 0) + 1);
   });
 
-  const [bestMatch] = Array.from(categoryCounts.entries()).sort((a, b) => b[1] - a[1]);
-  return bestMatch?.[0] || fallbackCategory;
+  // ⚡ Bolt: Replaced O(N log N) sorting with O(N) single-pass max tracking
+  let bestMatchCategory: string | undefined = undefined;
+  let highestCount = 0;
+  for (const [category, count] of categoryCounts.entries()) {
+    if (count > highestCount) {
+      highestCount = count;
+      bestMatchCategory = category;
+    }
+  }
+
+  return bestMatchCategory || fallbackCategory;
 };
 
 export const findPotentialTransactionDuplicates = (
@@ -586,7 +600,14 @@ export const getElectricityMetrics = (
     nonZeroMonths.length > 0
       ? nonZeroMonths.reduce((total, entry) => total + entry.amount, 0) / nonZeroMonths.length
       : 0;
-  const latestCharge = [...transactions].sort((left, right) => right.date.localeCompare(left.date))[0];
+  // ⚡ Bolt: Replaced O(N log N) sorting and array allocation with O(N) single-pass iteration
+  let latestCharge: Transaction | undefined = undefined;
+  for (let i = 0; i < transactions.length; i++) {
+    const t = transactions[i];
+    if (!latestCharge || t.date > latestCharge.date) {
+      latestCharge = t;
+    }
+  }
 
   return {
     currentMonthSpend,

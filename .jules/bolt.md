@@ -36,3 +36,6 @@
 ## 2024-06-05 - Intl Object Instantiation Overhead
 **Learning:** Instantiating `new Intl.DateTimeFormat` or `new Intl.NumberFormat` inside formatting functions that are called frequently (e.g., inside `.map` loops or render cycles) incurs severe performance penalties (up to 160x slower) because object instantiation for these formatters is expensive.
 **Action:** To prevent significant overhead during render cycles or high-frequency loops, cache and reuse `Intl.NumberFormat` and `Intl.DateTimeFormat` instances at the module level instead of repeatedly instantiating them inside frequently called formatting functions.
+## 2024-06-06 - Unnecessary Sorting for Max/Min Discovery
+**Learning:** Found several instances where an entire array was sorted just to extract the single maximum or minimum value (`[...array].sort()[0]`). This creates unnecessary array allocations and incurs O(N log N) overhead.
+**Action:** To find a single maximum or minimum value, replace sorting with an O(N) single-pass iteration (such as a standard `for` loop).

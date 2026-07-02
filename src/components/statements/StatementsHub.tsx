@@ -152,8 +152,9 @@ export default function StatementsHub() {
       <section className="cockpit-panel rounded-[28px] p-6">
         <div className="mb-5 grid gap-4 lg:grid-cols-[2fr_1fr_1fr_1fr]">
           <div>
-            <label className="mb-2 block text-sm font-medium text-slate-200">Search statements</label>
+            <label htmlFor="search-statements" className="mb-2 block text-sm font-medium text-slate-200">Search statements</label>
             <input
+              id="search-statements"
               type="text"
               value={search}
               onChange={(event) => setSearch(event.target.value)}
@@ -162,8 +163,9 @@ export default function StatementsHub() {
             />
           </div>
           <div>
-            <label className="mb-2 block text-sm font-medium text-slate-200">Source</label>
+            <label htmlFor="filter-source" className="mb-2 block text-sm font-medium text-slate-200">Source</label>
             <select
+              id="filter-source"
               value={sourceFilter}
               onChange={(event) => setSourceFilter(event.target.value as 'all' | 'bank' | 'credit_card')}
               className={COMMON_INPUT_CLASS}
@@ -174,8 +176,9 @@ export default function StatementsHub() {
             </select>
           </div>
           <div>
-            <label className="mb-2 block text-sm font-medium text-slate-200">Format</label>
+            <label htmlFor="filter-format" className="mb-2 block text-sm font-medium text-slate-200">Format</label>
             <select
+              id="filter-format"
               value={formatFilter}
               onChange={(event) => setFormatFilter(event.target.value as 'all' | 'csv' | 'pdf')}
               className={COMMON_INPUT_CLASS}
@@ -186,8 +189,9 @@ export default function StatementsHub() {
             </select>
           </div>
           <div>
-            <label className="mb-2 block text-sm font-medium text-slate-200">Account</label>
+            <label htmlFor="filter-account" className="mb-2 block text-sm font-medium text-slate-200">Account</label>
             <select
+              id="filter-account"
               value={accountFilter}
               onChange={(event) => setAccountFilter(event.target.value)}
               className={COMMON_INPUT_CLASS}

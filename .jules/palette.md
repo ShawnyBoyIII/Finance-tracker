@@ -17,3 +17,6 @@
 ## 2023-10-27 - Form Label Associations
 **Learning:** The `SalaryPlanner` component's form fields were missing explicit connections between their `<label>` and `<input>` elements. This is a common accessibility failure that prevents screen readers from correctly identifying the purpose of form inputs. In addition, the visual required asterisk `*` was read aloud by screen readers because it lacked `aria-hidden="true"`.
 **Action:** Always use `htmlFor` on the `<label>` and a matching `id` on the `<input>` to bind them together. Always append `aria-hidden="true"` to visual indicators like asterisks `*` in required fields to prevent redundant and confusing screen reader announcements.
+## 2024-07-02 - Associate Form Labels and Un-nest Inputs
+**Learning:** Found a widespread pattern across multiple components where inputs either lacked an `id` matching their `<label>`'s `htmlFor` attribute, or were improperly nested directly inside `<label>` tags (especially checkboxes). This reduces screen reader clarity and prevents users from easily clicking labels to focus inputs.
+**Action:** Always explicitly define `id` on inputs and a matching `htmlFor` on `<label>` elements. Do not nest inputs directly inside labels; decouple them to ensure clear semantic associations.

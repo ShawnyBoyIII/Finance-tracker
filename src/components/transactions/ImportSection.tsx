@@ -38,32 +38,37 @@ export default function ImportSection() {
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
         <div>
-          <label className="block text-sm font-medium text-slate-200 mb-2">Statement Type</label>
-          <div className="flex space-x-4">
-            <label className="flex items-center">
-              <input
-                type="radio"
-                className="mr-2 text-indigo-600 focus:ring-indigo-500"
-                checked={statementType === 'bank'}
-                onChange={() => setStatementType('bank')}
-              />
-              <span className="text-sm text-slate-200">Bank Statement</span>
-            </label>
-            <label className="flex items-center">
-              <input
-                type="radio"
-                className="mr-2 text-indigo-600 focus:ring-indigo-500"
-                checked={statementType === 'credit_card'}
-                onChange={() => setStatementType('credit_card')}
-              />
-              <span className="text-sm text-slate-200">Credit Card Statement</span>
-            </label>
-          </div>
+          <fieldset>
+            <legend className="block text-sm font-medium text-slate-200 mb-2">Statement Type</legend>
+            <div className="flex space-x-4">
+              <div className="flex items-center">
+                <input
+                  id="statement-type-bank"
+                  type="radio"
+                  className="mr-2 text-indigo-600 focus:ring-indigo-500"
+                  checked={statementType === 'bank'}
+                  onChange={() => setStatementType('bank')}
+                />
+                <label htmlFor="statement-type-bank" className="text-sm text-slate-200">Bank Statement</label>
+              </div>
+              <div className="flex items-center">
+                <input
+                  id="statement-type-credit-card"
+                  type="radio"
+                  className="mr-2 text-indigo-600 focus:ring-indigo-500"
+                  checked={statementType === 'credit_card'}
+                  onChange={() => setStatementType('credit_card')}
+                />
+                <label htmlFor="statement-type-credit-card" className="text-sm text-slate-200">Credit Card Statement</label>
+              </div>
+            </div>
+          </fieldset>
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-slate-200 mb-2">Destination Account</label>
+          <label htmlFor="import-account" className="block text-sm font-medium text-slate-200 mb-2">Destination Account</label>
           <select
+            id="import-account"
             value={selectedAccountId}
             onChange={(event) => setSelectedAccountId(event.target.value)}
             className={COMMON_INPUT_CLASS}
@@ -77,27 +82,31 @@ export default function ImportSection() {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-slate-200 mb-2">Format</label>
-          <div className="flex space-x-4">
-            <label className="flex items-center">
-              <input
-                type="radio"
-                className="mr-2 text-indigo-600 focus:ring-indigo-500"
-                checked={format === 'pdf'}
-                onChange={() => setFormat('pdf')}
-              />
-              <span className="text-sm text-slate-200">PDF</span>
-            </label>
-            <label className="flex items-center">
-              <input
-                type="radio"
-                className="mr-2 text-indigo-600 focus:ring-indigo-500"
-                checked={format === 'csv'}
-                onChange={() => setFormat('csv')}
-              />
-              <span className="text-sm text-slate-200">CSV</span>
-            </label>
-          </div>
+          <fieldset>
+            <legend className="block text-sm font-medium text-slate-200 mb-2">Format</legend>
+            <div className="flex space-x-4">
+              <div className="flex items-center">
+                <input
+                  id="format-type-pdf"
+                  type="radio"
+                  className="mr-2 text-indigo-600 focus:ring-indigo-500"
+                  checked={format === 'pdf'}
+                  onChange={() => setFormat('pdf')}
+                />
+                <label htmlFor="format-type-pdf" className="text-sm text-slate-200">PDF</label>
+              </div>
+              <div className="flex items-center">
+                <input
+                  id="format-type-csv"
+                  type="radio"
+                  className="mr-2 text-indigo-600 focus:ring-indigo-500"
+                  checked={format === 'csv'}
+                  onChange={() => setFormat('csv')}
+                />
+                <label htmlFor="format-type-csv" className="text-sm text-slate-200">CSV</label>
+              </div>
+            </div>
+          </fieldset>
         </div>
       </div>
 

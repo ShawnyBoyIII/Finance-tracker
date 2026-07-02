@@ -615,24 +615,24 @@ export default function ElectricityTracker() {
 
             <div className="grid gap-4 md:grid-cols-2">
               <div>
-                <label className="block text-sm font-medium text-slate-200">Bill name</label>
-                <input value={name} onChange={(event) => setName(event.target.value)} placeholder="Electricity Bill" className={COMMON_INPUT_CLASS} />
+                <label htmlFor="elec-bill-name" className="block text-sm font-medium text-slate-200">Bill name</label>
+                <input id="elec-bill-name" value={name} onChange={(event) => setName(event.target.value)} placeholder="Electricity Bill" className={COMMON_INPUT_CLASS} />
               </div>
               <div>
-                <label className="block text-sm font-medium text-slate-200">Due day</label>
-                <input type="number" min="1" max="31" value={dueDay} onChange={(event) => setDueDay(event.target.value)} placeholder="18" className={COMMON_INPUT_CLASS} />
+                <label htmlFor="elec-due-day" className="block text-sm font-medium text-slate-200">Due day</label>
+                <input id="elec-due-day" type="number" min="1" max="31" value={dueDay} onChange={(event) => setDueDay(event.target.value)} placeholder="18" className={COMMON_INPUT_CLASS} />
               </div>
               <div>
-                <label className="block text-sm font-medium text-slate-200">Expected amount</label>
-                <input type="number" min="0" step="0.01" value={amount} onChange={(event) => setAmount(event.target.value)} placeholder="150.00" className={COMMON_INPUT_CLASS} />
+                <label htmlFor="elec-amount" className="block text-sm font-medium text-slate-200">Expected amount</label>
+                <input id="elec-amount" type="number" min="0" step="0.01" value={amount} onChange={(event) => setAmount(event.target.value)} placeholder="150.00" className={COMMON_INPUT_CLASS} />
               </div>
               <div>
-                <label className="block text-sm font-medium text-slate-200">Usage consumed (kWh)</label>
-                <input type="number" min="0" step="0.01" value={usageKwh} onChange={(event) => setUsageKwh(event.target.value)} placeholder="825" className={COMMON_INPUT_CLASS} />
+                <label htmlFor="elec-usage" className="block text-sm font-medium text-slate-200">Usage consumed (kWh)</label>
+                <input id="elec-usage" type="number" min="0" step="0.01" value={usageKwh} onChange={(event) => setUsageKwh(event.target.value)} placeholder="825" className={COMMON_INPUT_CLASS} />
               </div>
               <div>
-                <label className="block text-sm font-medium text-slate-200">Pay from account</label>
-                <select value={accountId} onChange={(event) => setAccountId(event.target.value)} className={COMMON_INPUT_CLASS}>
+                <label htmlFor="elec-account" className="block text-sm font-medium text-slate-200">Pay from account</label>
+                <select id="elec-account" value={accountId} onChange={(event) => setAccountId(event.target.value)} className={COMMON_INPUT_CLASS}>
                   {accounts
                     .filter((account) => account.type === 'cash' || account.type === 'bank' || account.type === 'credit_card')
                     .map((account) => (
@@ -644,10 +644,10 @@ export default function ElectricityTracker() {
               </div>
             </div>
 
-            <label className="flex items-center gap-2 text-sm text-slate-200">
-              <input type="checkbox" checked={autopay} onChange={(event) => setAutopay(event.target.checked)} />
-              Autopay enabled
-            </label>
+            <div className="flex items-center gap-2">
+              <input id="elec-autopay" type="checkbox" checked={autopay} onChange={(event) => setAutopay(event.target.checked)} />
+              <label htmlFor="elec-autopay" className="text-sm text-slate-200">Autopay enabled</label>
+            </div>
 
             <div className="flex flex-wrap items-center gap-3">
               <button type="submit" className="inline-flex items-center gap-2 rounded-md bg-amber-400 px-4 py-2 text-sm font-medium text-slate-950 hover:bg-amber-300">
@@ -700,40 +700,40 @@ export default function ElectricityTracker() {
 
             <div className="grid gap-4 md:grid-cols-2">
               <div>
-                <label className="block text-sm font-medium text-slate-200">Provider</label>
-                <input value={manualHistoryProvider} onChange={(event) => setManualHistoryProvider(event.target.value)} placeholder="Jackson EMC" className={COMMON_INPUT_CLASS} />
+                <label htmlFor="manual-provider" className="block text-sm font-medium text-slate-200">Provider</label>
+                <input id="manual-provider" value={manualHistoryProvider} onChange={(event) => setManualHistoryProvider(event.target.value)} placeholder="Jackson EMC" className={COMMON_INPUT_CLASS} />
               </div>
               <div>
-                <label className="block text-sm font-medium text-slate-200">Account label / number</label>
-                <input value={manualHistoryAccountNumber} onChange={(event) => setManualHistoryAccountNumber(event.target.value)} placeholder="123456789" className={COMMON_INPUT_CLASS} />
+                <label htmlFor="manual-account-number" className="block text-sm font-medium text-slate-200">Account label / number</label>
+                <input id="manual-account-number" value={manualHistoryAccountNumber} onChange={(event) => setManualHistoryAccountNumber(event.target.value)} placeholder="123456789" className={COMMON_INPUT_CLASS} />
               </div>
               <div>
-                <label className="block text-sm font-medium text-slate-200">Bill date</label>
-                <input type="date" value={manualHistoryBillDate} onChange={(event) => setManualHistoryBillDate(event.target.value)} className={COMMON_INPUT_CLASS} />
+                <label htmlFor="manual-bill-date" className="block text-sm font-medium text-slate-200">Bill date</label>
+                <input id="manual-bill-date" type="date" value={manualHistoryBillDate} onChange={(event) => setManualHistoryBillDate(event.target.value)} className={COMMON_INPUT_CLASS} />
               </div>
               <div>
-                <label className="block text-sm font-medium text-slate-200">Due date</label>
-                <input type="date" value={manualHistoryDueDate} onChange={(event) => setManualHistoryDueDate(event.target.value)} className={COMMON_INPUT_CLASS} />
+                <label htmlFor="manual-due-date" className="block text-sm font-medium text-slate-200">Due date</label>
+                <input id="manual-due-date" type="date" value={manualHistoryDueDate} onChange={(event) => setManualHistoryDueDate(event.target.value)} className={COMMON_INPUT_CLASS} />
               </div>
               <div>
-                <label className="block text-sm font-medium text-slate-200">Service start</label>
-                <input type="date" value={manualHistoryServiceStart} onChange={(event) => setManualHistoryServiceStart(event.target.value)} className={COMMON_INPUT_CLASS} />
+                <label htmlFor="manual-service-start" className="block text-sm font-medium text-slate-200">Service start</label>
+                <input id="manual-service-start" type="date" value={manualHistoryServiceStart} onChange={(event) => setManualHistoryServiceStart(event.target.value)} className={COMMON_INPUT_CLASS} />
               </div>
               <div>
-                <label className="block text-sm font-medium text-slate-200">Service end</label>
-                <input type="date" value={manualHistoryServiceEnd} onChange={(event) => setManualHistoryServiceEnd(event.target.value)} className={COMMON_INPUT_CLASS} />
+                <label htmlFor="manual-service-end" className="block text-sm font-medium text-slate-200">Service end</label>
+                <input id="manual-service-end" type="date" value={manualHistoryServiceEnd} onChange={(event) => setManualHistoryServiceEnd(event.target.value)} className={COMMON_INPUT_CLASS} />
               </div>
               <div>
-                <label className="block text-sm font-medium text-slate-200">Total bill amount</label>
-                <input type="number" min="0" step="0.01" value={manualHistoryAmount} onChange={(event) => setManualHistoryAmount(event.target.value)} placeholder="164.22" className={COMMON_INPUT_CLASS} />
+                <label htmlFor="manual-total-amount" className="block text-sm font-medium text-slate-200">Total bill amount</label>
+                <input id="manual-total-amount" type="number" min="0" step="0.01" value={manualHistoryAmount} onChange={(event) => setManualHistoryAmount(event.target.value)} placeholder="164.22" className={COMMON_INPUT_CLASS} />
               </div>
               <div>
-                <label className="block text-sm font-medium text-slate-200">Usage (kWh)</label>
-                <input type="number" min="0" step="0.01" value={manualHistoryUsage} onChange={(event) => setManualHistoryUsage(event.target.value)} placeholder="921" className={COMMON_INPUT_CLASS} />
+                <label htmlFor="manual-usage" className="block text-sm font-medium text-slate-200">Usage (kWh)</label>
+                <input id="manual-usage" type="number" min="0" step="0.01" value={manualHistoryUsage} onChange={(event) => setManualHistoryUsage(event.target.value)} placeholder="921" className={COMMON_INPUT_CLASS} />
               </div>
               <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-slate-200">Rate plan (optional)</label>
-                <input value={manualHistoryRatePlan} onChange={(event) => setManualHistoryRatePlan(event.target.value)} placeholder="Residential" className={COMMON_INPUT_CLASS} />
+                <label htmlFor="manual-rate-plan" className="block text-sm font-medium text-slate-200">Rate plan (optional)</label>
+                <input id="manual-rate-plan" value={manualHistoryRatePlan} onChange={(event) => setManualHistoryRatePlan(event.target.value)} placeholder="Residential" className={COMMON_INPUT_CLASS} />
               </div>
             </div>
 

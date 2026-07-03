@@ -63,24 +63,25 @@ function AddTransactionForm({
   return (
     <form onSubmit={handleAdd} className="p-6 bg-gray-50 border-b border-gray-100 grid grid-cols-1 gap-4 sm:grid-cols-6">
       <div className="sm:col-span-1">
-        <label className="block text-sm font-medium text-gray-700">Date<span className="text-red-500 ml-1" aria-hidden="true">*</span></label>
-        <input type="date" required value={date} onChange={e => setDate(e.target.value)} className={COMMON_INPUT_CLASS} />
+        <label htmlFor="manual-date" className="block text-sm font-medium text-gray-700">Date<span className="text-red-500 ml-1" aria-hidden="true">*</span></label>
+        <input id="manual-date" type="date" required value={date} onChange={e => setDate(e.target.value)} className={COMMON_INPUT_CLASS} />
       </div>
       <div className="sm:col-span-1">
-        <label className="block text-sm font-medium text-gray-700">Type</label>
-        <select value={type} onChange={e => setType(e.target.value as TransactionType)} className={COMMON_INPUT_CLASS}>
+        <label htmlFor="manual-type" className="block text-sm font-medium text-gray-700">Type</label>
+        <select id="manual-type" value={type} onChange={e => setType(e.target.value as TransactionType)} className={COMMON_INPUT_CLASS}>
           <option value="expense">Expense</option>
           <option value="income">Income</option>
           <option value="cc_payment">CC Payment</option>
         </select>
       </div>
       <div className="sm:col-span-1">
-        <label className="block text-sm font-medium text-gray-700">Amount<span className="text-red-500 ml-1" aria-hidden="true">*</span></label>
-        <input type="number" required step="0.01" value={amount} onChange={e => setAmount(e.target.value)} className={COMMON_INPUT_CLASS} />
+        <label htmlFor="manual-amount" className="block text-sm font-medium text-gray-700">Amount<span className="text-red-500 ml-1" aria-hidden="true">*</span></label>
+        <input id="manual-amount" type="number" required step="0.01" value={amount} onChange={e => setAmount(e.target.value)} className={COMMON_INPUT_CLASS} />
       </div>
       <div className="sm:col-span-1">
-        <label className="block text-sm font-medium text-gray-700">Category<span className="text-red-500 ml-1" aria-hidden="true">*</span></label>
+        <label htmlFor="manual-category" className="block text-sm font-medium text-gray-700">Category<span className="text-red-500 ml-1" aria-hidden="true">*</span></label>
         <input
+          id="manual-category"
           type="text"
           required
           value={category}
@@ -154,15 +155,6 @@ export default function TransactionList() {
   const selectedAccount = selectedAccountId === 'all' ? null : accountMap.get(selectedAccountId);
 
   const categories = useMemo(() => {
-    // ⚡ Bolt: Using standard for loop and avoiding Set/map combinations to prevent intermediate array allocations
-    const categorySet = new Set<string>();
-    for (let i = 0; i < transactions.length; i++) {
-      if (transactions[i].category) {
-        categorySet.add(transactions[i].category);
-      }
-    }
-
-    return Array.from(categorySet).sort((a, b) => a.localeCompare(b));
     return Array.from(new Set([
       ...DEFAULT_TRANSACTION_CATEGORIES,
       ...transactions.map((transaction) => transaction.category),

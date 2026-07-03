@@ -36,3 +36,6 @@
 ## 2024-06-05 - Intl Object Instantiation Overhead
 **Learning:** Instantiating `new Intl.DateTimeFormat` or `new Intl.NumberFormat` inside formatting functions that are called frequently (e.g., inside `.map` loops or render cycles) incurs severe performance penalties (up to 160x slower) because object instantiation for these formatters is expensive.
 **Action:** To prevent significant overhead during render cycles or high-frequency loops, cache and reuse `Intl.NumberFormat` and `Intl.DateTimeFormat` instances at the module level instead of repeatedly instantiating them inside frequently called formatting functions.
+## 2024-07-03 - Finding Max/Min Values Overhead
+**Learning:** To find the single maximum or minimum value in an array (e.g., the latest date), creating shallow copies and sorting the entire array (e.g., `[...array].sort()[0]`) causes unnecessary memory allocations and O(N log N) overhead.
+**Action:** Instead, use a simple O(N) single-pass iteration (such as a standard `for` loop or `.reduce()`). When doing so, ensure the default/fallback value for empty arrays preserves the original `undefined` type instead of `null` to prevent TypeScript strict-mode inference regressions.

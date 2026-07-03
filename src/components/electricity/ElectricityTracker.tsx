@@ -615,24 +615,24 @@ export default function ElectricityTracker() {
 
             <div className="grid gap-4 md:grid-cols-2">
               <div>
-                <label className="block text-sm font-medium text-slate-200">Bill name</label>
-                <input value={name} onChange={(event) => setName(event.target.value)} placeholder="Electricity Bill" className={COMMON_INPUT_CLASS} />
+                <label htmlFor="tracker-bill-name" className="block text-sm font-medium text-slate-200">Bill name</label>
+                <input id="tracker-bill-name" value={name} onChange={(event) => setName(event.target.value)} placeholder="Electricity Bill" className={COMMON_INPUT_CLASS} />
               </div>
               <div>
-                <label className="block text-sm font-medium text-slate-200">Due day</label>
-                <input type="number" min="1" max="31" value={dueDay} onChange={(event) => setDueDay(event.target.value)} placeholder="18" className={COMMON_INPUT_CLASS} />
+                <label htmlFor="tracker-due-day" className="block text-sm font-medium text-slate-200">Due day</label>
+                <input id="tracker-due-day" type="number" min="1" max="31" value={dueDay} onChange={(event) => setDueDay(event.target.value)} placeholder="18" className={COMMON_INPUT_CLASS} />
               </div>
               <div>
-                <label className="block text-sm font-medium text-slate-200">Expected amount</label>
-                <input type="number" min="0" step="0.01" value={amount} onChange={(event) => setAmount(event.target.value)} placeholder="150.00" className={COMMON_INPUT_CLASS} />
+                <label htmlFor="tracker-expected-amount" className="block text-sm font-medium text-slate-200">Expected amount</label>
+                <input id="tracker-expected-amount" type="number" min="0" step="0.01" value={amount} onChange={(event) => setAmount(event.target.value)} placeholder="150.00" className={COMMON_INPUT_CLASS} />
               </div>
               <div>
-                <label className="block text-sm font-medium text-slate-200">Usage consumed (kWh)</label>
-                <input type="number" min="0" step="0.01" value={usageKwh} onChange={(event) => setUsageKwh(event.target.value)} placeholder="825" className={COMMON_INPUT_CLASS} />
+                <label htmlFor="tracker-usage" className="block text-sm font-medium text-slate-200">Usage consumed (kWh)</label>
+                <input id="tracker-usage" type="number" min="0" step="0.01" value={usageKwh} onChange={(event) => setUsageKwh(event.target.value)} placeholder="825" className={COMMON_INPUT_CLASS} />
               </div>
               <div>
-                <label className="block text-sm font-medium text-slate-200">Pay from account</label>
-                <select value={accountId} onChange={(event) => setAccountId(event.target.value)} className={COMMON_INPUT_CLASS}>
+                <label htmlFor="tracker-account" className="block text-sm font-medium text-slate-200">Pay from account</label>
+                <select id="tracker-account" value={accountId} onChange={(event) => setAccountId(event.target.value)} className={COMMON_INPUT_CLASS}>
                   {accounts
                     .filter((account) => account.type === 'cash' || account.type === 'bank' || account.type === 'credit_card')
                     .map((account) => (

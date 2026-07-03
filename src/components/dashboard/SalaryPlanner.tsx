@@ -159,7 +159,9 @@ export default function SalaryPlanner() {
                         deleteIncomeSource(incomeSource.id);
                       }
                     }}
-                    className="inline-flex items-center gap-2 rounded-xl bg-white/10 px-3 py-2 text-sm font-medium text-slate-100 hover:bg-white/15"
+                    className="inline-flex items-center gap-2 rounded-xl bg-white/10 px-3 py-2 text-sm font-medium text-slate-100 hover:bg-white/15 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500"
+                    aria-label="Remove income source"
+                    title="Remove income source"
                   >
                     <Trash2 className="w-4 h-4" />
                     Remove

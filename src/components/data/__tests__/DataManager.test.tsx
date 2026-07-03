@@ -23,7 +23,9 @@ describe('DataManager', () => {
       transactions: [{ id: 'tx-1' }],
       budgets: [{ category: 'Groceries', amount: 500 }],
       accounts: [{ id: 'account-1', name: 'Household Cash Flow', type: 'cash' }],
-      salarySchedule: null,
+      statements: [{ id: 'statement-1', accountId: 'account-1', sourceType: 'bank', format: 'csv', fileName: 'sample.csv', importedAt: '2026-06-07T00:00:00.000Z', status: 'imported', parseVersion: 1, transactionCount: 1 }],
+      bills: [{ id: 'bill-1', name: 'Internet', dueDay: 12 }],
+      incomeSources: [{ id: 'income-1', name: 'Partner A', amount: 2500, nextPayDate: '2026-06-12' }],
       getBackupData,
       restoreBackupData,
     });
@@ -32,8 +34,10 @@ describe('DataManager', () => {
       transactions: [{ id: 'tx-1' }],
       budgets: [],
       accounts: [],
-      salarySchedule: null,
-      metadata: { schemaVersion: 1 },
+      statements: [],
+      bills: [],
+      incomeSources: [],
+      metadata: { schemaVersion: 2 },
     });
   });
 
@@ -45,6 +49,9 @@ describe('DataManager', () => {
     expect(screen.getByText('Transactions').nextElementSibling).toHaveTextContent('1');
     expect(screen.getByText('Accounts').nextElementSibling).toHaveTextContent('1');
     expect(screen.getByText('Budgets').nextElementSibling).toHaveTextContent('1');
+    expect(screen.getByText('Statements').nextElementSibling).toHaveTextContent('1');
+    expect(screen.getByText('Bills').nextElementSibling).toHaveTextContent('1');
+    expect(screen.getByText('Income Sources').nextElementSibling).toHaveTextContent('1');
 
     await user.click(screen.getByRole('button', { name: /export backup/i }));
 
@@ -63,8 +70,11 @@ describe('DataManager', () => {
           transactions: [],
           budgets: [],
           accounts: [],
+          statements: [],
+          bills: [],
           salarySchedule: null,
-          metadata: { schemaVersion: 1 },
+          incomeSources: [],
+          metadata: { schemaVersion: 2 },
         }),
       ],
       'backup.json',
@@ -75,6 +85,6 @@ describe('DataManager', () => {
     fireEvent.change(input, { target: { files: [file] } });
 
     expect(await screen.findByText('Restored 0 transactions from backup.json.')).toBeInTheDocument();
-    expect(restoreBackupData).toHaveBeenCalledWith(expect.objectContaining({ metadata: { schemaVersion: 1 } }));
+    expect(restoreBackupData).toHaveBeenCalledWith(expect.objectContaining({ metadata: { schemaVersion: 2 } }));
   });
 });

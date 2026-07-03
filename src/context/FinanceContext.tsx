@@ -1,24 +1,49 @@
 'use client';
 
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { Transaction, Budget, SalarySchedule, FinancialAccount, FinancialAccountType, AppMetadata, AppData } from '@/types';
+import {
+  Transaction,
+  Budget,
+  FinancialAccount,
+  FinancialAccountType,
+  AppMetadata,
+  AppData,
+  IncomeSource,
+  Bill,
+  ImportedStatement,
+  ElectricityStatement,
+} from '@/types';
 import { APP_DATA_SCHEMA_VERSION, exportAppData, loadAppData, saveAppData } from '@/utils/storage';
+import { migrateSalaryScheduleToIncomeSources } from '@/utils/salary';
 import { v4 as uuidv4 } from 'uuid';
 
 interface FinanceContextType {
   transactions: Transaction[];
   budgets: Budget[];
   accounts: FinancialAccount[];
+  statements: ImportedStatement[];
+  electricityStatements: ElectricityStatement[];
+  bills: Bill[];
   addTransaction: (transaction: Omit<Transaction, 'id'>) => void;
   updateTransaction: (id: string, transaction: Omit<Transaction, 'id'>) => void;
   deleteTransaction: (id: string) => void;
   addTransactionsBulk: (transactions: Omit<Transaction, 'id'>[]) => void;
+  importStatement: (
+    statement: Omit<ImportedStatement, 'id' | 'importedAt' | 'status' | 'transactionCount'>,
+    transactions: Omit<Transaction, 'id' | 'statementId' | 'sourceType'>[]
+  ) => string;
   addAccount: (account: Omit<FinancialAccount, 'id'>) => string;
   updateTransactionCategory: (id: string, category: string) => void;
   updateBudget: (category: string, amount: number) => void;
   deleteBudget: (category: string) => void;
-  salarySchedule: SalarySchedule | null;
-  setSalarySchedule: (schedule: SalarySchedule | null) => void;
+  addBill: (bill: Omit<Bill, 'id'>) => void;
+  updateBill: (id: string, bill: Omit<Bill, 'id'>) => void;
+  deleteBill: (id: string) => void;
+  importElectricityStatement: (statement: Omit<ElectricityStatement, 'id' | 'importedAt'>) => string;
+  incomeSources: IncomeSource[];
+  addIncomeSource: (incomeSource: Omit<IncomeSource, 'id'>) => void;
+  updateIncomeSource: (id: string, incomeSource: Omit<IncomeSource, 'id'>) => void;
+  deleteIncomeSource: (id: string) => void;
   getBackupData: () => AppData;
   restoreBackupData: (appData: AppData) => void;
 }
@@ -104,7 +129,10 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [budgets, setBudgets] = useState<Budget[]>([]);
   const [accounts, setAccounts] = useState<FinancialAccount[]>([DEFAULT_ACCOUNT]);
-  const [salarySchedule, setSalarySchedule] = useState<SalarySchedule | null>(null);
+  const [statements, setStatements] = useState<ImportedStatement[]>([]);
+  const [electricityStatements, setElectricityStatements] = useState<ElectricityStatement[]>([]);
+  const [bills, setBills] = useState<Bill[]>([]);
+  const [incomeSources, setIncomeSources] = useState<IncomeSource[]>([]);
   const [metadata, setMetadata] = useState<AppMetadata>({ schemaVersion: APP_DATA_SCHEMA_VERSION });
   const [isLoaded, setIsLoaded] = useState(false);
 
@@ -118,7 +146,14 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
     setTransactions(migratedData.transactions);
     setAccounts(migratedData.accounts);
     setBudgets(storedAppData.budgets || []);
-    setSalarySchedule(storedAppData.salarySchedule || null);
+    setStatements(storedAppData.statements || []);
+    setElectricityStatements(storedAppData.electricityStatements || []);
+    setBills(storedAppData.bills || []);
+    setIncomeSources(
+      storedAppData.incomeSources && storedAppData.incomeSources.length > 0
+        ? storedAppData.incomeSources
+        : migrateSalaryScheduleToIncomeSources(storedAppData.salarySchedule || null)
+    );
     setMetadata({
       schemaVersion: APP_DATA_SCHEMA_VERSION,
       ...(storedAppData.metadata || {}),
@@ -134,10 +169,14 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
       transactions,
       budgets,
       accounts,
-      salarySchedule,
+      statements,
+      electricityStatements,
+      bills,
+      salarySchedule: null,
+      incomeSources,
       metadata,
     });
-  }, [transactions, budgets, accounts, salarySchedule, metadata, isLoaded]);
+  }, [transactions, budgets, accounts, statements, electricityStatements, bills, incomeSources, metadata, isLoaded]);
 
   const addTransaction = (transaction: Omit<Transaction, 'id'>) => {
     const newTransaction: Transaction = {
@@ -166,6 +205,37 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
       accountId: t.accountId || DEFAULT_ACCOUNT_ID,
     }));
     setTransactions((prev) => [...prev, ...transactionsWithIds]);
+  };
+
+  const importStatement = (
+    statement: Omit<ImportedStatement, 'id' | 'importedAt' | 'status' | 'transactionCount'>,
+    importedTransactions: Omit<Transaction, 'id' | 'statementId' | 'sourceType'>[]
+  ) => {
+    const statementId = uuidv4();
+    const transactionsWithIds: Transaction[] = importedTransactions.map((transaction) => ({
+      ...transaction,
+      id: uuidv4(),
+      accountId: transaction.accountId || statement.accountId || DEFAULT_ACCOUNT_ID,
+      statementId,
+      sourceType: statement.sourceType,
+    }));
+
+    const importedStatement: ImportedStatement = {
+      ...statement,
+      id: statementId,
+      importedAt: new Date().toISOString(),
+      status: 'imported',
+      transactionCount: transactionsWithIds.length,
+      reviewedTransactionCount:
+        statement.reviewedTransactionCount === undefined
+          ? importedTransactions.length
+          : statement.reviewedTransactionCount,
+    };
+
+    setTransactions((prev) => [...prev, ...transactionsWithIds]);
+    setStatements((prev) => [importedStatement, ...prev]);
+
+    return statementId;
   };
 
   const addAccount = (account: Omit<FinancialAccount, 'id'>) => {
@@ -202,12 +272,80 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
     setBudgets((prev) => prev.filter((b) => b.category !== category));
   };
 
+  const addBill = (bill: Omit<Bill, 'id'>) => {
+    setBills((prev) => [
+      ...prev,
+      {
+        ...bill,
+        id: uuidv4(),
+      },
+    ]);
+  };
+
+  const updateBill = (id: string, bill: Omit<Bill, 'id'>) => {
+    setBills((prev) => prev.map((existingBill) => (existingBill.id === id ? { ...bill, id } : existingBill)));
+  };
+
+  const deleteBill = (id: string) => {
+    setBills((prev) => prev.filter((bill) => bill.id !== id));
+  };
+
+  const importElectricityStatement = (
+    statement: Omit<ElectricityStatement, 'id' | 'importedAt'>
+  ) => {
+    const electricityStatement: ElectricityStatement = {
+      ...statement,
+      id: uuidv4(),
+      importedAt: new Date().toISOString(),
+    };
+
+    setElectricityStatements((prev) => {
+      const withoutMatchingStatement = prev.filter(
+        (existingStatement) =>
+          !(
+            existingStatement.accountNumber === electricityStatement.accountNumber &&
+            existingStatement.billDate === electricityStatement.billDate
+          )
+      );
+
+      return [electricityStatement, ...withoutMatchingStatement].sort((left, right) =>
+        right.billDate.localeCompare(left.billDate)
+      );
+    });
+
+    return electricityStatement.id;
+  };
+
+  const addIncomeSource = (incomeSource: Omit<IncomeSource, 'id'>) => {
+    setIncomeSources((prev) => [
+      ...prev,
+      {
+        ...incomeSource,
+        id: uuidv4(),
+      },
+    ]);
+  };
+
+  const updateIncomeSource = (id: string, incomeSource: Omit<IncomeSource, 'id'>) => {
+    setIncomeSources((prev) =>
+      prev.map((source) => (source.id === id ? { ...incomeSource, id } : source))
+    );
+  };
+
+  const deleteIncomeSource = (id: string) => {
+    setIncomeSources((prev) => prev.filter((source) => source.id !== id));
+  };
+
   const getBackupData = () =>
     exportAppData({
       transactions,
       budgets,
       accounts,
-      salarySchedule,
+      statements,
+      electricityStatements,
+      bills,
+      salarySchedule: null,
+      incomeSources,
       metadata,
     });
 
@@ -220,7 +358,14 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
     setTransactions(migratedData.transactions);
     setAccounts(migratedData.accounts);
     setBudgets(appData.budgets || []);
-    setSalarySchedule(appData.salarySchedule || null);
+    setStatements(appData.statements || []);
+    setElectricityStatements(appData.electricityStatements || []);
+    setBills(appData.bills || []);
+    setIncomeSources(
+      appData.incomeSources && appData.incomeSources.length > 0
+        ? appData.incomeSources
+        : migrateSalaryScheduleToIncomeSources(appData.salarySchedule || null)
+    );
     setMetadata({
       ...(appData.metadata || {}),
       schemaVersion: APP_DATA_SCHEMA_VERSION,
@@ -234,16 +379,26 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
         transactions,
         budgets,
         accounts,
+        statements,
+        electricityStatements,
+        bills,
         addTransaction,
         updateTransaction,
         deleteTransaction,
         addTransactionsBulk,
+        importStatement,
         addAccount,
         updateTransactionCategory,
         updateBudget,
         deleteBudget,
-        salarySchedule,
-        setSalarySchedule,
+        addBill,
+        updateBill,
+        deleteBill,
+        importElectricityStatement,
+        incomeSources,
+        addIncomeSource,
+        updateIncomeSource,
+        deleteIncomeSource,
         getBackupData,
         restoreBackupData,
       }}

@@ -1,32 +1,65 @@
 @import "tailwindcss";
 
 :root {
-  --foreground-rgb: 0, 0, 0;
-  --background-start-rgb: 214, 219, 220;
-  --background-end-rgb: 255, 255, 255;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --foreground-rgb: 255, 255, 255;
-    --background-start-rgb: 0, 0, 0;
-    --background-end-rgb: 0, 0, 0;
-  }
+  --foreground-rgb: 233, 239, 255;
+  --background-start-rgb: 4, 11, 27;
+  --background-mid-rgb: 10, 20, 43;
+  --background-end-rgb: 14, 29, 58;
+  --panel-rgb: 13, 26, 50;
+  --panel-strong-rgb: 18, 35, 67;
+  --border-rgb: 73, 99, 151;
+  --muted-rgb: 144, 165, 209;
+  --accent-coral-rgb: 255, 99, 132;
+  --accent-cyan-rgb: 68, 211, 255;
+  --accent-mint-rgb: 84, 214, 159;
+  --accent-amber-rgb: 255, 201, 71;
+  --accent-violet-rgb: 144, 122, 255;
 }
 
 body {
-  font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-family: "Avenir Next", "Segoe UI", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
   color: rgb(var(--foreground-rgb));
   background: linear-gradient(
-      to bottom,
-      transparent,
-      rgb(var(--background-end-rgb))
-    )
-    rgb(var(--background-start-rgb));
+      180deg,
+      rgb(var(--background-start-rgb)) 0%,
+      rgb(var(--background-mid-rgb)) 45%,
+      rgb(var(--background-end-rgb)) 100%
+    );
+  min-height: 100vh;
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at top left, rgba(68, 211, 255, 0.12), transparent 30%),
+    radial-gradient(circle at 80% 10%, rgba(144, 122, 255, 0.12), transparent 25%),
+    linear-gradient(135deg, rgba(255, 255, 255, 0.03), transparent 35%);
+  z-index: -1;
 }
 
 @layer utilities {
   .text-balance {
     text-wrap: balance;
+  }
+
+  .cockpit-panel {
+    background: linear-gradient(180deg, rgba(var(--panel-strong-rgb), 0.95), rgba(var(--panel-rgb), 0.92));
+    border: 1px solid rgba(var(--border-rgb), 0.35);
+    box-shadow: 0 20px 60px rgba(2, 8, 23, 0.35);
+    backdrop-filter: blur(10px);
+  }
+
+  .cockpit-muted {
+    color: rgb(var(--muted-rgb));
+  }
+
+  .cockpit-grid {
+    background-image:
+      linear-gradient(rgba(255, 255, 255, 0.025) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255, 255, 255, 0.025) 1px, transparent 1px);
+    background-size: 32px 32px;
   }
 }

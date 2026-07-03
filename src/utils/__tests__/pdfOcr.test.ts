@@ -1,21 +1,15 @@
-import { parseTransactionsFromText } from '../pdfOcr';
+import { analyzePdfTextExtraction, parseTransactionsFromText } from '../pdfOcr';
+import {
+  amexStatementFixture,
+  capitalOneStatementFixture,
+  chaseStatementFixture,
+  chaseNoisyStatementFixture,
+  synchronyStatementFixture,
+} from '../testFixtures/pdfStatements';
 
 describe('PDF OCR transaction parsing', () => {
   it('parses Chase credit card charges and payments with correct types and stored amounts', () => {
-    const statementText = `
-      Chase Freedom
-      Statement Date: 01/02/2026
-      Date of Transaction Merchant Name or Transaction Description $ Amount
-      12/28 AUTOMATIC PAYMENT - THANK YOU -179.85
-      12/04 TELLO US 866-3770294 GA 15.85
-      12/20 MENERALS LLC 775-684-9000 NV 44.00
-      12/21 TARGET.COM * WWW.TARGET.CO MN 4.24
-      12/24 APEX SPIN AND FITNESS APEXSPINANDFI CA 5.00
-      12/31 PUBLIX #803 DACULA GA 7.38
-      Total fees charged in
-    `;
-
-    const transactions = parseTransactionsFromText(statementText, 'credit_card');
+    const transactions = parseTransactionsFromText(chaseStatementFixture, 'credit_card');
 
     expect(transactions).toHaveLength(6);
     expect(transactions[0]).toMatchObject({
@@ -39,5 +33,149 @@ describe('PDF OCR transaction parsing', () => {
         }),
       ])
     );
+  });
+
+  it('parses noisier Chase statement sections and marks noisy merchants for review', () => {
+    const transactions = parseTransactionsFromText(chaseNoisyStatementFixture, 'credit_card');
+
+    expect(transactions).toHaveLength(4);
+    expect(transactions).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          description: 'AMAZON.COM*MKTP US AMZN.COM/BILL WA',
+          parserProfile: 'Chase credit card',
+          confidence: 'medium',
+        }),
+        expect.objectContaining({
+          description: 'SPOTIFY USA NEW YORK NY',
+          parserProfile: 'Chase credit card',
+        }),
+      ])
+    );
+  });
+
+  it('parses Capital One credit card charges and autopay rows', () => {
+    const transactions = parseTransactionsFromText(capitalOneStatementFixture, 'credit_card');
+
+    expect(transactions).toHaveLength(3);
+    expect(transactions).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          date: '2025-12-03',
+          description: 'NETFLIX.COM NETFLIX.COM CA',
+          amount: 15.49,
+          type: 'expense',
+          institution: 'Capital One',
+        }),
+        expect.objectContaining({
+          date: '2025-12-27',
+          description: 'AUTOPAY PAYMENT - THANK YOU',
+          amount: -125,
+          type: 'cc_payment',
+          institution: 'Capital One',
+        }),
+      ])
+    );
+  });
+
+  it('parses American Express credit card charges and payment rows', () => {
+    const transactions = parseTransactionsFromText(amexStatementFixture, 'credit_card');
+
+    expect(transactions).toHaveLength(3);
+    expect(transactions).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          date: '2025-12-05',
+          description: 'WALMART SUPERCENTER LAWRENCEVILLE GA',
+          amount: 28.44,
+          type: 'expense',
+          institution: 'American Express',
+        }),
+        expect.objectContaining({
+          date: '2025-12-29',
+          description: 'PAYMENT RECEIVED - THANK YOU',
+          amount: -80,
+          type: 'cc_payment',
+          institution: 'American Express',
+        }),
+      ])
+    );
+  });
+
+  it('parses Synchrony transaction activity without double-counting summary payments', () => {
+    const transactions = parseTransactionsFromText(synchronyStatementFixture, 'credit_card');
+
+    expect(transactions).toHaveLength(4);
+    expect(transactions.filter((transaction) => transaction.type === 'cc_payment')).toHaveLength(1);
+    expect(transactions).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          date: '2026-01-28',
+          description: 'PAYMENT RECEIVED - THANK YOU',
+          amount: -588.57,
+          type: 'cc_payment',
+          institution: 'Synchrony',
+          parserProfile: 'Synchrony credit card',
+        }),
+        expect.objectContaining({
+          date: '2026-02-15',
+          description: 'AMAZON MARKETPLACE',
+          amount: 215.73,
+          type: 'expense',
+        }),
+      ])
+    );
+  });
+
+  it('prefers native PDF text when extraction is dense and already parsed', () => {
+    expect(
+      analyzePdfTextExtraction(
+        {
+          text: 'Statement Date 01/02/2026 Some valid text content repeated for multiple rows',
+          totalItems: 200,
+          nonEmptyItems: 180,
+          pagesWithText: 2,
+          pageCount: 2,
+        },
+        4
+      )
+    ).toEqual({
+      shouldUseOcr: false,
+      reason: 'text_ok',
+    });
+  });
+
+  it('falls back to OCR when extracted PDF text is empty or too sparse', () => {
+    expect(
+      analyzePdfTextExtraction(
+        {
+          text: '',
+          totalItems: 0,
+          nonEmptyItems: 0,
+          pagesWithText: 0,
+          pageCount: 2,
+        },
+        0
+      )
+    ).toEqual({
+      shouldUseOcr: true,
+      reason: 'empty_text',
+    });
+
+    expect(
+      analyzePdfTextExtraction(
+        {
+          text: 'Amt Date',
+          totalItems: 8,
+          nonEmptyItems: 6,
+          pagesWithText: 1,
+          pageCount: 2,
+        },
+        0
+      )
+    ).toEqual({
+      shouldUseOcr: true,
+      reason: 'sparse_text',
+    });
   });
 });

@@ -43,6 +43,10 @@ To provide a complete picture of financial health, we will add the ability to tr
 4. **Smart Categorization Rules**: Allow users to create 'If/Then' rules (e.g., 'If description contains UBER, categorize as Transit') to auto-categorize imported CSV transactions.
 5. **AI Financial Assistant (Client-Side)**: Integrate a lightweight, in-browser AI model (like WebLLM) to allow users to ask questions like 'How much did I spend on food this month?' without sending data to a server.
 
+## Future Dashboard Upgrades
+1. **Dedicated Card Summary Row**: Add a dashboard row that shows each credit card's current spending, recent payments, and bill pressure side by side.
+2. **Subscription Watchlist**: Surface recurring low-dollar subscriptions detected during statement parsing so users can see which subscriptions are active, which card they are on, and whether any have increased in price.
+
 ## Phase 6: Multi-Device Sync & Export
 6. **Peer-to-Peer Syncing**: Implement WebRTC or a service like Yjs to allow users to sync their local data securely between their phone and laptop without needing a central database.
 7. **Advanced Export Options**: Expand beyond CSV to allow exporting data to beautifully formatted PDF reports for tax purposes or personal records.

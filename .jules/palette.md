@@ -13,3 +13,11 @@
 ## 2023-10-27 - Dynamic Active Navigation States
 **Learning:** For Next.js navigation menus, active routes were statically set, causing confusion about the current page, and missing the `aria-current="page"` attribute for screen readers.
 **Action:** Always dynamically determine active routes using `usePathname` from `next/navigation`, and apply `aria-current="page"` along with active visual styles to the active link element to ensure accessibility and clear UX.
+
+## 2023-10-27 - Form Label Associations
+**Learning:** The `SalaryPlanner` component's form fields were missing explicit connections between their `<label>` and `<input>` elements. This is a common accessibility failure that prevents screen readers from correctly identifying the purpose of form inputs. In addition, the visual required asterisk `*` was read aloud by screen readers because it lacked `aria-hidden="true"`.
+**Action:** Always use `htmlFor` on the `<label>` and a matching `id` on the `<input>` to bind them together. Always append `aria-hidden="true"` to visual indicators like asterisks `*` in required fields to prevent redundant and confusing screen reader announcements.
+
+## 2023-10-27 - Linking Form Labels
+**Learning:** Many form `<label>` elements were found across `BillPlanner.tsx`, `TransactionList.tsx` (manual entry), and `ElectricityTracker.tsx` lacking the explicit `htmlFor` attribute linking them to their corresponding `<input>` or `<select>` via an `id`. This prevents screen readers from correctly announcing the field's purpose.
+**Action:** Always generate unique `id`s for form input elements and bind them using the `htmlFor` attribute on the corresponding `<label>` element.

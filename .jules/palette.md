@@ -21,3 +21,7 @@
 ## 2023-10-27 - Linking Form Labels
 **Learning:** Many form `<label>` elements were found across `BillPlanner.tsx`, `TransactionList.tsx` (manual entry), and `ElectricityTracker.tsx` lacking the explicit `htmlFor` attribute linking them to their corresponding `<input>` or `<select>` via an `id`. This prevents screen readers from correctly announcing the field's purpose.
 **Action:** Always generate unique `id`s for form input elements and bind them using the `htmlFor` attribute on the corresponding `<label>` element.
+
+## 2024-07-04 - Semantic Form Grouping and Focus States
+**Learning:** Using `<div>` tags with nested `<label><input type="radio"></label>` is a common pattern but fails to correctly group related radio inputs for screen readers and breaks explicit semantic association.
+**Action:** Always group related radio inputs using `<fieldset>` and `<legend>` elements. Un-nest the `<input type="radio">` tags from their parent `<label>` tags, and explicitly associate them using `id` and `htmlFor` attributes to improve semantic parsing for screen readers. Ensure explicit focus states (`focus-visible`) are provided for keyboard navigation.

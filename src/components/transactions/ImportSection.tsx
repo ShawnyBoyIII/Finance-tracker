@@ -37,33 +37,38 @@ export default function ImportSection() {
       <h3 className="text-lg font-medium text-white mb-4">Import Transactions</h3>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-        <div>
-          <label className="block text-sm font-medium text-slate-200 mb-2">Statement Type</label>
+        <fieldset>
+          <legend className="block text-sm font-medium text-slate-200 mb-2">Statement Type</legend>
           <div className="flex space-x-4">
-            <label className="flex items-center">
+            <div className="flex items-center">
               <input
+                id="type-bank"
+                name="statement-type"
                 type="radio"
-                className="mr-2 text-indigo-600 focus:ring-indigo-500"
+                className="mr-2 text-indigo-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 rounded-full"
                 checked={statementType === 'bank'}
                 onChange={() => setStatementType('bank')}
               />
-              <span className="text-sm text-slate-200">Bank Statement</span>
-            </label>
-            <label className="flex items-center">
+              <label htmlFor="type-bank" className="text-sm text-slate-200">Bank Statement</label>
+            </div>
+            <div className="flex items-center">
               <input
+                id="type-credit-card"
+                name="statement-type"
                 type="radio"
-                className="mr-2 text-indigo-600 focus:ring-indigo-500"
+                className="mr-2 text-indigo-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 rounded-full"
                 checked={statementType === 'credit_card'}
                 onChange={() => setStatementType('credit_card')}
               />
-              <span className="text-sm text-slate-200">Credit Card Statement</span>
-            </label>
+              <label htmlFor="type-credit-card" className="text-sm text-slate-200">Credit Card Statement</label>
+            </div>
           </div>
-        </div>
+        </fieldset>
 
         <div>
-          <label className="block text-sm font-medium text-slate-200 mb-2">Destination Account</label>
+          <label htmlFor="destination-account" className="block text-sm font-medium text-slate-200 mb-2">Destination Account</label>
           <select
+            id="destination-account"
             value={selectedAccountId}
             onChange={(event) => setSelectedAccountId(event.target.value)}
             className={COMMON_INPUT_CLASS}
@@ -76,29 +81,33 @@ export default function ImportSection() {
           </select>
         </div>
 
-        <div>
-          <label className="block text-sm font-medium text-slate-200 mb-2">Format</label>
+        <fieldset>
+          <legend className="block text-sm font-medium text-slate-200 mb-2">Format</legend>
           <div className="flex space-x-4">
-            <label className="flex items-center">
+            <div className="flex items-center">
               <input
+                id="format-pdf"
+                name="statement-format"
                 type="radio"
-                className="mr-2 text-indigo-600 focus:ring-indigo-500"
+                className="mr-2 text-indigo-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 rounded-full"
                 checked={format === 'pdf'}
                 onChange={() => setFormat('pdf')}
               />
-              <span className="text-sm text-slate-200">PDF</span>
-            </label>
-            <label className="flex items-center">
+              <label htmlFor="format-pdf" className="text-sm text-slate-200">PDF</label>
+            </div>
+            <div className="flex items-center">
               <input
+                id="format-csv"
+                name="statement-format"
                 type="radio"
-                className="mr-2 text-indigo-600 focus:ring-indigo-500"
+                className="mr-2 text-indigo-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 rounded-full"
                 checked={format === 'csv'}
                 onChange={() => setFormat('csv')}
               />
-              <span className="text-sm text-slate-200">CSV</span>
-            </label>
+              <label htmlFor="format-csv" className="text-sm text-slate-200">CSV</label>
+            </div>
           </div>
-        </div>
+        </fieldset>
       </div>
 
       <div className="border-t border-white/10 pt-4 mt-4">

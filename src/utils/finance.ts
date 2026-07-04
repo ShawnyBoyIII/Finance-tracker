@@ -410,7 +410,13 @@ export const getSuggestedCategory = (
     categoryCounts.set(transaction.category, (categoryCounts.get(transaction.category) || 0) + 1);
   });
 
-  const [bestMatch] = Array.from(categoryCounts.entries()).sort((a, b) => b[1] - a[1]);
+  let bestMatch: [string, number] | undefined = undefined;
+  for (const entry of categoryCounts.entries()) {
+    if (!bestMatch || entry[1] > bestMatch[1]) {
+      bestMatch = entry;
+    }
+  }
+
   return bestMatch?.[0] || fallbackCategory;
 };
 
@@ -586,7 +592,14 @@ export const getElectricityMetrics = (
     nonZeroMonths.length > 0
       ? nonZeroMonths.reduce((total, entry) => total + entry.amount, 0) / nonZeroMonths.length
       : 0;
-  const latestCharge = [...transactions].sort((left, right) => right.date.localeCompare(left.date))[0];
+
+  let latestCharge: Transaction | undefined = undefined;
+  for (let i = 0; i < transactions.length; i++) {
+    const current = transactions[i];
+    if (!latestCharge || current.date > latestCharge.date) {
+      latestCharge = current;
+    }
+  }
 
   return {
     currentMonthSpend,

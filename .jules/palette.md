@@ -21,3 +21,7 @@
 ## 2023-10-27 - Linking Form Labels
 **Learning:** Many form `<label>` elements were found across `BillPlanner.tsx`, `TransactionList.tsx` (manual entry), and `ElectricityTracker.tsx` lacking the explicit `htmlFor` attribute linking them to their corresponding `<input>` or `<select>` via an `id`. This prevents screen readers from correctly announcing the field's purpose.
 **Action:** Always generate unique `id`s for form input elements and bind them using the `htmlFor` attribute on the corresponding `<label>` element.
+
+## 2024-07-05 - Radio and Checkbox Label Associations
+**Learning:** Several checkboxes (`BillPlanner.tsx`, `ElectricityTracker.tsx`) and radio buttons (`ImportSection.tsx`) nested their `<input>` elements directly within the `<label>` tags without using `htmlFor` attributes, or failed to group related choices (like radio buttons) inside semantic `<fieldset>` and `<legend>` structures. This can confuse screen readers and reduce structural clarity.
+**Action:** Always extract inputs from within `<label>` tags, generate explicit `id` attributes, and bind them with `htmlFor`. When grouping related choices like radio buttons, always wrap them in semantic `<fieldset>` elements with `<legend>` tags instead of generic `<div>` and `<label>` wrappers.

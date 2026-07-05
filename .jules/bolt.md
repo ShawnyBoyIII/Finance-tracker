@@ -40,3 +40,6 @@
 ## 2026-07-04 - Array Sort to Single Pass Optimization
 **Learning:** In utility functions, sorting an entire array or map in (N \log N)$ time solely to find a single maximum value (e.g. `[...array].sort()[0]` or `Array.from(map).sort()[0]`) introduces significant execution time overhead and unnecessary memory allocations. A stable max value can be found much faster using a single-pass (N)$ loop.
 **Action:** Always replace `[...array].sort(...)[0]` with a standard `for` loop maintaining a running maximum value when searching for max/min values, ensuring correct TypeScript types (e.g. `undefined` fallback) are preserved.
+## 2023-10-27 - Pre-aggregate Data to Avoid O(N*M) Render Cycle Bottlenecks
+**Learning:** In React render loops, nested iterations over arrays using methods like `.filter()` followed by `.reduce()` (especially inside a `.map()`) create hidden O(N*M) time complexity. When calculating metrics per account from a shared array of transactions, this becomes a major bottleneck as the transaction list grows.
+**Action:** Always refactor these nested iterations into a single-pass O(N) pre-aggregation loop using a `Map`. Calculate any expensive, repetitive loop invariants (like `new Date().toISOString().slice(0, 7)`) once outside the loop, and use O(1) lookups from the Map inside the mapping function.

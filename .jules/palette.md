@@ -21,3 +21,7 @@
 ## 2023-10-27 - Linking Form Labels
 **Learning:** Many form `<label>` elements were found across `BillPlanner.tsx`, `TransactionList.tsx` (manual entry), and `ElectricityTracker.tsx` lacking the explicit `htmlFor` attribute linking them to their corresponding `<input>` or `<select>` via an `id`. This prevents screen readers from correctly announcing the field's purpose.
 **Action:** Always generate unique `id`s for form input elements and bind them using the `htmlFor` attribute on the corresponding `<label>` element.
+
+## 2023-10-27 - Checkbox Accessibility and Label Nesting
+**Learning:** React elements like `<input type="checkbox">` nested directly inside a `<label>` can cause inconsistent behavior in some assistive technologies, especially when utility classes (like Tailwind) remove the native focus indicator, making it difficult for keyboard-only users to see when the checkbox is focused.
+**Action:** Always place checkboxes adjacent to (not inside) their `<label>` elements, explicitly linking them using `id` and `htmlFor`. Additionally, ensure custom-styled checkboxes include explicit keyboard focus states (`focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color] rounded`) for accessible keyboard navigation.

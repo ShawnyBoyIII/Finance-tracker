@@ -644,10 +644,12 @@ export default function ElectricityTracker() {
               </div>
             </div>
 
-            <label className="flex items-center gap-2 text-sm text-slate-200">
-              <input type="checkbox" checked={autopay} onChange={(event) => setAutopay(event.target.checked)} />
-              Autopay enabled
-            </label>
+            <div className="flex items-center gap-2">
+              <input id="tracker-autopay" type="checkbox" checked={autopay} onChange={(event) => setAutopay(event.target.checked)} className="focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500 rounded" />
+              <label htmlFor="tracker-autopay" className="text-sm text-slate-200">
+                Autopay enabled
+              </label>
+            </div>
 
             <div className="flex flex-wrap items-center gap-3">
               <button type="submit" className="inline-flex items-center gap-2 rounded-md bg-amber-400 px-4 py-2 text-sm font-medium text-slate-950 hover:bg-amber-300">
@@ -799,7 +801,7 @@ export default function ElectricityTracker() {
                         : `${bill.daysUntilDue} day(s) until due`}
                   </div>
                   <div className="flex items-center gap-2">
-                    <button type="button" onClick={() => handleEdit(bill.billId)} className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-sm text-white hover:bg-white/5">
+                    <button type="button" onClick={() => handleEdit(bill.billId)} className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-sm text-white hover:bg-white/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500">
                       <Pencil className="h-3.5 w-3.5" />
                       Edit
                     </button>
@@ -807,7 +809,10 @@ export default function ElectricityTracker() {
                       if (window.confirm('Are you sure you want to delete this electricity bill?')) {
                         deleteBill(bill.billId);
                       }
-                    }} className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-sm text-white hover:bg-white/5">
+                    }} className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-sm text-white hover:bg-white/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500"
+                    aria-label="Remove electricity bill"
+                    title="Remove electricity bill"
+                    >
                       <Trash2 className="h-3.5 w-3.5" />
                       Remove
                     </button>

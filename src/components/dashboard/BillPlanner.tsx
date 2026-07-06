@@ -152,10 +152,12 @@ export default function BillPlanner() {
                 ))}
               </select>
             </div>
-            <label className="flex items-center gap-2 text-sm text-slate-200 mt-6">
-              <input type="checkbox" checked={autopay} onChange={(event) => setAutopay(event.target.checked)} />
-              Autopay enabled
-            </label>
+            <div className="flex items-center gap-2 mt-6">
+              <input id="bill-autopay" type="checkbox" checked={autopay} onChange={(event) => setAutopay(event.target.checked)} className="focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500 rounded" />
+              <label htmlFor="bill-autopay" className="text-sm text-slate-200">
+                Autopay enabled
+              </label>
+            </div>
           </div>
           <div className="flex items-center gap-3">
             <button type="submit" className="inline-flex items-center gap-2 rounded-md bg-cyan-500 px-4 py-2 text-sm font-medium text-slate-950 hover:bg-cyan-400">
@@ -207,14 +209,14 @@ export default function BillPlanner() {
                     <button
                       type="button"
                       onClick={() => setBillManualStatus(bill.billId, bill.status === 'paid' ? 'unpaid' : 'paid')}
-                      className="inline-flex items-center gap-1 rounded-md px-2 py-1 hover:bg-black/5"
+                      className="inline-flex items-center gap-1 rounded-md px-2 py-1 hover:bg-black/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500"
                     >
                       {bill.status === 'paid' ? 'Mark unpaid' : 'Mark paid'}
                     </button>
                     <button
                       type="button"
                       onClick={() => startEditing(bill.billId)}
-                      className="inline-flex items-center gap-1 rounded-md px-2 py-1 hover:bg-black/5"
+                      className="inline-flex items-center gap-1 rounded-md px-2 py-1 hover:bg-black/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500"
                     >
                       <Pencil className="h-3.5 w-3.5" />
                       Edit

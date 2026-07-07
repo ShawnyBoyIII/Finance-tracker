@@ -58,7 +58,8 @@ export default function StatementsHub() {
         const summary = summarizeStatementTransactions(statement, transactions);
         const validation = getStatementValidationSummary(statement, transactions);
         const statementTransactions = getStatementTransactions(statement, transactions)
-          .sort((left, right) => right.date.localeCompare(left.date));
+          // ⚡ Bolt: Replaced expensive localeCompare with fast comparative operators for ISO date string sorting
+          .sort((left, right) => (left.date < right.date ? 1 : left.date > right.date ? -1 : 0));
 
         return {
           statement,

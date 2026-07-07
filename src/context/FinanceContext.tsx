@@ -308,8 +308,9 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
           )
       );
 
+      // ⚡ Bolt: Replaced expensive localeCompare with fast comparative operators for ISO date string sorting
       return [electricityStatement, ...withoutMatchingStatement].sort((left, right) =>
-        right.billDate.localeCompare(left.billDate)
+        (left.billDate < right.billDate ? 1 : left.billDate > right.billDate ? -1 : 0)
       );
     });
 

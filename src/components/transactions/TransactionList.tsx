@@ -97,8 +97,8 @@ function AddTransactionForm({
         </datalist>
       </div>
       <div className="sm:col-span-1">
-        <label className="block text-sm font-medium text-gray-700">Account</label>
-        <select value={accountId} onChange={e => setAccountId(e.target.value)} className={COMMON_INPUT_CLASS}>
+        <label htmlFor="manual-account" className="block text-sm font-medium text-gray-700">Account</label>
+        <select id="manual-account" value={accountId} onChange={e => setAccountId(e.target.value)} className={COMMON_INPUT_CLASS}>
           {accountOptions.map((account) => (
             <option key={account.id} value={account.id}>
               {account.name}
@@ -108,8 +108,8 @@ function AddTransactionForm({
       </div>
       <div className="sm:col-span-1 flex items-end gap-2">
         <div className="flex-1">
-          <label className="block text-sm font-medium text-gray-700">Description</label>
-          <input type="text" value={description} onChange={e => handleDescriptionChange(e.target.value)} placeholder="Optional" className={COMMON_INPUT_CLASS} />
+          <label htmlFor="manual-description" className="block text-sm font-medium text-gray-700">Description</label>
+          <input id="manual-description" type="text" value={description} onChange={e => handleDescriptionChange(e.target.value)} placeholder="Optional" className={COMMON_INPUT_CLASS} />
         </div>
         <button type="submit" className="mb-0.5 bg-green-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-green-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-green-500">
           Save

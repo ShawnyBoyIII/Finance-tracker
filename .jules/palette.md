@@ -21,3 +21,7 @@
 ## 2023-10-27 - Linking Form Labels
 **Learning:** Many form `<label>` elements were found across `BillPlanner.tsx`, `TransactionList.tsx` (manual entry), and `ElectricityTracker.tsx` lacking the explicit `htmlFor` attribute linking them to their corresponding `<input>` or `<select>` via an `id`. This prevents screen readers from correctly announcing the field's purpose.
 **Action:** Always generate unique `id`s for form input elements and bind them using the `htmlFor` attribute on the corresponding `<label>` element.
+
+## 2026-07-07 - Explicit Form Label Linking and Un-nesting
+**Learning:** Many form `<label>` elements were found across the application (`ElectricityTracker.tsx`, `BillPlanner.tsx`, `TransactionList.tsx`) lacking the explicit `htmlFor` attribute connecting them to their corresponding input elements via an `id`. Additionally, some checkbox inputs were nested inside their labels without explicit IDs. This causes accessibility issues as screen readers may fail to associate the label with the input correctly.
+**Action:** Always generate unique `id`s for form input elements (including checkboxes, selects, and text inputs) and explicitly bind them using the `htmlFor` attribute on the corresponding `<label>` element. Avoid nesting inputs inside labels to ensure clearer semantic association and more robust support across different screen readers.

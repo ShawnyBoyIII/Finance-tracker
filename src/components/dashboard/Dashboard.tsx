@@ -38,7 +38,8 @@ export default function Dashboard() {
 
   const recurringBills = useMemo(() => detectRecurringBills(transactions), [transactions]);
   const upcomingPaychecks = useMemo(() => getUpcomingIncomeSourcesPaychecks(incomeSources, 4), [incomeSources]);
-  const recentTransactions = useMemo(() => [...transactions].sort((a, b) => b.date.localeCompare(a.date)).slice(0, 5), [transactions]);
+  // ⚡ Bolt: Replaced expensive localeCompare with fast comparative operators for ISO date string sorting
+  const recentTransactions = useMemo(() => [...transactions].sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : 0)).slice(0, 5), [transactions]);
   const focusCategories = useMemo(() => monthlySummary.expensesByCategory.slice(0, 5), [monthlySummary.expensesByCategory]);
   const cardSummaries = useMemo(() => {
     return accounts

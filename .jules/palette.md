@@ -21,3 +21,7 @@
 ## 2023-10-27 - Linking Form Labels
 **Learning:** Many form `<label>` elements were found across `BillPlanner.tsx`, `TransactionList.tsx` (manual entry), and `ElectricityTracker.tsx` lacking the explicit `htmlFor` attribute linking them to their corresponding `<input>` or `<select>` via an `id`. This prevents screen readers from correctly announcing the field's purpose.
 **Action:** Always generate unique `id`s for form input elements and bind them using the `htmlFor` attribute on the corresponding `<label>` element.
+
+## 2023-10-27 - Checkbox Accessibility
+**Learning:** Checkboxes nested directly inside `<label>` elements without explicit `htmlFor` attributes can sometimes cause issues with screen readers accurately identifying the label context, and native checkboxes often lack consistent focus states.
+**Action:** Always un-nest checkboxes, placing them alongside their `<label>`, and explicitly bind them using `htmlFor` and `id`. In addition, ensure standard Tailwind checkbox inputs have `focus-visible` utilities (e.g., `focus-visible:outline-none focus-visible:ring-2`) to support clear keyboard navigation.

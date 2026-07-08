@@ -152,10 +152,18 @@ export default function BillPlanner() {
                 ))}
               </select>
             </div>
-            <label className="flex items-center gap-2 text-sm text-slate-200 mt-6">
-              <input type="checkbox" checked={autopay} onChange={(event) => setAutopay(event.target.checked)} />
-              Autopay enabled
-            </label>
+            <div className="flex items-center gap-2 mt-6">
+              <input
+                type="checkbox"
+                id="bill-autopay"
+                checked={autopay}
+                onChange={(event) => setAutopay(event.target.checked)}
+                className="rounded border-white/20 bg-slate-900/50 text-cyan-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500"
+              />
+              <label htmlFor="bill-autopay" className="text-sm text-slate-200">
+                Autopay enabled
+              </label>
+            </div>
           </div>
           <div className="flex items-center gap-3">
             <button type="submit" className="inline-flex items-center gap-2 rounded-md bg-cyan-500 px-4 py-2 text-sm font-medium text-slate-950 hover:bg-cyan-400">

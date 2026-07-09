@@ -288,7 +288,7 @@ export const detectRecurringBills = (
       return;
     }
 
-    const sortedGroup = [...group].sort((a, b) => a.date.localeCompare(b.date));
+    const sortedGroup = [...group].sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : 0));
     const intervals = sortedGroup.slice(1).map((transaction, index) =>
       getDateDifferenceInDays(sortedGroup[index].date, transaction.date)
     );
@@ -320,7 +320,7 @@ export const detectRecurringBills = (
     });
   });
 
-  return recurringBills.sort((a, b) => a.nextExpectedDate.localeCompare(b.nextExpectedDate));
+  return recurringBills.sort((a, b) => (a.nextExpectedDate < b.nextExpectedDate ? -1 : a.nextExpectedDate > b.nextExpectedDate ? 1 : 0));
 };
 
 export const getBillStatuses = (
@@ -334,20 +334,26 @@ export const getBillStatuses = (
     .map((bill) => {
       const currentMonthDueDate = buildDueDate(referenceDate, bill.dueDay);
       const monthKey = currentMonthDueDate.slice(0, 7);
-      const matchingTransactions = transactions
-        .filter((transaction) => {
-          if (transaction.type !== 'expense') return false;
-          if (bill.accountId && transaction.accountId !== bill.accountId) return false;
-          if (bill.category && transaction.category !== bill.category) return false;
-          if (transaction.date.slice(0, 7) !== monthKey) return false;
+      let matchedTransaction: Transaction | undefined = undefined;
 
-          const normalizedBillName = normalizeDescription(bill.name);
-          const normalizedTransactionName = normalizeDescription(transaction.description || transaction.category);
-          return normalizedTransactionName.includes(normalizedBillName) || normalizedBillName.includes(normalizedTransactionName);
-        })
-        .sort((a, b) => b.date.localeCompare(a.date));
+      const normalizedBillName = normalizeDescription(bill.name);
+      for (let i = 0; i < transactions.length; i++) {
+        const transaction = transactions[i];
+        if (transaction.type !== 'expense') continue;
+        if (bill.accountId && transaction.accountId !== bill.accountId) continue;
+        if (bill.category && transaction.category !== bill.category) continue;
+        if (transaction.date.slice(0, 7) !== monthKey) continue;
 
-      const matchedTransaction = matchingTransactions[0];
+        const normalizedTransactionName = normalizeDescription(transaction.description || transaction.category);
+        const matches = normalizedTransactionName.includes(normalizedBillName) || normalizedBillName.includes(normalizedTransactionName);
+
+        if (matches) {
+          if (!matchedTransaction || transaction.date > matchedTransaction.date) {
+            matchedTransaction = transaction;
+          }
+        }
+      }
+
       const manualOverrideApplies = bill.manualStatusMonth === monthKey && bill.manualStatus;
       const isPaid = manualOverrideApplies
         ? bill.manualStatus === 'paid'
@@ -372,7 +378,7 @@ export const getBillStatuses = (
         daysUntilDue,
       };
     })
-    .sort((a, b) => a.dueDate.localeCompare(b.dueDate));
+    .sort((a, b) => (a.dueDate < b.dueDate ? -1 : a.dueDate > b.dueDate ? 1 : 0));
 };
 
 export const getDueSoonBills = (

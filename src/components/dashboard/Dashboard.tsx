@@ -38,20 +38,34 @@ export default function Dashboard() {
 
   const recurringBills = useMemo(() => detectRecurringBills(transactions), [transactions]);
   const upcomingPaychecks = useMemo(() => getUpcomingIncomeSourcesPaychecks(incomeSources, 4), [incomeSources]);
-  const recentTransactions = useMemo(() => [...transactions].sort((a, b) => b.date.localeCompare(a.date)).slice(0, 5), [transactions]);
+  // ⚡ Bolt: Replaced expensive localeCompare with direct comparison for ISO dates
+  const recentTransactions = useMemo(() => [...transactions].sort((a, b) => (b.date > a.date ? 1 : b.date < a.date ? -1 : 0)).slice(0, 5), [transactions]);
   const focusCategories = useMemo(() => monthlySummary.expensesByCategory.slice(0, 5), [monthlySummary.expensesByCategory]);
   const cardSummaries = useMemo(() => {
+    // ⚡ Bolt: Hoisted expensive current month string creation out of the loop
+    const currentMonthKey = new Date().toISOString().slice(0, 7);
+
+    // ⚡ Bolt: Pre-aggregated O(N) transaction lookups to avoid O(N*M) nested filtering
+    const aggregatedCardStats = new Map<string, { charges: number; payments: number }>();
+
+    for (const transaction of transactions) {
+      if (!transaction.accountId || transaction.date.slice(0, 7) !== currentMonthKey) {
+        continue;
+      }
+
+      const stats = aggregatedCardStats.get(transaction.accountId) || { charges: 0, payments: 0 };
+      if (transaction.type === 'expense') {
+        stats.charges += transaction.amount;
+      } else if (transaction.type === 'cc_payment') {
+        stats.payments += Math.abs(transaction.amount);
+      }
+      aggregatedCardStats.set(transaction.accountId, stats);
+    }
+
     return accounts
       .filter((account) => account.type === 'credit_card')
       .map((account) => {
-        const accountTransactions = transactions.filter((transaction) => transaction.accountId === account.id);
-        const monthlyTransactions = accountTransactions.filter((transaction) => transaction.date.slice(0, 7) === new Date().toISOString().slice(0, 7));
-        const charges = monthlyTransactions
-          .filter((transaction) => transaction.type === 'expense')
-          .reduce((sum, transaction) => sum + transaction.amount, 0);
-        const payments = monthlyTransactions
-          .filter((transaction) => transaction.type === 'cc_payment')
-          .reduce((sum, transaction) => sum + Math.abs(transaction.amount), 0);
+        const stats = aggregatedCardStats.get(account.id) || { charges: 0, payments: 0 };
         const recurringCount = recurringBills.filter((bill) => bill.institution === account.issuer || bill.institution === account.name).length;
 
         return {
@@ -59,9 +73,9 @@ export default function Dashboard() {
           name: account.name,
           issuer: account.issuer,
           last4: account.last4,
-          charges,
-          payments,
-          openItems: Math.max(charges - payments, 0),
+          charges: stats.charges,
+          payments: stats.payments,
+          openItems: Math.max(stats.charges - stats.payments, 0),
           recurringCount,
         };
       })

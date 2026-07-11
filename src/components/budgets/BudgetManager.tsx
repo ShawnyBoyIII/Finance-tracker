@@ -77,8 +77,9 @@ export default function BudgetManager() {
         <h3 className="text-lg font-medium text-white mb-4">Set a Budget</h3>
         <form onSubmit={handleAddBudget} className="flex gap-4 items-end">
           <div className="flex-1">
-            <label className="block text-sm font-medium text-slate-200">Category Name<span className="text-red-500 ml-1" aria-hidden="true">*</span></label>
+            <label htmlFor="budget-category" className="block text-sm font-medium text-slate-200">Category Name<span className="text-red-500 ml-1" aria-hidden="true">*</span></label>
             <input
+              id="budget-category"
               type="text"
               required
               value={newCategory}
@@ -94,8 +95,9 @@ export default function BudgetManager() {
             </datalist>
           </div>
           <div className="flex-1">
-            <label className="block text-sm font-medium text-slate-200">Monthly Limit ($)<span className="text-red-500 ml-1" aria-hidden="true">*</span></label>
+            <label htmlFor="budget-amount" className="block text-sm font-medium text-slate-200">Monthly Limit ($)<span className="text-red-500 ml-1" aria-hidden="true">*</span></label>
             <input
+              id="budget-amount"
               type="number"
               required
               min="0"

@@ -152,8 +152,9 @@ export default function StatementsHub() {
       <section className="cockpit-panel rounded-[28px] p-6">
         <div className="mb-5 grid gap-4 lg:grid-cols-[2fr_1fr_1fr_1fr]">
           <div>
-            <label className="mb-2 block text-sm font-medium text-slate-200">Search statements</label>
+            <label htmlFor="statement-search" className="mb-2 block text-sm font-medium text-slate-200">Search statements</label>
             <input
+              id="statement-search"
               type="text"
               value={search}
               onChange={(event) => setSearch(event.target.value)}
@@ -162,8 +163,9 @@ export default function StatementsHub() {
             />
           </div>
           <div>
-            <label className="mb-2 block text-sm font-medium text-slate-200">Source</label>
+            <label htmlFor="statement-source" className="mb-2 block text-sm font-medium text-slate-200">Source</label>
             <select
+              id="statement-source"
               value={sourceFilter}
               onChange={(event) => setSourceFilter(event.target.value as 'all' | 'bank' | 'credit_card')}
               className={COMMON_INPUT_CLASS}
@@ -174,8 +176,9 @@ export default function StatementsHub() {
             </select>
           </div>
           <div>
-            <label className="mb-2 block text-sm font-medium text-slate-200">Format</label>
+            <label htmlFor="statement-format" className="mb-2 block text-sm font-medium text-slate-200">Format</label>
             <select
+              id="statement-format"
               value={formatFilter}
               onChange={(event) => setFormatFilter(event.target.value as 'all' | 'csv' | 'pdf')}
               className={COMMON_INPUT_CLASS}
@@ -186,8 +189,9 @@ export default function StatementsHub() {
             </select>
           </div>
           <div>
-            <label className="mb-2 block text-sm font-medium text-slate-200">Account</label>
+            <label htmlFor="statement-account" className="mb-2 block text-sm font-medium text-slate-200">Account</label>
             <select
+              id="statement-account"
               value={accountFilter}
               onChange={(event) => setAccountFilter(event.target.value)}
               className={COMMON_INPUT_CLASS}

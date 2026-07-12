@@ -200,7 +200,14 @@ export default function CSVImport({ statementType, accountId }: CSVImportProps) 
       return;
     }
 
-    const statementDates = readyToImport.map((transaction) => transaction.date).sort();
+    // Optimization: Find min/max dates in a single O(N) pass instead of mapping and sorting
+    let minDate: string | undefined;
+    let maxDate: string | undefined;
+    for (let i = 0; i < readyToImport.length; i++) {
+      const date = readyToImport[i].date;
+      if (minDate === undefined || date < minDate) minDate = date;
+      if (maxDate === undefined || date > maxDate) maxDate = date;
+    }
 
     importStatement(
       {
@@ -209,8 +216,8 @@ export default function CSVImport({ statementType, accountId }: CSVImportProps) 
         format: 'csv',
         fileName: selectedFileName || 'import.csv',
         institution: transactions.find((transaction) => transaction.accountId === accountId)?.institution,
-        periodStart: statementDates[0],
-        periodEnd: statementDates[statementDates.length - 1],
+        periodStart: minDate as string,
+        periodEnd: maxDate as string,
         parseVersion: 1,
         reviewedTransactionCount: stagedTransactions.length,
         duplicateCandidateCount: duplicateCount,

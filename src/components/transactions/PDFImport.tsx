@@ -240,7 +240,15 @@ export default function PDFImport({ statementType, accountId }: PDFImportProps) 
 
     const statementInstitution = stagedTransactions.find((transaction) => transaction.institution)?.institution;
     const parserProfile = stagedTransactions.find((transaction) => transaction.parserProfile)?.parserProfile;
-    const statementDates = readyToImport.map((transaction) => transaction.date).sort();
+
+    // Optimization: Find min/max dates in a single O(N) pass instead of mapping and sorting
+    let minDate: string | undefined;
+    let maxDate: string | undefined;
+    for (let i = 0; i < readyToImport.length; i++) {
+      const date = readyToImport[i].date;
+      if (minDate === undefined || date < minDate) minDate = date;
+      if (maxDate === undefined || date > maxDate) maxDate = date;
+    }
 
     importStatement(
       {
@@ -250,8 +258,8 @@ export default function PDFImport({ statementType, accountId }: PDFImportProps) 
         fileName: selectedFileName || 'statement.pdf',
         institution: statementInstitution,
         parserProfile,
-        periodStart: statementDates[0],
-        periodEnd: statementDates[statementDates.length - 1],
+        periodStart: minDate as string,
+        periodEnd: maxDate as string,
         parseVersion: 1,
         reviewedTransactionCount: stagedTransactions.length,
         duplicateCandidateCount: duplicateCount,

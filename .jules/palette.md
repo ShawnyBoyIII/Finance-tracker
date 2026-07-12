@@ -21,3 +21,7 @@
 ## 2023-10-27 - Linking Form Labels
 **Learning:** Many form `<label>` elements were found across `BillPlanner.tsx`, `TransactionList.tsx` (manual entry), and `ElectricityTracker.tsx` lacking the explicit `htmlFor` attribute linking them to their corresponding `<input>` or `<select>` via an `id`. This prevents screen readers from correctly announcing the field's purpose.
 **Action:** Always generate unique `id`s for form input elements and bind them using the `htmlFor` attribute on the corresponding `<label>` element.
+
+## 2023-10-27 - Radio Button Grouping Accessibility
+**Learning:** Groups of radio buttons, like the Statement Type and Format selectors in the `ImportSection`, were using generic `<div>` and `<label>` elements for grouping. This doesn't provide correct semantic structure and context for screen readers to understand how the options relate to each other.
+**Action:** Always wrap groups of related form inputs, such as radio buttons, using semantic `<fieldset>` and `<legend>` elements instead of generic wrappers, to ensure correct structural grouping and context for screen readers.

@@ -40,3 +40,6 @@
 ## 2026-07-04 - Array Sort to Single Pass Optimization
 **Learning:** In utility functions, sorting an entire array or map in (N \log N)$ time solely to find a single maximum value (e.g. `[...array].sort()[0]` or `Array.from(map).sort()[0]`) introduces significant execution time overhead and unnecessary memory allocations. A stable max value can be found much faster using a single-pass (N)$ loop.
 **Action:** Always replace `[...array].sort(...)[0]` with a standard `for` loop maintaining a running maximum value when searching for max/min values, ensuring correct TypeScript types (e.g. `undefined` fallback) are preserved.
+## 2024-07-04 - Set Aggregation Spread Overheads
+**Learning:** Using `Array.from(new Set([...defaults, ...largeArray.map(item => item.prop)]))` inside render cycles or `useMemo` blocks is extremely inefficient for large datasets. It forces the allocation of an intermediate mapped array, followed by a second intermediate array from the spread operator, before finally passing it to the Set constructor, creating memory pressure and execution time overhead.
+**Action:** Always replace `Array.from(new Set([...defaults, ...mappedItems]))` with standard, O(N) single-pass `for` loops directly adding items to the initialized `Set`.

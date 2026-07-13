@@ -37,8 +37,8 @@ export default function ImportSection() {
       <h3 className="text-lg font-medium text-white mb-4">Import Transactions</h3>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-        <div>
-          <label className="block text-sm font-medium text-slate-200 mb-2">Statement Type</label>
+        <fieldset>
+          <legend className="block text-sm font-medium text-slate-200 mb-2">Statement Type</legend>
           <div className="flex space-x-4">
             <label className="flex items-center">
               <input
@@ -59,11 +59,12 @@ export default function ImportSection() {
               <span className="text-sm text-slate-200">Credit Card Statement</span>
             </label>
           </div>
-        </div>
+        </fieldset>
 
         <div>
-          <label className="block text-sm font-medium text-slate-200 mb-2">Destination Account</label>
+          <label htmlFor="import-destination-account" className="block text-sm font-medium text-slate-200 mb-2">Destination Account</label>
           <select
+            id="import-destination-account"
             value={selectedAccountId}
             onChange={(event) => setSelectedAccountId(event.target.value)}
             className={COMMON_INPUT_CLASS}
@@ -76,8 +77,8 @@ export default function ImportSection() {
           </select>
         </div>
 
-        <div>
-          <label className="block text-sm font-medium text-slate-200 mb-2">Format</label>
+        <fieldset>
+          <legend className="block text-sm font-medium text-slate-200 mb-2">Format</legend>
           <div className="flex space-x-4">
             <label className="flex items-center">
               <input
@@ -98,7 +99,7 @@ export default function ImportSection() {
               <span className="text-sm text-slate-200">CSV</span>
             </label>
           </div>
-        </div>
+        </fieldset>
       </div>
 
       <div className="border-t border-white/10 pt-4 mt-4">

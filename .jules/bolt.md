@@ -40,3 +40,7 @@
 ## 2026-07-04 - Array Sort to Single Pass Optimization
 **Learning:** In utility functions, sorting an entire array or map in (N \log N)$ time solely to find a single maximum value (e.g. `[...array].sort()[0]` or `Array.from(map).sort()[0]`) introduces significant execution time overhead and unnecessary memory allocations. A stable max value can be found much faster using a single-pass (N)$ loop.
 **Action:** Always replace `[...array].sort(...)[0]` with a standard `for` loop maintaining a running maximum value when searching for max/min values, ensuring correct TypeScript types (e.g. `undefined` fallback) are preserved.
+
+## 2024-06-06 - O(Accounts * Transactions) Nested Aggregation in useMemo
+**Learning:** Found a critical performance bottleneck in `Dashboard.tsx` where an `O(N)` loop (accounts mapping) contained multiple inner `O(M)` loops (transactions filtering) inside a `useMemo` dependency array tracking frequently updated inputs (`transactions`). Furthermore, it recalculated `new Date().toISOString()` inside the inner loop for every item. This created a significant block on the main thread for simple render updates.
+**Action:** Replaced the nested `.filter()` logic with a pre-aggregation step using a standard `for` loop and a `Map` ($O(M)$ time), enabling $O(1)$ lookups during the subsequent `accounts.map` iteration. Constant strings (like the current month ISO substring) must always be extracted outside of render cycle loops.

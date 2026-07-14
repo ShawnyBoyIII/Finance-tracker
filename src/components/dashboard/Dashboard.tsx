@@ -41,27 +41,48 @@ export default function Dashboard() {
   const recentTransactions = useMemo(() => [...transactions].sort((a, b) => b.date.localeCompare(a.date)).slice(0, 5), [transactions]);
   const focusCategories = useMemo(() => monthlySummary.expensesByCategory.slice(0, 5), [monthlySummary.expensesByCategory]);
   const cardSummaries = useMemo(() => {
+    // ⚡ Bolt: Pre-aggregate monthly transactions in O(N) to avoid O(Accounts * Transactions) nested loop overhead
+    const currentMonthKey = new Date().toISOString().slice(0, 7);
+    const monthlyAccountStats = new Map<string, { charges: number; payments: number }>();
+
+    for (let i = 0; i < transactions.length; i++) {
+      const transaction = transactions[i];
+      if (transaction.date.slice(0, 7) === currentMonthKey) {
+        let stats = monthlyAccountStats.get(transaction.accountId);
+        if (!stats) {
+          stats = { charges: 0, payments: 0 };
+          monthlyAccountStats.set(transaction.accountId, stats);
+        }
+        if (transaction.type === 'expense') {
+          stats.charges += transaction.amount;
+        } else if (transaction.type === 'cc_payment') {
+          stats.payments += Math.abs(transaction.amount);
+        }
+      }
+    }
+
     return accounts
       .filter((account) => account.type === 'credit_card')
       .map((account) => {
-        const accountTransactions = transactions.filter((transaction) => transaction.accountId === account.id);
-        const monthlyTransactions = accountTransactions.filter((transaction) => transaction.date.slice(0, 7) === new Date().toISOString().slice(0, 7));
-        const charges = monthlyTransactions
-          .filter((transaction) => transaction.type === 'expense')
-          .reduce((sum, transaction) => sum + transaction.amount, 0);
-        const payments = monthlyTransactions
-          .filter((transaction) => transaction.type === 'cc_payment')
-          .reduce((sum, transaction) => sum + Math.abs(transaction.amount), 0);
-        const recurringCount = recurringBills.filter((bill) => bill.institution === account.issuer || bill.institution === account.name).length;
+        const stats = monthlyAccountStats.get(account.id) || { charges: 0, payments: 0 };
+
+        // ⚡ Bolt: Fast single-pass loop instead of filter().length
+        let recurringCount = 0;
+        for (let i = 0; i < recurringBills.length; i++) {
+          const bill = recurringBills[i];
+          if (bill.institution === account.issuer || bill.institution === account.name) {
+            recurringCount++;
+          }
+        }
 
         return {
           id: account.id,
           name: account.name,
           issuer: account.issuer,
           last4: account.last4,
-          charges,
-          payments,
-          openItems: Math.max(charges - payments, 0),
+          charges: stats.charges,
+          payments: stats.payments,
+          openItems: Math.max(stats.charges - stats.payments, 0),
           recurringCount,
         };
       })

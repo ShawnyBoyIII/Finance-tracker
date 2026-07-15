@@ -155,12 +155,13 @@ export default function TransactionList() {
   const selectedAccount = selectedAccountId === 'all' ? null : accountMap.get(selectedAccountId);
 
   const categories = useMemo(() => {
-    return Array.from(new Set([
-      ...DEFAULT_TRANSACTION_CATEGORIES,
-      ...transactions.map((transaction) => transaction.category),
-    ]))
-      .filter(Boolean)
-      .sort((a, b) => a.localeCompare(b));
+    const uniqueCategories = new Set(DEFAULT_TRANSACTION_CATEGORIES);
+    for (let i = 0; i < transactions.length; i++) {
+      if (transactions[i].category) {
+        uniqueCategories.add(transactions[i].category);
+      }
+    }
+    return Array.from(uniqueCategories).sort((a, b) => a.localeCompare(b));
   }, [transactions]);
 
   const handleCategoryChange = (transactionId: string, category: string) => {

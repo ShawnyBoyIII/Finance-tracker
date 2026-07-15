@@ -40,3 +40,6 @@
 ## 2026-07-04 - Array Sort to Single Pass Optimization
 **Learning:** In utility functions, sorting an entire array or map in (N \log N)$ time solely to find a single maximum value (e.g. `[...array].sort()[0]` or `Array.from(map).sort()[0]`) introduces significant execution time overhead and unnecessary memory allocations. A stable max value can be found much faster using a single-pass (N)$ loop.
 **Action:** Always replace `[...array].sort(...)[0]` with a standard `for` loop maintaining a running maximum value when searching for max/min values, ensuring correct TypeScript types (e.g. `undefined` fallback) are preserved.
+## 2024-06-06 - Intermediate Array Allocations in Render Loops
+**Learning:** Constructing a `Set` by mapping large arrays and spreading them (e.g., `Array.from(new Set([...defaults, ...data.map(x => x.prop)]))`) inside a React render loop or `useMemo` causes severe performance degradation. This approach allocates multiple intermediate arrays that are immediately discarded, increasing garbage collection pressure and blocking the main thread during render cycles.
+**Action:** Always replace `.map()` and spread-based `Set` constructions with standard index-based `for` loops directly populating a `Set` initialized with defaults, completely eliminating the intermediate array allocation overhead.

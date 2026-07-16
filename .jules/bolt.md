@@ -40,3 +40,6 @@
 ## 2026-07-04 - Array Sort to Single Pass Optimization
 **Learning:** In utility functions, sorting an entire array or map in (N \log N)$ time solely to find a single maximum value (e.g. `[...array].sort()[0]` or `Array.from(map).sort()[0]`) introduces significant execution time overhead and unnecessary memory allocations. A stable max value can be found much faster using a single-pass (N)$ loop.
 **Action:** Always replace `[...array].sort(...)[0]` with a standard `for` loop maintaining a running maximum value when searching for max/min values, ensuring correct TypeScript types (e.g. `undefined` fallback) are preserved.
+## 2024-06-06 - Render Loop Date Instantiation Overhead
+**Learning:** Found that invoking `new Date().toISOString().slice(0, 7)` directly inside an inner array filter (`.filter`) that itself is inside a `.map()` mapping over accounts causes exponentially expensive Date instantiation overhead during a React render cycle.
+**Action:** When working with nested array loops inside `useMemo` hooks, always hoist invariant `new Date()` calculations (like current month string prefixes) to the top of the `useMemo` block to ensure $O(1)$ calculation time.

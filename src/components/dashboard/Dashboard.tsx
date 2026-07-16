@@ -38,14 +38,15 @@ export default function Dashboard() {
 
   const recurringBills = useMemo(() => detectRecurringBills(transactions), [transactions]);
   const upcomingPaychecks = useMemo(() => getUpcomingIncomeSourcesPaychecks(incomeSources, 4), [incomeSources]);
-  const recentTransactions = useMemo(() => [...transactions].sort((a, b) => b.date.localeCompare(a.date)).slice(0, 5), [transactions]);
+  const recentTransactions = useMemo(() => [...transactions].sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : 0)).slice(0, 5), [transactions]);
   const focusCategories = useMemo(() => monthlySummary.expensesByCategory.slice(0, 5), [monthlySummary.expensesByCategory]);
   const cardSummaries = useMemo(() => {
+    const currentMonthPrefix = new Date().toISOString().slice(0, 7);
     return accounts
       .filter((account) => account.type === 'credit_card')
       .map((account) => {
         const accountTransactions = transactions.filter((transaction) => transaction.accountId === account.id);
-        const monthlyTransactions = accountTransactions.filter((transaction) => transaction.date.slice(0, 7) === new Date().toISOString().slice(0, 7));
+        const monthlyTransactions = accountTransactions.filter((transaction) => transaction.date.slice(0, 7) === currentMonthPrefix);
         const charges = monthlyTransactions
           .filter((transaction) => transaction.type === 'expense')
           .reduce((sum, transaction) => sum + transaction.amount, 0);

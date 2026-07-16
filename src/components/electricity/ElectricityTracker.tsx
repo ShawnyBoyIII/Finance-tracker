@@ -799,7 +799,7 @@ export default function ElectricityTracker() {
                         : `${bill.daysUntilDue} day(s) until due`}
                   </div>
                   <div className="flex items-center gap-2">
-                    <button type="button" onClick={() => handleEdit(bill.billId)} className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-sm text-white hover:bg-white/5">
+                    <button type="button" onClick={() => handleEdit(bill.billId)} className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-sm text-white hover:bg-white/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20">
                       <Pencil className="h-3.5 w-3.5" />
                       Edit
                     </button>
@@ -807,7 +807,7 @@ export default function ElectricityTracker() {
                       if (window.confirm('Are you sure you want to delete this electricity bill?')) {
                         deleteBill(bill.billId);
                       }
-                    }} className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-sm text-white hover:bg-white/5">
+                    }} className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-sm text-white hover:bg-white/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500" aria-label="Remove electricity bill" title="Remove electricity bill">
                       <Trash2 className="h-3.5 w-3.5" />
                       Remove
                     </button>

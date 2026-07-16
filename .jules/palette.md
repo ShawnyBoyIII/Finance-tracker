@@ -21,3 +21,7 @@
 ## 2023-10-27 - Linking Form Labels
 **Learning:** Many form `<label>` elements were found across `BillPlanner.tsx`, `TransactionList.tsx` (manual entry), and `ElectricityTracker.tsx` lacking the explicit `htmlFor` attribute linking them to their corresponding `<input>` or `<select>` via an `id`. This prevents screen readers from correctly announcing the field's purpose.
 **Action:** Always generate unique `id`s for form input elements and bind them using the `htmlFor` attribute on the corresponding `<label>` element.
+
+## 2026-07-16 - Focus States and ARIA labels on Secondary Destructive Actions
+**Learning:** The secondary entities like electricity bills had edit and remove buttons that were missing keyboard focus visibility and descriptive ARIA labels, creating a gap in accessibility compared to primary entities (like budgets or generic transactions).
+**Action:** Always ensure that all interactive elements, including those in secondary components or new features, implement consistent keyboard focus styling (`focus-visible`) and ARIA labels for icon-heavy destructive actions.

@@ -1,0 +1,16 @@
+
+> finance-tracker@1.0.1 dev /app
+> next dev --turbopack -p 4000
+
+▲ Next.js 16.2.6 (Turbopack)
+- Local:         http://localhost:4000
+- Network:       http://192.168.0.2:4000
+✓ Ready in 572ms
+Attention: Next.js now collects completely anonymous telemetry regarding usage.
+This information is used to shape Next.js' roadmap and prioritize features.
+You can learn more, including how to opt-out if you'd not like to participate in this anonymous program, by visiting the following URL:
+https://nextjs.org/telemetry
+
+
+○ Compiling /electricity ...
+ GET /electricity 200 in 10.1s (next.js: 8.9s, application-code: 1218ms)

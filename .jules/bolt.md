@@ -40,3 +40,6 @@
 ## 2026-07-04 - Array Sort to Single Pass Optimization
 **Learning:** In utility functions, sorting an entire array or map in (N \log N)$ time solely to find a single maximum value (e.g. `[...array].sort()[0]` or `Array.from(map).sort()[0]`) introduces significant execution time overhead and unnecessary memory allocations. A stable max value can be found much faster using a single-pass (N)$ loop.
 **Action:** Always replace `[...array].sort(...)[0]` with a standard `for` loop maintaining a running maximum value when searching for max/min values, ensuring correct TypeScript types (e.g. `undefined` fallback) are preserved.
+## 2024-06-06 - Set Unions with Mapped Arrays in Render Cycles
+**Learning:** Initializing a `Set` via array destructuring and `.map()` (e.g., `new Set([...defaults, ...array.map(...)])`) within render cycles or frequently called functions creates multiple intermediate arrays, causing unnecessary memory allocation and garbage collection overhead. This can significantly slow down performance when dealing with large datasets.
+**Action:** When extracting unique values from large datasets (like transactions) into a `Set`, avoid `...array.map()`. Instead, initialize the `Set` with defaults (`new Set(defaults)`), and use a standard `for` loop to directly `add()` values.

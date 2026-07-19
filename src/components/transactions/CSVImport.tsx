@@ -200,7 +200,16 @@ export default function CSVImport({ statementType, accountId }: CSVImportProps) 
       return;
     }
 
-    const statementDates = readyToImport.map((transaction) => transaction.date).sort();
+    // ⚡ Bolt Optimization: Calculate min/max dates using O(N) single-pass iteration
+    // replacing the O(N log N) `readyToImport.map(...).sort()` to eliminate array allocations and sorting overhead.
+    let periodStart = readyToImport[0]?.date || '';
+    let periodEnd = readyToImport[0]?.date || '';
+
+    for (let i = 1; i < readyToImport.length; i++) {
+      const d = readyToImport[i].date;
+      if (d < periodStart) periodStart = d;
+      if (d > periodEnd) periodEnd = d;
+    }
 
     importStatement(
       {
@@ -209,8 +218,8 @@ export default function CSVImport({ statementType, accountId }: CSVImportProps) 
         format: 'csv',
         fileName: selectedFileName || 'import.csv',
         institution: transactions.find((transaction) => transaction.accountId === accountId)?.institution,
-        periodStart: statementDates[0],
-        periodEnd: statementDates[statementDates.length - 1],
+        periodStart,
+        periodEnd,
         parseVersion: 1,
         reviewedTransactionCount: stagedTransactions.length,
         duplicateCandidateCount: duplicateCount,

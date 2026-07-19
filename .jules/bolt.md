@@ -40,3 +40,6 @@
 ## 2026-07-04 - Array Sort to Single Pass Optimization
 **Learning:** In utility functions, sorting an entire array or map in (N \log N)$ time solely to find a single maximum value (e.g. `[...array].sort()[0]` or `Array.from(map).sort()[0]`) introduces significant execution time overhead and unnecessary memory allocations. A stable max value can be found much faster using a single-pass (N)$ loop.
 **Action:** Always replace `[...array].sort(...)[0]` with a standard `for` loop maintaining a running maximum value when searching for max/min values, ensuring correct TypeScript types (e.g. `undefined` fallback) are preserved.
+## 2024-07-04 - Safely Replicating String Sort Behavior in O(N) Loops
+**Learning:** When optimizing away $O(N \log N)$ sorting for string-based arrays (like finding min/max dates formatted as ISO 8601 strings), the native `<` and `>` JavaScript operators evaluate lexicographically using UTF-16 code units. This exactly mirrors the default behavior of `Array.prototype.sort()` without a comparator, meaning we can safely replace `.sort()[0]` with an $O(N)$ loop using direct comparative operators without risking behavioral regressions.
+**Action:** When replacing array sorts with single-pass loops to find bounds on string arrays, rely on `<` and `>` operators rather than pulling in `localeCompare` or Date parsing.

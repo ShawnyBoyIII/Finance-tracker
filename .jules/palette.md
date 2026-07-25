@@ -21,3 +21,6 @@
 ## 2023-10-27 - Linking Form Labels
 **Learning:** Many form `<label>` elements were found across `BillPlanner.tsx`, `TransactionList.tsx` (manual entry), and `ElectricityTracker.tsx` lacking the explicit `htmlFor` attribute linking them to their corresponding `<input>` or `<select>` via an `id`. This prevents screen readers from correctly announcing the field's purpose.
 **Action:** Always generate unique `id`s for form input elements and bind them using the `htmlFor` attribute on the corresponding `<label>` element.
+## 2023-11-20 - Explicit Form Label Associations
+**Learning:** Found several fields in `TransactionList.tsx` (Account and Description) and `ElectricityTracker.tsx` (all 9 fields in manual history form) missing explicit `htmlFor` attributes linking them to their corresponding `<input>` or `<select>` via an `id`. This prevents screen readers from correctly announcing the purpose of the input fields, reducing accessibility for these manual data entry forms.
+**Action:** When adding or updating form inputs, ensure that all `<label>` elements have an `htmlFor` attribute that exactly matches the `id` of their corresponding input, even in components that are rendered dynamically.

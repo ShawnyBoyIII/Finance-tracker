@@ -40,3 +40,6 @@
 ## 2026-07-04 - Array Sort to Single Pass Optimization
 **Learning:** In utility functions, sorting an entire array or map in (N \log N)$ time solely to find a single maximum value (e.g. `[...array].sort()[0]` or `Array.from(map).sort()[0]`) introduces significant execution time overhead and unnecessary memory allocations. A stable max value can be found much faster using a single-pass (N)$ loop.
 **Action:** Always replace `[...array].sort(...)[0]` with a standard `for` loop maintaining a running maximum value when searching for max/min values, ensuring correct TypeScript types (e.g. `undefined` fallback) are preserved.
+## 2024-07-28 - Intermediate Array Allocation in Unique Sets
+**Learning:** Found several places where unique values were calculated using the pattern `Array.from(new Set([...defaults, ...array.map(item => item.value)])).filter(Boolean)`. The nested `.map()` array execution causes unnecessary garbage collection pressure by creating an intermediate array before immediately discarding it inside the `Set` constructor.
+**Action:** When extracting unique values or iterating over large data arrays, prefer standard index-based `for` loops directly populating a `Set` initialized with any default values to prevent intermediate array allocation overhead.

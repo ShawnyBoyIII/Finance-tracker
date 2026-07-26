@@ -11,17 +11,27 @@ export default function BudgetManager() {
   const [newCategory, setNewCategory] = useState('');
   const [newAmount, setNewAmount] = useState('');
 
-  const categoryOptions = useMemo(
-    () =>
-      Array.from(new Set([
-        ...DEFAULT_TRANSACTION_CATEGORIES,
-        ...transactions.map((transaction) => transaction.category),
-        ...budgets.map((budget) => budget.category),
-      ]))
-        .filter(Boolean)
-        .sort((a, b) => a.localeCompare(b)),
-    [budgets, transactions]
-  );
+  // ⚡ Bolt: Prevent intermediate array allocation overhead
+  // Replacing Array.from(new Set([...].map(...))).filter() with a standard for loop
+  const categoryOptions = useMemo(() => {
+    const uniqueCategories = new Set(DEFAULT_TRANSACTION_CATEGORIES);
+
+    for (let i = 0; i < transactions.length; i++) {
+      const category = transactions[i].category;
+      if (category) {
+        uniqueCategories.add(category as typeof DEFAULT_TRANSACTION_CATEGORIES[number]);
+      }
+    }
+
+    for (let i = 0; i < budgets.length; i++) {
+      const category = budgets[i].category;
+      if (category) {
+        uniqueCategories.add(category as typeof DEFAULT_TRANSACTION_CATEGORIES[number]);
+      }
+    }
+
+    return Array.from(uniqueCategories).sort((a, b) => a.localeCompare(b));
+  }, [budgets, transactions]);
 
   const handleAddBudget = (e: React.FormEvent) => {
     e.preventDefault();

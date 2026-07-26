@@ -154,13 +154,18 @@ export default function TransactionList() {
 
   const selectedAccount = selectedAccountId === 'all' ? null : accountMap.get(selectedAccountId);
 
+  // ⚡ Bolt: Prevent intermediate array allocation overhead
+  // Replacing Array.from(new Set([...].map(...))).filter() with a standard for loop
+  // that populates a Set initialized with DEFAULT_TRANSACTION_CATEGORIES.
   const categories = useMemo(() => {
-    return Array.from(new Set([
-      ...DEFAULT_TRANSACTION_CATEGORIES,
-      ...transactions.map((transaction) => transaction.category),
-    ]))
-      .filter(Boolean)
-      .sort((a, b) => a.localeCompare(b));
+    const uniqueCategories = new Set(DEFAULT_TRANSACTION_CATEGORIES);
+    for (let i = 0; i < transactions.length; i++) {
+      const category = transactions[i].category;
+      if (category) {
+        uniqueCategories.add(category as typeof DEFAULT_TRANSACTION_CATEGORIES[number]);
+      }
+    }
+    return Array.from(uniqueCategories).sort((a, b) => a.localeCompare(b));
   }, [transactions]);
 
   const handleCategoryChange = (transactionId: string, category: string) => {

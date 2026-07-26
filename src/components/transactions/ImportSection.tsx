@@ -37,12 +37,13 @@ export default function ImportSection() {
       <h3 className="text-lg font-medium text-white mb-4">Import Transactions</h3>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-        <div>
-          <label className="block text-sm font-medium text-slate-200 mb-2">Statement Type</label>
+        <fieldset>
+          <legend className="block text-sm font-medium text-slate-200 mb-2">Statement Type</legend>
           <div className="flex space-x-4">
             <label className="flex items-center">
               <input
                 type="radio"
+                name="statement-type"
                 className="mr-2 text-indigo-600 focus:ring-indigo-500"
                 checked={statementType === 'bank'}
                 onChange={() => setStatementType('bank')}
@@ -52,6 +53,7 @@ export default function ImportSection() {
             <label className="flex items-center">
               <input
                 type="radio"
+                name="statement-type"
                 className="mr-2 text-indigo-600 focus:ring-indigo-500"
                 checked={statementType === 'credit_card'}
                 onChange={() => setStatementType('credit_card')}
@@ -59,7 +61,7 @@ export default function ImportSection() {
               <span className="text-sm text-slate-200">Credit Card Statement</span>
             </label>
           </div>
-        </div>
+        </fieldset>
 
         <div>
           <label className="block text-sm font-medium text-slate-200 mb-2">Destination Account</label>
@@ -76,12 +78,13 @@ export default function ImportSection() {
           </select>
         </div>
 
-        <div>
-          <label className="block text-sm font-medium text-slate-200 mb-2">Format</label>
+        <fieldset>
+          <legend className="block text-sm font-medium text-slate-200 mb-2">Format</legend>
           <div className="flex space-x-4">
             <label className="flex items-center">
               <input
                 type="radio"
+                name="format"
                 className="mr-2 text-indigo-600 focus:ring-indigo-500"
                 checked={format === 'pdf'}
                 onChange={() => setFormat('pdf')}
@@ -91,6 +94,7 @@ export default function ImportSection() {
             <label className="flex items-center">
               <input
                 type="radio"
+                name="format"
                 className="mr-2 text-indigo-600 focus:ring-indigo-500"
                 checked={format === 'csv'}
                 onChange={() => setFormat('csv')}
@@ -98,7 +102,7 @@ export default function ImportSection() {
               <span className="text-sm text-slate-200">CSV</span>
             </label>
           </div>
-        </div>
+        </fieldset>
       </div>
 
       <div className="border-t border-white/10 pt-4 mt-4">

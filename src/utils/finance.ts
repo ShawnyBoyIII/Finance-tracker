@@ -334,20 +334,24 @@ export const getBillStatuses = (
     .map((bill) => {
       const currentMonthDueDate = buildDueDate(referenceDate, bill.dueDay);
       const monthKey = currentMonthDueDate.slice(0, 7);
-      const matchingTransactions = transactions
-        .filter((transaction) => {
-          if (transaction.type !== 'expense') return false;
-          if (bill.accountId && transaction.accountId !== bill.accountId) return false;
-          if (bill.category && transaction.category !== bill.category) return false;
-          if (transaction.date.slice(0, 7) !== monthKey) return false;
+      // ⚡ Bolt: Replaced O(N log N) filter/sort/slice chain with O(N) single-pass loop
+      let matchedTransaction: typeof transactions[0] | undefined = undefined;
 
-          const normalizedBillName = normalizeDescription(bill.name);
-          const normalizedTransactionName = normalizeDescription(transaction.description || transaction.category);
-          return normalizedTransactionName.includes(normalizedBillName) || normalizedBillName.includes(normalizedTransactionName);
-        })
-        .sort((a, b) => b.date.localeCompare(a.date));
+      const normalizedBillName = normalizeDescription(bill.name);
+      for (const transaction of transactions) {
+        if (transaction.type !== 'expense') continue;
+        if (bill.accountId && transaction.accountId !== bill.accountId) continue;
+        if (bill.category && transaction.category !== bill.category) continue;
+        if (transaction.date.slice(0, 7) !== monthKey) continue;
 
-      const matchedTransaction = matchingTransactions[0];
+        const normalizedTransactionName = normalizeDescription(transaction.description || transaction.category);
+        if (normalizedTransactionName.includes(normalizedBillName) || normalizedBillName.includes(normalizedTransactionName)) {
+          if (!matchedTransaction || transaction.date > matchedTransaction.date) {
+            matchedTransaction = transaction;
+          }
+        }
+      }
+
       const manualOverrideApplies = bill.manualStatusMonth === monthKey && bill.manualStatus;
       const isPaid = manualOverrideApplies
         ? bill.manualStatus === 'paid'
